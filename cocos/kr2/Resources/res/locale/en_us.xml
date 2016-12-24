@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Locale lang="en_us">
+    <Item id="preference_title" text="Global Preference"/>
+    <Item id="preference_title_individual" text="Individual Preference"/>
+    <Item id="preference_output_log" text="Output Log"/>
+    <Item id="preference_select_renderer" text="Select Renderer"/>
+    <Item id="preference_opengl" text="OpenGL(Experimental)"/>
+    <Item id="preference_software" text="Software"/>
+    <Item id="preference_renderer_opt" text="Advanced Renderer Option"/>
+    <Item id="preference_soft_renderer_opt" text="Soft Renderer Option"/>
+    <Item id="preference_opengl_renderer_opt" text="OpenGL Renderer Option"/>
+    <Item id="preference_multi_draw_thread" text="Draw Thread"/>
+    <Item id="preference_draw_thread_auto" text="Auto"/>
+    <Item id="preference_draw_thread_1" text="1"/>
+    <Item id="preference_draw_thread_2" text="2"/>
+    <Item id="preference_draw_thread_3" text="3"/>
+    <Item id="preference_draw_thread_4" text="4"/>
+    <Item id="preference_draw_thread_5" text="5"/>
+    <Item id="preference_draw_thread_6" text="6"/>
+    <Item id="preference_draw_thread_7" text="7"/>
+    <Item id="preference_draw_thread_8" text="8"/>
+    <Item id="preference_software_compress_tex" text="Texture Compression"/>
+    <Item id="preference_soft_compress_tex_none" text="None"/>
+    <Item id="preference_soft_compress_tex_halfline" text="Half Line"/>
+    <Item id="preference_ogl_compress_tex" text="Texture Compression"/>
+    <Item id="preference_ogl_compress_tex_none" text="None"/>
+    <Item id="preference_ogl_compress_tex_half" text="Quarter Pixel"/>
+    <Item id="preference_remember_last_path" text="Remember Last Path"/>
+    <Item id="preference_keep_screen_alive" text="Keep Screen Alive"/>
+    <Item id="preference_custom_option" text="Custom Option"/>
+    <Item id="preference_opengl_dup_target" text="Copy Render Target Texture"/>
+    <Item id="preference_ogl_accurate_render" text="Accurate Rendering"/>
+    <Item id="preference_ogl_max_texsize" text="Max Texture Size"/>
+    <Item id="preference_ogl_texsize_auto" text="Auto"/>
+    <Item id="preference_ogl_texsize_1024" text="1024"/>
+    <Item id="preference_ogl_texsize_2048" text="2048"/>
+    <Item id="preference_ogl_texsize_4096" text="4096"/>
+    <Item id="preference_ogl_texsize_8192" text="8192"/>
+    <Item id="preference_ogl_texsize_16384" text="16384"/>
+    <Item id="preference_mem_limit" text="Attempt to Limit Memory Usage"/>
+    <Item id="preference_mem_unlimited" text="Unlimited"/>
+    <Item id="preference_mem_high" text="High Memory(<300MB)"/>
+    <Item id="preference_mem_medium" text="Medium Memory(<200MB)"/>
+    <Item id="preference_mem_low" text="Low Memory(<100MB)"/>
+    <Item id="preference_show_fps" text="Show FPS"/>
+    <Item id="preference_hide_loading_ad" text="Hide Ads while loading"/>
+    <Item id="preference_rotate_screen_180" text="Rotate Game Screen"/>
+    <Item id="preference_virtual_cursor_scale" text="Virtual Cursor Scale"/>
+    <Item id="preference_menu_handler_opacity" text="Menu Handler Opacity"/>
+    <Item id="preference_reset" text="Reset"/>
+    <Item id="preference_hide_android_sys_btn" text="Hide System Bar"/>
+    <Item id="preference_default_font" text="Default Font(Internal If Empty)"/>
+    <Item id="ok" text="OK"/>
+    <Item id="cancel" text="Cancel"/>
+    <Item id="retry" text="Retry"/>
+    <Item id="reactive" text="Reactive"/>
+    <Item id="ensure_to_override_file" text="Please ensure to override:"/>
+    <Item id="readonly_storage" text="Read-only external storage detected"/>
+    <Item id="cannot_create_preference" text="Can not create individual preference file."/>
+    <Item id="use_internal_path" text="Please copy your game folder into package path to avoid this warning or you may lost your savedata:&#10;%1&#10;&#10;Continue anyway?"/>
+    <Item id="crash_report" text="Crash Report"/>
+    <Item id="crash_report_msg" text="Crash detected, send data (%d files) to help improving this app?"/>
+    <Item id="menu_rotate" text="Rotate Screen"/>
+    <Item id="menu_global_preference" text="Global Pref."/>
+    <Item id="menu_new_local_pref" text="New Individual Pref."/>
+    <Item id="menu_local_pref" text="Individual Pref."/>
+    <Item id="menu_about" text="About"/>
+    <Item id="menu_help" text="View Help"/>
+    <Item id="menu_exit" text="Exit"/>
+    <Item id="about_content" text="Visit our forum for help if you have problems:&#10;https://groups.google.com/forum/#!forum/kirikiroid2"/>
+    <Item id="about_content_i" text=""/>
+    <Item id="sure_to_exit" text="Sure to exit?"/>
+    <Item id="msgbox_yes" text="Yes"/>
+    <Item id="msgbox_no" text="No"/>
+    <Item id="msgbox_ok" text="OK"/>
+    <Item id="use_last_path" text="Use last path:"/>
+	
+    <Item id="err_narrow_to_wide" text="Cannot convert given narrow string to wide string,&#10;Data could be corrupted or encrypted or wrong text encoding.&#10;Maybe you need xp3filter.tjs if data is encrypted,&#10;or use patch.tjs to specify correct encoding if text is not encoded in SHIFT-JIS"/>
+	<Item id="err_no_memory" text="Insufficent Memory&#10;If this error occured frequently, you can try limit memory usage in preference."/>
+	<Item id="err_occured" text="Error Occured"/>
+	<Item id="err_read_error" text="Read Error"/>
+	<Item id="err_not_xp3_archive" text="%1 is not valid XP3 archive. The data may be corrupted."/>
+	<Item id="err_cannot_suggest_graph_ext" text="%1 Cannot suggest extension name of this graphic. The data may lost or there has error in script."/>
+</Locale>

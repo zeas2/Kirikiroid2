@@ -1,0 +1,173 @@
+[
+  uuid(F09B2E87-740A-4AEA-90CB-AE1C4EFD35F1), 
+  version(1.0), 
+  helpstring("TVP Sound System Library")
+    
+]
+library TVPSndSysLib
+{
+
+  importlib("stdole2.tlb");
+
+  [
+    uuid(B4C4239B-7D27-43CC-8523-66955BDF59DF), 
+    version(1.9), 
+    helpstring("TVP Sound System Media Base Information Interface")
+  ]
+   interface ITSSMediaBaseInfo: IUnknown
+  {
+    [
+    id(0x00000001), 
+    helpstring("メディアの種類文字列の取得")
+    ]
+    HRESULT _stdcall GetMediaType([in] LPWSTR shortname, [in] LPWSTR descbuf, [in] unsigned long descbuflen );
+    [
+    id(0x00000002), 
+    helpstring("曲長さの取得")
+    ]
+    HRESULT _stdcall GetLength([out, retval] unsigned long * length );
+    [
+    id(0x00000003), 
+    helpstring("メディアタイトルの取得")
+    ]
+    HRESULT _stdcall GetTitle([in] LPWSTR buf, [in] unsigned long buflen );
+    [
+    id(0x00000004), 
+    helpstring("メディア著作権情報の取得")
+    ]
+    HRESULT _stdcall GetCopyright([in] LPWSTR buf, [in] unsigned long buflen );
+    [
+    id(0x00000005), 
+    helpstring("メディアコメントの取得")
+    ]
+    HRESULT _stdcall GetComment([in] LPWSTR buf, [in] unsigned long buflen );
+    [
+    id(0x00000006), 
+    helpstring("メディアアーティストの取得")
+    ]
+    HRESULT _stdcall GetArtist([in] LPWSTR buf, [in] unsigned long buflen );
+  };
+
+  [
+    uuid(76CA2F83-6E9F-4687-9E2D-5C898E5DB2A7), 
+    version(1.0), 
+    helpstring("TVP Sound System Wave Format Record")
+  ]
+  typedef struct tagTSSWaveFormat
+  {
+    [
+    helpstring("サンプリング周波数")
+    ]
+    unsigned long dwSamplesPerSec;
+    [
+    helpstring("チャネル数")
+    ]
+    unsigned long dwChannels;
+    [
+    helpstring("ビット数")
+    ]
+    unsigned long dwBitsPerSample;
+    [
+    helpstring("シーク可能か")
+    ]
+    unsigned long dwSeekable;
+    [
+    helpstring("全サンプル数")
+    ]
+    unsigned __int64 ui64TotalSamples;
+    [
+    helpstring("全時間")
+    ]
+    unsigned long dwTotalTime;
+    long dwReserved1;
+    long dwReserved2;
+  } TSSWaveFormat;
+
+  [
+    uuid(7DD61993-615D-481D-B060-A9FD48394430), 
+    version(1.6), 
+    helpstring("TVP Sound System Storage Stream Provider")
+  ]
+   interface ITSSStorageProvider: IUnknown
+  {
+    [
+    id(0x00000001), 
+    helpstring("ストレージの読み込み用IStreamの取得")
+    ]
+    HRESULT _stdcall GetStreamForRead([in] LPWSTR url, [out, retval]  IUnknown ** stream );
+    [
+    id(0x00000002), 
+    helpstring("ストレージの書き込み用IStreamの取得")
+    ]
+    HRESULT _stdcall GetStreamForWrite([in] LPWSTR url, [out, retval]  IUnknown ** stream );
+    [
+    id(0x00000003), 
+    helpstring("ストレージの更新用IStreamの取得")
+    ]
+    HRESULT _stdcall GetStreamForUpdate([in] LPWSTR url, [out, retval]  IUnknown ** stream );
+  };
+
+  [
+    uuid(A938D1A5-2980-498B-B051-99931D41895D), 
+    version(1.9), 
+    helpstring("TVP Sound System Module Interface")
+  ]
+   interface ITSSModule: IUnknown
+  {
+    [
+    id(0x00000001), 
+    helpstring("モジュールの著作権情報の取得")
+    ]
+    HRESULT _stdcall GetModuleCopyright([in] LPWSTR buffer, [in] unsigned long buflen );
+    [
+    id(0x00000002), 
+    helpstring("モジュールの追加情報の取得")
+    ]
+    HRESULT _stdcall GetModuleDescription([in] LPWSTR buffer, [in] unsigned long buflen );
+    [
+    id(0x00000003), 
+    helpstring("対応ファイル拡張子の取得")
+    ]
+    HRESULT _stdcall GetSupportExts([in] unsigned long index, [in] LPWSTR mediashortname, [in] LPWSTR buf, [in] unsigned long buflen );
+    [
+    id(0x00000004), 
+    helpstring("指定メディアの情報を取得")
+    ]
+    HRESULT _stdcall GetMediaInfo([in] LPWSTR url, [out, retval] ITSSMediaBaseInfo ** info );
+    [
+    id(0x00000005), 
+    helpstring("指定メディアをこのプラグインで扱えるか検査")
+    ]
+    HRESULT _stdcall GetMediaSupport([in] LPWSTR url );
+    [
+    id(0x00000006), 
+    helpstring("メディア再生用オブジェクトの取得")
+    ]
+    HRESULT _stdcall GetMediaInstance([in] LPWSTR url, [out, retval]  IUnknown ** instance );
+  };
+
+  [
+    uuid(313864E2-910E-496F-8A6D-43465C105B58), 
+    version(1.6), 
+    helpstring("TVP Sound System Wave Decoder Interface")
+  ]
+   interface ITSSWaveDecoder: IUnknown
+  {
+    [
+    id(0x00000001), 
+    helpstring("再生フォーマットの取得")
+    ]
+    HRESULT _stdcall GetFormat([in] TSSWaveFormat * format );
+    [
+    id(0x00000002), 
+    helpstring("現在位置からデコード")
+    ]
+    HRESULT _stdcall Render([in] void * buf, [in] unsigned long bufsamplelen, [out] unsigned long * rendered, [out, retval] unsigned long * status );
+    [
+    id(0x00000003), 
+    helpstring("指定位置へのデコード位置の移動")
+    ]
+    HRESULT _stdcall SetPosition([in] unsigned __int64 samplepos );
+  };
+
+}; 

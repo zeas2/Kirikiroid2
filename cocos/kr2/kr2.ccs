@@ -1,0 +1,81 @@
+<Solution>
+  <PropertyGroup Name="kr2" Version="3.10.0.0" Type="CocosStudio" />
+  <SolutionFolder>
+    <Group ctype="ResourceGroup">
+      <RootFolder Name=".">
+        <Folder Name="img">
+          <Image Name="about_icon.png" />
+          <Image Name="back_btn_off.png" />
+          <Image Name="back_btn_on.png" />
+          <Image Name="Cancel_Normal.png" />
+          <Image Name="Cancel_Press.png" />
+          <Image Name="CheckBox_Disable.png" />
+          <Image Name="CheckBox_Normal.png" />
+          <Image Name="CheckBox_Press.png" />
+          <Image Name="CheckBoxNode_Normal.png" />
+          <Image Name="CheckBoxNode_Press.png" />
+          <Image Name="circle_arrow.png" />
+          <Image Name="circle_arrow_normal.png" />
+          <Image Name="circle_arrow_press.png" />
+          <Image Name="circle_white.png" />
+          <Image Name="empty.png" />
+          <Image Name="exit_icon.png" />
+          <Image Name="gray.png" />
+          <Image Name="keyboard_icon.png" />
+          <Image Name="menu_handler.png" />
+          <Image Name="menu_icon.png" />
+          <Image Name="menu_press.png" />
+          <Image Name="mouse_2btn.png" />
+          <Image Name="mouse_icon.png" />
+          <Image Name="mouse_left_btn.png" />
+          <Image Name="mouse_right_btn.png" />
+          <Image Name="syssetting_btn_ff.png" />
+          <Image Name="syssetting_btn_on.png" />
+          <Image Name="touch_icon.png" />
+          <Image Name="touch1.png" />
+          <Image Name="touch2.png" />
+          <Image Name="triangle.png" />
+          <Image Name="white.png" />
+          <Image Name="windows_icon.png" />
+        </Folder>
+        <Folder Name="ui">
+          <Folder Name="comctrl">
+            <Project Name="CheckBoxItem.csd" Type="Layer" />
+            <Project Name="SelectListItem.csd" Type="Layer" />
+            <Project Name="SeperateItem.csd" Type="Layer" />
+            <Project Name="SliderIconItem.csd" Type="Layer" />
+            <Project Name="SliderTextItem.csd" Type="Layer" />
+            <Project Name="SubDirItem.csd" Type="Layer" />
+          </Folder>
+          <Folder Name="help">
+            <Project Name="AllTips.csd" Type="Layer" />
+            <Project Name="MouseModeTips.csd" Type="Layer" />
+            <Project Name="ScreenModeTips.csd" Type="Layer" />
+            <Project Name="TouchModeTips.csd" Type="Layer" />
+          </Folder>
+          <Project Name="BottomBar.csd" Type="Layer" />
+          <Project Name="BottomBarTextInput.csd" Type="Layer" />
+          <Project Name="FileItem.csd" Type="Layer" />
+          <Project Name="GameMenu.csd" Type="Layer" />
+          <Project Name="ListItem.csd" Type="Layer" />
+          <Project Name="ListView.csd" Type="Layer" />
+          <Project Name="MainFileSelector.csd" Type="Layer" />
+          <Project Name="MediaPlayerBody.csd" Type="Layer" />
+          <Project Name="MediaPlayerFoot.csd" Type="Layer" />
+          <Project Name="MediaPlayerNavi.csd" Type="Layer" />
+          <Project Name="MenuList.csd" Type="Layer" />
+          <Project Name="MessageBox.csd" Type="Layer" />
+          <Project Name="NaviBar.csd" Type="Layer" />
+          <Project Name="NaviBarWithMenu.csd" Type="Layer" />
+          <Project Name="RecentListItem.csd" Type="Layer" />
+          <Project Name="SelectList.csd" Type="Layer" />
+          <Project Name="SelectListItem.csd" Type="Layer" />
+          <Project Name="TableView.csd" Type="Layer" />
+          <Project Name="TextPairInput.csd" Type="Layer" />
+          <Project Name="WinMgrOverlay.csd" Type="Layer" />
+        </Folder>
+        <TTF Name="DroidSansFallback.ttf" />
+      </RootFolder>
+    </Group>
+  </SolutionFolder>
+</Solution>
