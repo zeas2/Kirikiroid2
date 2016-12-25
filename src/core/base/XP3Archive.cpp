@@ -34,6 +34,11 @@ void TVPSetXP3ArchiveExtractionFilter(tTVPXP3ArchiveExtractionFilter filter)
 }
 //---------------------------------------------------------------------------
 
+static tTVPXP3ArchiveContentFilter TVPXP3ArchiveContentFilter = nullptr;
+void TVPSetXP3ArchiveContentFilter(tTVPXP3ArchiveContentFilter filter)
+{
+	TVPXP3ArchiveContentFilter = filter;
+}
 
 
 //---------------------------------------------------------------------------
@@ -572,6 +577,17 @@ tTJSBinaryStream * tTVPXP3Archive::CreateStreamByIndex(tjs_uint idx)
 	{
 		out = new tTVPXP3ArchiveStream(this, idx, &(item.Segments), stream,
 			item.OrgSize);
+		if (TVPXP3ArchiveContentFilter) {
+			tjs_int result = TVPXP3ArchiveContentFilter(item.Name, Name, item.OrgSize);
+#define XP3_CONTENT_FILTER_FETCH_FULLDATA 1
+			if (result == XP3_CONTENT_FILTER_FETCH_FULLDATA) {
+				tTVPMemoryStream *memstr = new tTVPMemoryStream();
+				memstr->SetSize(item.OrgSize);
+				out->ReadBuffer(memstr->GetInternalBuffer(), item.OrgSize);
+				delete out;
+				out = memstr;
+			}
+		}
 	}
 	catch(...)
 	{

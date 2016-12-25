@@ -821,7 +821,7 @@ struct tTVPDrawTextData
 	tTVPBBBltMethod bltmode;
 };
 
-static iTVPTexture2D *_CharacterTexture = NULL;
+static iTVPTexture2D *_CharacterTexture = nullptr, *_CharacterTextureRGBA = nullptr;
 
 bool tTVPNativeBaseBitmap::InternalBlendText(
     tTVPCharacterData *data, tTVPDrawTextData *dtdata, tjs_uint32 color, const tTVPRect &srect, tTVPRect &drect)
@@ -844,6 +844,7 @@ bool tTVPNativeBaseBitmap::InternalBlendText(
 	static bool fastGPURoute = !TVPIsSoftwareRenderManager()
 		&& !IndividualConfigManager::GetInstance()->GetValueBool("ogl_accurate_render", false);
 
+	iTVPTexture2D *pTexSrc;
 	if (fastGPURoute && dtdata->bltmode == bmAlphaOnAlpha && dtdata->opa > 0) {
 		// convert to addalpha bitmap
 		tTVPBitmap* tmp = new tTVPBitmap(w, h, 32);
@@ -859,25 +860,26 @@ bool tTVPNativeBaseBitmap::InternalBlendText(
 			dst += dpitch;
 			src += spitch;
 		}
-		if (_CharacterTexture) {
-			if (_CharacterTexture->GetFormat() != TVPTextureFormat::RGBA) {
-				_CharacterTexture->Release();
-				_CharacterTexture = nullptr;
+		if (_CharacterTextureRGBA) {
+			if (_CharacterTextureRGBA->GetFormat() != TVPTextureFormat::RGBA) {
+				_CharacterTextureRGBA->Release();
+				_CharacterTextureRGBA = nullptr;
 			}
 		}
-		if (!_CharacterTexture) {
-			_CharacterTexture = GetRenderManager()->CreateTexture2D(tmp->GetBits(), dpitch, w, h, TVPTextureFormat::RGBA);
-		} else if (_CharacterTexture->GetInternalWidth() < w || _CharacterTexture->GetInternalHeight() < h) {
-			_CharacterTexture->Release();
-			_CharacterTexture = GetRenderManager()->CreateTexture2D(tmp->GetBits(), dpitch, w, h, TVPTextureFormat::RGBA);
+		if (!_CharacterTextureRGBA) {
+			_CharacterTextureRGBA = GetRenderManager()->CreateTexture2D(tmp->GetBits(), dpitch, w, h, TVPTextureFormat::RGBA);
+		} else if (_CharacterTextureRGBA->GetInternalWidth() < w || _CharacterTextureRGBA->GetInternalHeight() < h) {
+			_CharacterTextureRGBA->Release();
+			_CharacterTextureRGBA = GetRenderManager()->CreateTexture2D(tmp->GetBits(), dpitch, w, h, TVPTextureFormat::RGBA);
 		} else {
-			_CharacterTexture->Update(tmp->GetBits(), TVPTextureFormat::RGBA, dpitch, tTVPRect(0, 0, w, h));
+			_CharacterTextureRGBA->Update(tmp->GetBits(), TVPTextureFormat::RGBA, dpitch, tTVPRect(0, 0, w, h));
 		}
 
 		tmp->Release();
 
 		GEMTHOD_OPA_CLR(AlphaBlend_a);
 		method->SetParameterOpa(opa_id, dtdata->opa);
+		pTexSrc = _CharacterTextureRGBA;
 	} else {
 		if (dtdata->bltmode == bmAlphaOnAlpha) {
 			if (dtdata->opa > 0) {
@@ -904,6 +906,8 @@ bool tTVPNativeBaseBitmap::InternalBlendText(
 
 		method->SetParameterOpa(opa_id, dtdata->opa);
 		method->SetParameterColor4B(clr_id, color);
+
+		pTexSrc = _CharacterTexture;
 	}
 #if 0
     if (pShader->isBlendEnabled() || !IsIndependent()) {
@@ -929,7 +933,7 @@ bool tTVPNativeBaseBitmap::InternalBlendText(
     }
 #endif
 	tRenderTexRectArray::Element src_tex[] = {
-		tRenderTexRectArray::Element(_CharacterTexture, tTVPRect(0, 0, w, h))
+		tRenderTexRectArray::Element(pTexSrc, tTVPRect(0, 0, w, h))
 	};
 	TVPGetRenderManager()->OperateRect(method,
 		GetTextureForRender(method->IsBlendTarget(), &drect), nullptr, drect,

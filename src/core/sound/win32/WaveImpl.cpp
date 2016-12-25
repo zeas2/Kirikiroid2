@@ -3234,12 +3234,12 @@ void tTJSNI_WaveSoundBuffer::SetVolumeToSoundBuffer()
 		v = (Volume / 10) * (Volume2 / 10) / 1000;
 		v = (v / 10) * (GlobalVolume / 10) / 1000;
 		v = (v / 10) * (mutevol / 10) / 1000;
-		SoundBuffer->SetVolume(TVPVolumeToDSAttenuate(v));
+		SoundBuffer->SetVolume(/*TVPVolumeToDSAttenuate*/(v / 100000.0f));
 
 		if(BufferCanControlPan)
 		{
 			// set pan
-			SoundBuffer->SetPan(TVPPanToDSAttenuate(Pan));
+			SoundBuffer->SetPan(/*TVPPanToDSAttenuate*/(Pan / 100000.0f));
 		}
 	}
 }

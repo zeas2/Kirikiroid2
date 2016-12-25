@@ -51,11 +51,13 @@ struct tTVPXP3ExtractionFilterInfo
 
 typedef void (TVP_tTVPXP3ArchiveExtractionFilter_CONVENTION *
 	tTVPXP3ArchiveExtractionFilter)(tTVPXP3ExtractionFilterInfo *info);
-
+typedef tjs_int (TVP_tTVPXP3ArchiveExtractionFilter_CONVENTION *
+	tTVPXP3ArchiveContentFilter)(const ttstr &filepath, const ttstr &archivename, tjs_uint64 filesize);
 
 /*]*/
 //---------------------------------------------------------------------------
 TJS_EXP_FUNC_DEF(void, TVPSetXP3ArchiveExtractionFilter, (tTVPXP3ArchiveExtractionFilter filter));
+TJS_EXP_FUNC_DEF(void, TVPSetXP3ArchiveContentFilter, (tTVPXP3ArchiveContentFilter filter));
 //---------------------------------------------------------------------------
 
 
