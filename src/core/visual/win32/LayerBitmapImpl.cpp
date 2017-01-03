@@ -628,13 +628,19 @@ tjs_uint tTVPNativeBaseBitmap::GetBPP() const
 //---------------------------------------------------------------------------
 bool tTVPNativeBaseBitmap::Is32BPP() const
 {
-	return Bitmap->GetFormat() == TVPTextureFormat::RGBA;
+	return Bitmap->GetFormat() != TVPTextureFormat::Gray; 
 }
 //---------------------------------------------------------------------------
 bool tTVPNativeBaseBitmap::Is8BPP() const
 {
 	return Bitmap->GetFormat() == TVPTextureFormat::Gray;
 }
+
+bool tTVPNativeBaseBitmap::IsOpaque() const
+{
+	return Bitmap->IsOpaque();
+}
+
 //---------------------------------------------------------------------------
 bool tTVPNativeBaseBitmap::Assign(const tTVPNativeBaseBitmap &rhs)
 {

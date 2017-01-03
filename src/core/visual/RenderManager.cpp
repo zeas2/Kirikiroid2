@@ -336,6 +336,7 @@ public:
 		Height = rc.get_height();
 	}
 	virtual bool IsStatic() { return true; }
+	virtual bool IsOpaque() { return false; }
 	virtual TVPTextureFormat::e GetFormat() const { return Format; }
 	virtual void SetPoint(int x, int y, tjs_uint32 clr) {
 		assert(false);
@@ -621,6 +622,7 @@ public:
 				src += pitch;
 			}
 		}
+		Bitmap->IsOpaque = false;
 	}
 
 	virtual uint32_t GetPoint(int x, int y) {
@@ -635,8 +637,14 @@ public:
 			*((tjs_uint32*)Bitmap->GetScanLine(y) + x) = clr; // 32bpp
 		else
 			*((tjs_uint8*)Bitmap->GetScanLine(y) + x) = (tjs_uint8)clr; // 8bpp
+		Bitmap->IsOpaque = false;
 	}
 	virtual bool IsStatic() { return false; }
+	virtual bool IsOpaque() { return Bitmap->IsOpaque; }
+	virtual void * GetScanLineForWrite(tjs_uint l) {
+		Bitmap->IsOpaque = false;
+		return (void*)GetScanLineForRead(l);
+	}
 };
 
 class tTVPRenderMethod_Software : public iTVPRenderMethod {

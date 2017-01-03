@@ -24,9 +24,12 @@ LocaleConfigManager* LocaleConfigManager::GetInstance() {
 	return &instance;
 }
 
-std::string LocaleConfigManager::GetText(const std::string &tid) {
+const std::string &LocaleConfigManager::GetText(const std::string &tid) {
 	auto it = AllConfig.find(tid);
-	if (it == AllConfig.end()) return tid;
+	if (it == AllConfig.end()) {
+		AllConfig[tid] = tid;
+		return AllConfig[tid];
+	}
 	return it->second;
 }
 

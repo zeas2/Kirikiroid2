@@ -171,7 +171,7 @@ static void initAllConfig() {
 
 	OpenglOptPreference = new tPreferenceScreen("preference_opengl_renderer_opt", {
 		new tTVPPreferenceInfoCheckBox("preference_ogl_accurate_render", "ogl_accurate_render", false),
-		new tTVPPreferenceInfoCheckBox("preference_opengl_dup_target", "ogl_dup_target", true),
+//		new tTVPPreferenceInfoCheckBox("preference_opengl_dup_target", "ogl_dup_target", true),
 		new tTVPPreferenceInfoSelectList("preference_ogl_max_texsize", "ogl_max_texsize", "0", {
 			{ "preference_ogl_texsize_auto", "0" },
 			{ "preference_ogl_texsize_1024", "1024" },

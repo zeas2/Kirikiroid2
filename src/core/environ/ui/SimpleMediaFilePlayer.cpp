@@ -1,4 +1,7 @@
 #include "SimpleMediaFilePlayer.h"
+#ifdef PixelFormat // libavcodec vs cocos2d
+#undef PixelFormat
+#endif
 #include "cocos2d.h"
 #include "StorageIntf.h"
 #include "SysInitIntf.h"
@@ -7,9 +10,6 @@
 #include "ui/UISlider.h"
 #include "cocos2d/MainScene.h"
 #include "cocos/ui/UIHelper.h"
-#ifdef PixelFormat // libavcodec vs cocos2d
-#undef PixelFormat
-#endif
 #include "movie/ffmpeg/KRMoviePlayer.h"
 #include "StorageImpl.h"
 
@@ -44,6 +44,7 @@ public:
 		_overlay->SetRootNode(rootNode);
 		parent->addChild(rootNode);
 		rootNode->setContentSize(cocos2d::Size::ZERO);
+		_overlay->SetVisible(true);
 	}
 	KRMovie::VideoPresentOverlay2 &GetOverlay() { return *_overlay; }
 };

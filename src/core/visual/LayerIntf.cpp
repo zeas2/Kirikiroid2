@@ -5585,7 +5585,7 @@ void tTJSNI_BaseLayer::QueryUpdateExcludeRect(tTVPRect &rect, bool parentvisible
 	rect.bottom += Rect.top;
 
 	// check visibility & opacity
-	if(parentvisible && DisplayType == ltOpaque && Opacity == 255)
+	if (parentvisible && (DisplayType == ltOpaque || (MainImage && MainImage->IsOpaque())) && Opacity == 255)
 	{
 		if(rect.is_empty())
 		{
@@ -5978,7 +5978,7 @@ void tTJSNI_BaseLayer::Draw_GPU(tTVPDrawable *target, int x, int y, const tTVPRe
 
 	// caching is not enabled
 	tTVPRect rctar(r);
-	rctar.add_offsets(x, y);
+	rctar.add_offsets(x - r.left, y - r.top);
 
 	if (InTransition && TransWithChildren)
 	{
@@ -5993,9 +5993,10 @@ void tTJSNI_BaseLayer::Draw_GPU(tTVPDrawable *target, int x, int y, const tTVPRe
 
 			// copy self image to UpdateBitmapForChild
 			if (MainImage != NULL) {
-				CopySelf(UpdateBitmapForChild,
-					rect.left,
-					rect.top, rect); // transfer self image
+				if (UpdateExcludeRect.top <= rect.top && UpdateExcludeRect.bottom >= rect.bottom &&
+					rect.left >= UpdateExcludeRect.left && rect.right <= UpdateExcludeRect.right) {
+				} else
+					CopySelfForRect(UpdateBitmapForChild, rect.left, rect.top, rect); // transfer self image
 			}
 
 			TVP_LAYER_FOR_EACH_CHILD_BEGIN(child)
@@ -6013,7 +6014,7 @@ void tTJSNI_BaseLayer::Draw_GPU(tTVPDrawable *target, int x, int y, const tTVPRe
 				UpdateRectForChildOfsY = UpdateRectForChild.top - child->Rect.top;
 
 				// call children's "Draw" method
-				child->Draw_GPU((tTVPDrawable*)this, x + Rect.left, y + Rect.top, UpdateRectForChild);
+				child->Draw_GPU((tTVPDrawable*)this, x + child->Rect.left, y + child->Rect.top, UpdateRectForChild);
 			}
 			TVP_LAYER_FOR_EACH_CHILD_END
 			target->DrawCompleted(rctar, CacheBitmap, rect, DisplayType, Opacity);
@@ -6025,9 +6026,12 @@ void tTJSNI_BaseLayer::Draw_GPU(tTVPDrawable *target, int x, int y, const tTVPRe
 			DrawnRegion.Clear();
 			tTVPRect updaterectforchild;
 			UpdateBitmapForChild = target->GetDrawTargetBitmap(rctar, updaterectforchild);
-			const tTVPComplexRect & overlapped = GetOverlappedRegion();
 			// send completion message to the target
-			DrawSelf(target, rctar, rect);
+
+			if (UpdateExcludeRect.top <= rect.top && UpdateExcludeRect.bottom >= rect.bottom &&
+				rect.left >= UpdateExcludeRect.left && rect.right <= UpdateExcludeRect.right) {
+			} else
+				DrawSelf(target, rctar, rect);
 			TVP_LAYER_FOR_EACH_CHILD_BEGIN(child)
 			{
 				// for each child...
@@ -6041,7 +6045,7 @@ void tTJSNI_BaseLayer::Draw_GPU(tTVPDrawable *target, int x, int y, const tTVPRe
 					continue;
 
 				// call children's "Draw" method
-				child->Draw_GPU(target, x + Rect.left, y + Rect.top, chrect);
+				child->Draw_GPU(target, x + child->Rect.left, y + child->Rect.top, chrect);
 			}
 			TVP_LAYER_FOR_EACH_CHILD_END
 		}
@@ -6760,6 +6764,15 @@ void tTJSNI_BaseLayer::InternalComplete2(tTVPComplexRect & updateregion,
 
 	updateregion.Clear();
 }
+
+//---------------------------------------------------------------------------
+void tTJSNI_BaseLayer::InternalComplete2_GPU(tTVPRect updateregion, tTVPDrawable *drawable)
+{
+	if (Manager) Manager->QueryUpdateExcludeRect();
+	updateregion.add_offsets(Rect.left, Rect.top);
+	Draw_GPU(drawable, 0, 0, updateregion, false);
+}
+
 //---------------------------------------------------------------------------
 void tTJSNI_BaseLayer::InternalComplete(tTVPComplexRect & updateregion,
 	tTVPDrawable *drawable)
@@ -6773,7 +6786,7 @@ void tTJSNI_BaseLayer::InternalComplete(tTVPComplexRect & updateregion,
 		&& !IndividualConfigManager::GetInstance()->GetValueBool("ogl_accurate_render", false);
 
 	if (isGPU) {
-		Draw_GPU(drawable, 0, 0, updateregion.GetBound(), false);
+		InternalComplete2_GPU(updateregion.GetBound(), drawable);
 	} else {
 		InternalComplete2(updateregion, drawable);
 	}
@@ -6796,7 +6809,7 @@ void tTJSNI_BaseLayer::CompleteForWindow(tTVPDrawable *drawable)
 	try
 	{
 		if (isGPU) {
-			Draw_GPU(drawable, 0, 0, Rect);
+			InternalComplete2_GPU(Rect, drawable);
 		} else {
 			InternalComplete2(Manager->GetUpdateRegionForCompletion(), drawable);
 		}
@@ -6844,12 +6857,16 @@ tTVPBaseTexture * tTJSNI_BaseLayer::Complete(const tTVPRect & rect)
 	class tCompleteDrawable_GPU : public tCompleteDrawable {
 	public:
 		tCompleteDrawable_GPU(tTVPBaseTexture *bmp, tTVPLayerType layertype)
-			: tCompleteDrawable(bmp, layertype) {};
+			: tCompleteDrawable(bmp, layertype) {
+			bmp->Fill(tTVPRect(0, 0, bmp->GetWidth(), bmp->GetHeight()), 0);
+		};
 
 		virtual void DrawCompleted(const tTVPRect &destrect,
 			tTVPBaseTexture *bmp, const tTVPRect &cliprect,
 			tTVPLayerType type, tjs_int opacity) override {
-			Bitmap->Blt(destrect.left, destrect.top, bmp, cliprect, type, opacity, true);
+			if (bmp != Bitmap) {
+				BltImage(Bitmap, LayerType, destrect.left, destrect.top, bmp, cliprect, type, opacity);
+			}
 		}
 	};
 

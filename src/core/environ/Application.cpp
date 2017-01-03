@@ -1017,9 +1017,13 @@ void tTVPApplication::OnActivate()
 
 	// trigger System.onActivate event
 	TVPPostApplicationActivateEvent();
+	for (auto & it : m_activeEvents) {
+		it.second(it.first, eTVPActiveEvent::onActive);
+	}
 }
 void tTVPApplication::OnDeactivate(  )
 {
+	if (!image_load_thread_) return; // project is not startup yet
 	application_activating_ = false;
 	
 //	TVPMinimizeFullScreenWindowAtInactivation();
@@ -1033,6 +1037,9 @@ void tTVPApplication::OnDeactivate(  )
 
 	// trigger System.onDeactivate event
 	TVPPostApplicationDeactivateEvent();
+	for (auto & it : m_activeEvents) {
+		it.second(it.first, eTVPActiveEvent::onDeactive);
+	}
 }
 
 void tTVPApplication::OnExit()
@@ -1080,6 +1087,15 @@ void tTVPApplication::LoadImageRequest( class iTJSDispatch2 *owner, class tTJSNI
 		image_load_thread_->LoadRequest( owner, bmp, name );
 	}
 }
+
+void tTVPApplication::RegisterActiveEvent(void *host, const std::function<void(void*, eTVPActiveEvent)>& func/*empty = unregister*/)
+{
+	if (func)
+		m_activeEvents.emplace(host, func);
+	else
+		m_activeEvents.erase(host);
+}
+
 #if 0
 std::vector<std::string>* LoadLinesFromFile( const std::wstring& path ) {
 	FILE *fp = NULL;

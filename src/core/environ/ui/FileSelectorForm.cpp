@@ -12,6 +12,7 @@
 #include "base/CCDirector.h"
 #include "MessageBox.h"
 #include <sys/stat.h>
+#include "platform/CCDevice.h"
 
 using namespace cocos2d;
 using namespace cocos2d::extension;
@@ -19,6 +20,16 @@ using namespace cocos2d::ui;
 
 const char * const FileName_Cell = "ui/FileItem.csb";
 static TVPListForm* _listform;
+#define MOVE_INCH            7.0f/160.0f
+static const std::string str_long_press("long_press");
+
+static float convertDistanceFromPointToInch(const Vec2& dis)
+{
+	auto glview = cocos2d::Director::getInstance()->getOpenGLView();
+	int dpi = cocos2d::Device::getDPI();
+	float distance = Vec2(dis.x * glview->getScaleX() / dpi, dis.y * glview->getScaleY() / dpi).getLength();
+	return distance;
+}
 
 std::pair<std::string, std::string> TVPBaseFileSelectorForm::PathSplit(const std::string &path) {
 	std::pair<std::string, std::string> ret;
@@ -172,6 +183,32 @@ void TVPBaseFileSelectorForm::onCellClicked(int idx) {
 	}
 }
 
+void TVPBaseFileSelectorForm::onCellLongPress(int idx)
+{
+	LocaleConfigManager *localeMgr = LocaleConfigManager::GetInstance();
+	const char *btnTitles[] = {
+		localeMgr->GetText("delete").c_str(),
+		localeMgr->GetText("cancel").c_str(),
+	};
+	int n = TVPShowSimpleMessageBox(
+		localeMgr->GetText("file_operate_menu_text").c_str(),
+		localeMgr->GetText("file_operate_menu_title").c_str(),
+		sizeof(btnTitles) / sizeof(btnTitles[0]), btnTitles);
+	const FileInfo &info = CurrentDirList[idx];
+	switch (n) {
+	case 0:
+		if (TVPShowSimpleMessageBoxYesNo(info.FullPath, localeMgr->GetText("ensure_to_delete_file")) == 0) {
+			TVPDeleteFile(info.FullPath);
+			scheduleOnce([this](float){
+				ListDir(CurrentPath);
+			}, 0, "refresh_path");
+		}
+		break;
+	default:
+		break;
+	}
+}
+
 void TVPBaseFileSelectorForm::getShortCutDirList(std::vector<std::string> &pathlist) {
 	std::vector<std::string> paths = TVPGetDriverPath();
 	for (const std::string &path : paths) {
@@ -238,7 +275,8 @@ TVPBaseFileSelectorForm::FileItemCellImpl* TVPBaseFileSelectorForm::FetchCell(Fi
 				break;
 			case Widget::TouchEventType::MOVED:
 				FileList->onTouchMoved(touch, nullptr);
-				if ((sender->getTouchBeganPosition() - touchPoint).getLength() > 5.0f) { // TODO
+				if (sender->isHighlighted() &&
+					convertDistanceFromPointToInch(sender->getTouchBeganPosition() - touchPoint) > MOVE_INCH) {
 					sender->setHighlighted(false);
 				}
 				break;
@@ -482,6 +520,21 @@ void TVPBaseFileSelectorForm::FileItemCellImpl::initFromFile(const char * filena
 	Widget *HighLight = static_cast<Widget *>(reader.findController(str_highlight));
 	if (HighLight) {
 		HighLight->addClickEventListener(std::bind(&FileItemCellImpl::onClicked, this, std::placeholders::_1));
+		HighLight->addTouchEventListener([this](Ref* p, Widget::TouchEventType ev){
+			Widget* sender = static_cast<Widget*>(p);
+			switch (ev) {
+			case Widget::TouchEventType::BEGAN:
+				sender->scheduleOnce([this, sender](float){
+					if (sender->isHighlighted()) {
+						sender->scheduleOnce([this](float){_owner->onLongPress(); }, 0, "delay_call");
+					}
+				}, 1.5f, str_long_press);
+				break;
+			case Widget::TouchEventType::CANCELED:
+				sender->unschedule(str_long_press);
+				break;
+			}
+		});
 	}
 }
 
@@ -501,6 +554,10 @@ void TVPBaseFileSelectorForm::FileItemCellImpl::setInfo(const FileInfo &info) {
 	_set = true;
 }
 
-void TVPBaseFileSelectorForm::FileItemCellImpl::onClicked(cocos2d::Ref*) {
-	_owner->onClicked();
+void TVPBaseFileSelectorForm::FileItemCellImpl::onClicked(cocos2d::Ref* p) {
+	Widget* sender = static_cast<Widget*>(p);
+	if (sender->isScheduled(str_long_press)) {
+		sender->unschedule(str_long_press);
+		_owner->onClicked();
+	}
 }

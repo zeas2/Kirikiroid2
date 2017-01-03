@@ -50,12 +50,14 @@ tjs_error TJS_INTF_METHOD CBinaryAccessor::OperationByNum( /* operation with mem
 tjs_error TJS_INTF_METHOD CBinaryAccessor::Operation( /* operation with member */ tjs_uint32 flag, /* calling flag */ const tjs_char *membername, /* member name ( NULL for a default member ) */ tjs_uint32 *hint, /* hint for the member name (in/out) */ tTJSVariant *result, /* result ( can be NULL ) */ const tTJSVariant *param, /* parameters */ iTJSDispatch2 *objthis /* object as "this" */)
 {
 	if (membername) {
+		static const ttstr str_ptr(TJS_W("ptr"));
 		if (hint) {
+			static const tjs_uint32 hash_ptr = tTJSHashFunc<tjs_char *>::Make(str_ptr.c_str());
 			if (!*hint)
-				*hint = !TJS_strcmp(membername, TJS_W("ptr"));
-			if (!*hint)
+				*hint = tTJSHashFunc<tjs_char *>::Make(membername);
+			if (*hint != hash_ptr)
 				return TJS_E_NOTIMPL;
-		} else if (TJS_strcmp(membername, TJS_W("ptr"))) {
+		} else if (str_ptr != membername) {
 			return TJS_E_NOTIMPL;
 		}
 	}

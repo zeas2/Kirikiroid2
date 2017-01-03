@@ -315,6 +315,8 @@ public:
 	void SetLoopSegement(int beginFrame, unsigned int endFrame);
 
 private:
+	void OnActive();
+	void OnDeactive();
 //	bool		Shutdown = false;
 	bool		m_bStopStatus = true;
 	std::string m_strFileName;
@@ -334,6 +336,7 @@ private:
 
 	std::atomic_int m_playSpeed;
 	std::atomic_int m_newPlaySpeed;
+	double m_origSpeed = 0;
 	int m_streamPlayerSpeed = DVD_PLAYSPEED_NORMAL;
 	struct SSpeedState
 	{

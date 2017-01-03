@@ -941,6 +941,7 @@ private:
 		tTVPLayerType type, tjs_int opacity) override;
 
 	void InternalComplete2(tTVPComplexRect & updateregion, tTVPDrawable *drawable);
+	void InternalComplete2_GPU(tTVPRect updateregion, tTVPDrawable *drawable);
 	void InternalComplete(tTVPComplexRect & updateregion, tTVPDrawable *drawable);
 	void CompleteForWindow(tTVPDrawable *drawable);
 public:

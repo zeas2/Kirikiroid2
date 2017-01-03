@@ -52,7 +52,6 @@ LOCAL_C_INCLUDES += $(LOCAL_PATH)/base  \
                  $(LOCAL_PATH)/environ/win32 \
                  $(LOCAL_PATH)/environ/android \
                  $(LOCAL_PATH)/environ/sdl \
-                 $(LOCAL_PATH)/environ/my_vcl \
                  $(LOCAL_PATH)/msg \
                  $(LOCAL_PATH)/msg/win32 \
                  $(LOCAL_PATH)/extension \

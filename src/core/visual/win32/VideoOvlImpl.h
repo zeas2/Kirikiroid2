@@ -32,6 +32,9 @@ class tTJSNI_VideoOverlay : public tTJSNI_BaseVideoOverlay
 	typedef tTJSNI_BaseVideoOverlay inherited;
 
 	iTVPVideoOverlay *VideoOverlay;
+	iTVPVideoOverlay *CachedOverlay = nullptr;
+	tTVPVideoOverlayMode CachedOverlayMode;
+	ttstr   CachedPlayingFile;
 
 	tTVPRect Rect;
 	bool Visible;

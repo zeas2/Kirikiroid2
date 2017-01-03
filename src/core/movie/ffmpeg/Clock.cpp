@@ -76,7 +76,7 @@ double CDVDClock::GetVsyncAdjust()
 	CSingleLock lock(m_critSection);
 	return m_vSyncAdjust;
 }
-#if 0
+
 void CDVDClock::Pause(bool pause)
 {
 	CSingleLock lock(m_critSection);
@@ -96,7 +96,7 @@ void CDVDClock::Pause(bool pause)
 		SetSpeed(m_speedAfterPause);
 	}
 }
-#endif
+
 void CDVDClock::SetSpeed(int iSpeed)
 {
 	// this will sometimes be a little bit of due to rounding errors, ie clock might jump abit when changing speed

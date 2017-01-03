@@ -48,6 +48,7 @@ public:
 	bool GetClockInfo(int& MissedVblanks, double& ClockSpeed, double& RefreshRate) const;
 	void SetVsyncAdjust(double adjustment);
 	double GetVsyncAdjust();
+	void Pause(bool pause);
 
 protected:
 	double SystemToAbsolute(int64_t system);

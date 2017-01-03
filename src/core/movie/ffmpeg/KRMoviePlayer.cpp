@@ -209,23 +209,13 @@ int TVPMoviePlayer::AddVideoPicture(DVDVideoPicture &pic, int index)
 	if (m_usedPicture >= MAX_BUFFER_COUNT) return -1;
 
 	int width = pic.iWidth, height = pic.iHeight;
-#if 0
-	uint8_t *data = new uint8_t[width * height * 4];
-	int datasize = width * 4;
-
-	img_convert_ctx = sws_getCachedContext(
-		img_convert_ctx, width, height, AV_PIX_FMT_YUV420P, width, height,
-		AV_PIX_FMT_RGBA, /*sws_flags*/SWS_FAST_BILINEAR, NULL, NULL, NULL);
-	assert(img_convert_ctx);
-	int processed = sws_scale(img_convert_ctx, pic.data, pic.iLineSize, 0, pic.iHeight, &data, &datasize);
-#endif
 	// YUV data passthrough
 	int yuvwidth[3] = { width, width / 2, width / 2 };
 	int yuvheight[3] = { height, height / 2, height / 2 };
 	uint8_t *yuvdata[3] = { nullptr };
 	for (int i = 0; i < sizeof(yuvdata) / sizeof(yuvdata[0]); ++i) {
 		int size = yuvwidth[i] * yuvheight[i];
-		yuvdata[i] = new uint8_t[size];
+		yuvdata[i] = (uint8_t*)TJSAlignedAlloc(size, 4);
 		if (yuvwidth[i] == pic.iLineSize[i]) {
 			memcpy(yuvdata[i], pic.data[i], size);
 		} else {
@@ -375,6 +365,12 @@ void VideoPresentOverlay::BitmapPicture::swap(BitmapPicture &r)
 	std::swap(data, r.data);
 	std::swap(width, r.width);
 	std::swap(height, r.height);
+}
+
+void TVPMoviePlayer::BitmapPicture::Clear()
+{
+	for (int i = 0; i < sizeof(data) / sizeof(data[0]); ++i)
+		if (data[i]) TJSAlignedDealloc(data[i]), data[i] = nullptr;
 }
 
 void VideoPresentOverlay2::SetRootNode(cocos2d::Node *node)

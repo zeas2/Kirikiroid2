@@ -2068,6 +2068,55 @@ static void TVPConvert24BitTo32Bit_NEON(tjs_uint32 *dest, const tjs_uint8 *src, 
     }
 }
 
+static void TVPConvert32BitTo24Bit_NEON(tjs_uint8 *dest, const tjs_uint8 *src, tjs_int len) {
+	const tjs_uint8* pEndSrc = src + len;
+	{
+		tjs_int PreFragLen = (const tjs_uint8*)((((intptr_t)src) + 7)&~7) - src;
+		if (PreFragLen > len) PreFragLen = len;
+		const tjs_uint8 *pend = src + PreFragLen; // in bytes
+		while (src < pend)
+		{
+			dest[0] = src[0];
+			dest[1] = src[1];
+			dest[2] = src[2];
+			dest += 3;
+			src += 4;
+		}
+	}
+
+	const tjs_uint8* pVecEndSrc = (const tjs_uint8*)(((intptr_t)pEndSrc)&~7) - 15;
+	uint8x16x3_t d;
+	if (((intptr_t)dest) & 7) {
+		while (src < pVecEndSrc) {
+			uint8x16x4_t s = vld4q_u8(__builtin_assume_aligned(src, 8));
+			d.val[0] = s.val[0];
+			d.val[1] = s.val[1];
+			d.val[2] = s.val[2];
+			vst3q_u8(dest, d);
+			dest += 16 * 3;
+			src += 16 * 4;
+		}
+	} else {
+		while (src < pVecEndSrc) {
+			uint8x16x4_t s = vld4q_u8(__builtin_assume_aligned(src, 8));
+			d.val[0] = s.val[0];
+			d.val[1] = s.val[1];
+			d.val[2] = s.val[2];
+			vst3q_u8(__builtin_assume_aligned(dest, 8), d);
+			dest += 16 * 3;
+			src += 16 * 4;
+		}
+	}
+
+	while (src < pEndSrc) {
+		dest[0] = src[0];
+		dest[1] = src[1];
+		dest[2] = src[2];
+		dest += 3;
+		src += 4;
+	}
+}
+
 static void TVPDoGrayScale_NEON(tjs_uint32 *dest, tjs_int len) {
     tjs_uint32* pEndDst = dest + len;
     {
@@ -3517,7 +3566,8 @@ FUNC_API void TVPGL_ASM_Init()
         REGISTER_TVPGL_CUSTOM_FUNC(TVPBLConvert15BitTo32Bit, TVPBLConvert15BitTo32Bit, (const tjs_uint16*)testrule, 128 * 256);
 //         TVPBLConvert24BitTo8Bit, TVPBLConvert24BitTo8Bit;
         REGISTER_TVPGL_ONLY(TVPBLConvert24BitTo32Bit, TVPConvert24BitTo32Bit_NEON);
-        REGISTER_TVPGL_CUSTOM_FUNC(TVPConvert24BitTo32Bit, TVPConvert24BitTo32Bit, testrule, 256 * 256 / 3);
+		REGISTER_TVPGL_CUSTOM_FUNC(TVPConvert24BitTo32Bit, TVPConvert24BitTo32Bit, testrule, 256 * 256 / 3);
+		REGISTER_TVPGL_CUSTOM_FUNC(TVPConvert32BitTo24Bit, TVPConvert32BitTo24Bit, testrule, 256 * 256 / 3);
 //         TVPBLConvert32BitTo8Bit, TVPBLConvert32BitTo8Bit;
 //         TVPBLConvert32BitTo32Bit_NoneAlpha, TVPBLConvert32BitTo32Bit_NoneAlpha;
 //         TVPBLConvert32BitTo32Bit_MulAddAlpha, TVPBLConvert32BitTo32Bit_MulAddAlpha;

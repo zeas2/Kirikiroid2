@@ -1749,7 +1749,8 @@ void TVPMainScene::doStartup(float dt, std::string path) {
 		_fpsLabel = cocos2d::Label::createWithTTF("", "DroidSansFallback.ttf", 16);
 		_fpsLabel->setAnchorPoint(Vec2(0, 1));
 		_fpsLabel->setPosition(Vec2(0, GameNode->getContentSize().height));
-		_fpsLabel->setColor(Color3B::GRAY);
+		_fpsLabel->setColor(Color3B::WHITE);
+		_fpsLabel->enableOutline(Color4B::BLACK, 1);
 		GameNode->addChild(_fpsLabel, GAME_MENU_ORDER);
 	}
 }

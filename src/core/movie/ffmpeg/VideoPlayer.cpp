@@ -9,6 +9,7 @@
 #include "krmovie.h"
 #include "TimeUtils.h"
 #include "tjsConfig.h"
+#include "Application.h"
 
 NS_KRMOVIE_BEGIN
 
@@ -193,11 +194,22 @@ BasePlayer::BasePlayer(CBaseRenderer *renderer)
 	m_streamPlayerSpeed = DVD_PLAYSPEED_NORMAL;
 	m_caching = CACHESTATE_DONE;
 	memset(&m_SpeedState, 0, sizeof(m_SpeedState));
+	::Application->RegisterActiveEvent(this, [](void* p, eTVPActiveEvent ev){
+		switch (ev) {
+		case eTVPActiveEvent::onActive:
+			static_cast<BasePlayer*>(p)->OnActive();
+			break;
+		case eTVPActiveEvent::onDeactive:
+			static_cast<BasePlayer*>(p)->OnDeactive();
+			break;
+		}
+	});
 }
 
 BasePlayer::~BasePlayer() {
 	CloseInputStream();
 	DestroyPlayers();
+	::Application->RegisterActiveEvent(this, nullptr);
 }
 
 void BasePlayer::Play()
@@ -243,6 +255,18 @@ void BasePlayer::SetLoopSegement(int beginFrame, unsigned int endFrame)
 {
 	m_iLoopSegmentBegin = beginFrame;
 	m_iLoopSegmentEnd = endFrame;
+}
+
+void BasePlayer::OnDeactive()
+{
+	m_origSpeed = GetSpeed();
+	m_clock.Pause(true);
+}
+
+void BasePlayer::OnActive()
+{
+	m_clock.Pause(false);
+	SetSpeed(m_origSpeed);
 }
 
 void BasePlayer::VideoParamsChange()

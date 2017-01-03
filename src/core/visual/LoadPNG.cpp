@@ -360,7 +360,7 @@ void TVPLoadPNG(void* formatdata, void *callbackdata, tTVPGraphicSizeCallback si
 		png_read_update_info(png_ptr,info_ptr);
 
 		// set size
-		sizecallback(callbackdata, width, height);
+		sizecallback(callbackdata, width, height, color_type == PNG_COLOR_TYPE_RGB_ALPHA ? gpfRGBA : gpfRGB);
 
 		// load image
 		if (png_get_interlace_type(png_ptr,info_ptr) == PNG_INTERLACE_NONE)

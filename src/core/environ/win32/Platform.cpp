@@ -331,3 +331,7 @@ tjs_uint32 TVPGetRoughTickCount32()
 {
 	return timeGetTime();
 }
+
+void TVPPrintLog(const char *str) {
+	printf("%s", str);
+}

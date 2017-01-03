@@ -2561,9 +2561,9 @@ double TJS_strtod(const tjs_char* string, tjs_char** endPtr)
 	} else {
 		mantSize -= 1;			/* One of the digits was the point. */
 	}
-	if (mantSize > 18) {
-		fracExp = decPt - 18;
-		mantSize = 18;
+	if (mantSize > 48) {
+		fracExp = decPt - 48;
+		mantSize = 48;
 	} else {
 		fracExp = decPt - mantSize;
 	}

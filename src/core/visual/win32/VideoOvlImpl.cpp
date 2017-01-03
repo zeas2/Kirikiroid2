@@ -122,7 +122,10 @@ void TJS_INTF_METHOD tTJSNI_VideoOverlay::Invalidate()
 	inherited::Invalidate();
 
 	Close();
-
+	if (CachedOverlay) {
+		CachedOverlay->Release();
+		CachedOverlay = nullptr;
+	}
 	EventQueue.Deallocate();
 }
 //---------------------------------------------------------------------------
@@ -178,7 +181,15 @@ void tTJSNI_VideoOverlay::Open(const ttstr &_name)
 	// create video overlay object
 	try
 	{
-		{
+		if (CachedOverlay && CachedOverlayMode == Mode && CachedPlayingFile == _name) {
+			VideoOverlay = CachedOverlay;
+			CachedOverlay = nullptr;
+			VideoOverlay->Rewind();
+		} else {
+			if (CachedOverlay) {
+				CachedOverlay->Release();
+				CachedOverlay = nullptr;
+			}
 			if(Mode == vomLayer)
 				GetVideoLayerObject(EventQueue.GetOwner(), istream, name.c_str(), ext.c_str(), size, &VideoOverlay);
 			else if(Mode == vomMixer)
@@ -227,7 +238,8 @@ void tTJSNI_VideoOverlay::Open(const ttstr &_name)
 	// set Status
 	ClearWndProcMessages();
 	SetStatus(ssStop);
-
+	CachedPlayingFile = _name;
+	CachedOverlayMode = Mode;
 	if (Loop) VideoOverlay->SetLoopSegement(0, -1);
 }
 //---------------------------------------------------------------------------
@@ -237,7 +249,13 @@ void tTJSNI_VideoOverlay::Close()
 	// release VideoOverlay object
 	if(VideoOverlay)
 	{
-		VideoOverlay->Release(), VideoOverlay = NULL;
+		if (CachedOverlay) {
+			CachedOverlay->Release();
+			CachedOverlay = nullptr;
+		}
+		VideoOverlay->Pause();
+		CachedOverlay = VideoOverlay;
+		VideoOverlay = NULL;
 //		::SetFocus(Window->GetWindowHandle());
 	}
 	if(LocalTempStorageHolder)
@@ -263,7 +281,15 @@ void tTJSNI_VideoOverlay::Shutdown()
 	SetStatus(ssUnload);
 	try
 	{
-		if(VideoOverlay) VideoOverlay->Release(), VideoOverlay = NULL;
+		if (VideoOverlay) {
+			if (CachedOverlay) {
+				CachedOverlay->Release();
+				CachedOverlay = nullptr;
+			}
+			VideoOverlay->Pause();
+			CachedOverlay = VideoOverlay;
+			VideoOverlay = NULL;
+		}
 	}
 	catch(...)
 	{

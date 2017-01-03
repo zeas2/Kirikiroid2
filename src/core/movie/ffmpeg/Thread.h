@@ -2,8 +2,7 @@
 #include "KRMovieDef.h"
 #include <atomic>
 #include <condition_variable>
-
-namespace std { class thread; }
+#include <thread>
 
 NS_KRMOVIE_BEGIN
 typedef std::recursive_mutex CCriticalSection;

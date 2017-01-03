@@ -258,6 +258,8 @@ void TVPMainFileSelectorForm::doStartup(const std::string &path) {
 	}
 }
 
+std::string TVPGetOpenGLInfo();
+
 void TVPMainFileSelectorForm::showMenu(Ref*) {
 	if (!_menu) {
 		Size uiSize = getContentSize();
@@ -331,24 +333,47 @@ void TVPMainFileSelectorForm::showMenu(Ref*) {
 			versionText += "\n";
 			versionText += LocaleConfigManager::GetInstance()->GetText("about_content");
 
-			std::string btnText[2] = {
-				LocaleConfigManager::GetInstance()->GetText("ok"),
-				LocaleConfigManager::GetInstance()->GetText("reactive")
-			};
 			const char * pszBtnText[] = {
-				btnText[0].c_str(),
-				btnText[1].c_str()
+				LocaleConfigManager::GetInstance()->GetText("ok").c_str(),
+				LocaleConfigManager::GetInstance()->GetText("device_info").c_str(),
 			};
 
 			std::string strCaption = LocaleConfigManager::GetInstance()->GetText("menu_about");
-			const char *caption = strCaption.c_str();
-			int n = TVPShowSimpleMessageBox(versionText.c_str(), caption, 1, pszBtnText);
+			int n = TVPShowSimpleMessageBox(versionText.c_str(), strCaption.c_str(),
+				sizeof(pszBtnText) / sizeof(pszBtnText[0]), pszBtnText);
+
+			switch (n) {
+			case 1: {
+				std::string text = TVPGetOpenGLInfo();
+				const char *pOK = LocaleConfigManager::GetInstance()->GetText("ok").c_str();
+				TVPShowSimpleMessageBox(text.c_str(),
+					LocaleConfigManager::GetInstance()->GetText("device_info").c_str(),
+					1, &pOK);
+			} break;
+			}
+
+// 			TVPMessageBoxForm::show(LocaleConfigManager::GetInstance()->GetText("menu_about"), versionText,
+// #ifdef KR_FREE_VER
+// 				1
+// #else
+// 				2
+// #endif
+// 				, btnText, [](int n) {
+// 				if (n == 1) {
+// 					TVPUpdateLicense();
+// 				}
+// 			});
 		});
 		reader.findWidget("btnExit")->addClickEventListener([](Ref*) {
 			if (TVPShowSimpleMessageBoxYesNo(
 				LocaleConfigManager::GetInstance()->GetText("sure_to_exit"),
 				"Kirikiroid2") == 0) TVPExitApplication(0);
+// 			TVPMessageBoxForm::showYesNo("Kirikiroid2",
+// 				LocaleConfigManager::GetInstance()->GetText("sure_to_exit"), [](int n) {
+// 				if (n == 0) TVPExitApplication(0);
+// 			});
 		});
+#endif
 	}
 	const Size &uiSize = getContentSize();
 	const Vec2 &pos = _menu->getPosition();
@@ -504,6 +529,7 @@ void TVPMainFileSelectorForm::HistoryCell::initInfo(const std::string &fullpath,
 	_panel_delete = reader.findController("panel_delete");
 	if (!_panel_delete) _panel_delete = _btn_delete;
 	_scrollview->setScrollBarEnabled(false);
+	_scrollview->setPropagateTouchEvents(true);
 
 	_prefix->setString(prefix);
 	_path->setString(pathname);

@@ -8,6 +8,7 @@
 #include <functional>
 #include <mutex>
 #include <tuple>
+#include <map>
 
 ttstr ExePath();
 
@@ -31,6 +32,10 @@ enum {
 };
 enum {
 	mbOK = /*MB_OK*/0x00000000L,
+};
+enum class eTVPActiveEvent {
+	onActive,
+	onDeactive,
 };
 #if 0
 class AcceleratorKey {
@@ -179,9 +184,14 @@ public:
 	 */
 	void LoadImageRequest( class iTJSDispatch2 *owner, class tTJSNI_Bitmap* bmp, const ttstr &name );
 	tTVPAsyncImageLoader* GetAsyncImageLoader() { return image_load_thread_; }
+
+	void RegisterActiveEvent(void *host, const std::function<void(void*, eTVPActiveEvent)>& func/*empty = unregister*/);
+
+private:
 	std::mutex m_msgQueueLock;
 
 	std::vector<std::tuple<void*, int, tMsg> > m_lstUserMsg;
+	std::map<void*, std::function<void(void*, eTVPActiveEvent)> > m_activeEvents;
 };
 std::vector<std::string>* LoadLinesFromFile( const ttstr& path );
 

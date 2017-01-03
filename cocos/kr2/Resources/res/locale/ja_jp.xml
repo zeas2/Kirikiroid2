@@ -81,4 +81,10 @@
 	<Item id="err_read_error" text="読み込みエラーが発生しました。ファイルが破損している可能性や、デバイスからの読み込みに失敗した可能性があります"/>
 	<Item id="err_not_xp3_archive" text="%1 は正しいXP3アーカイブではありません。ファイルが破損している可能性があります。"/>
 	<Item id="err_cannot_suggest_graph_ext" text="%1 について適切な拡張子を持ったファイルを見つけられませんでした"/>
+	<Item id="delete" text="削除"/>
+	<Item id="file_operate_menu_title" text="ファイル管理"/>
+	<Item id="file_operate_menu_text" text="操作を選択してください"/>
+	<Item id="ensure_to_delete_file" text="このファイルを削除しますか："/>
+	<Item id="device_info" text="設備情報"/>
+	<Item id="supported_opengl_extension" text="OpenGL拡張特性（利用可能の拡張）："/>
 </Locale>

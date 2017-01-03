@@ -22,7 +22,8 @@ void TVPLoadWEBP(void* formatdata, void *callbackdata,
 		TVPThrowExceptionMessage(TJS_W("Invalid WebP image"));
 	}
 
-	unsigned int stride = sizecallback(callbackdata, config.input.width, config.input.height);
+	unsigned int stride = sizecallback(callbackdata, config.input.width, config.input.height,
+		config.input.has_alpha ? gpfRGBA : gpfRGB);
 #if 0
 	WebPData webp_data = { data, datasize };
 	WebPDemuxer* demux = WebPDemux(&webp_data);

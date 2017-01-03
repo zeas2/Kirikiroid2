@@ -124,6 +124,7 @@ public:
 	virtual uint32_t GetPoint(int x, int y) = 0;
 	virtual void SetPoint(int x, int y, uint32_t clr) = 0;
 	virtual bool IsStatic() = 0; // aka. is readonly
+	virtual bool IsOpaque() = 0;
 	//virtual void RefreshBitmap() = 0;
 	virtual cocos2d::Texture2D* GetAdapterTexture(cocos2d::Texture2D* origTex) = 0;
 	virtual bool GetScale(float &x, float &y) { x = 1.f; y = 1.f; return true; }

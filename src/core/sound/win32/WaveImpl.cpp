@@ -47,8 +47,6 @@
 #include "NativeEventQueue.h"
 #include "Platform.h"
 
-static void PauseWaveSoundBufferThread(bool b);
-
 //---------------------------------------------------------------------------
 // Options management
 //---------------------------------------------------------------------------
@@ -71,6 +69,7 @@ static tjs_int TVPL1BufferLength = 1000; // in ms
 static tjs_int TVPL2BufferLength = 1000; // in ms
 static bool TVPDirectSoundUse3D = false;
 static tjs_int TVPVolumeLogFactor = 3322;
+static bool TVPPrimarySoundBufferPlaying = false;
 //---------------------------------------------------------------------------
 static void TVPInitSoundOptions()
 {
@@ -605,7 +604,6 @@ static void TVPEnsurePrimaryBufferPlay()
 	if (!TVPControlPrimaryBufferRun) return;
 	TVPInitDirectSound();
 	if (!TVPPrimaryBufferPlayingByProgram) {
-		PauseWaveSoundBufferThread(false);
 		TVPPrimaryBufferPlayingByProgram = true;
 	}
 #if 0
@@ -1494,7 +1492,6 @@ class tTVPWaveSoundBufferThread : public tTVPThread
 	//HWND UtilWindow; // utility window to notify the pending events occur
 	bool PendingLabelEventExists;
 	bool WndProcToBeCalled;
-	bool IsPaused;
 	DWORD NextLabelEventTick;
 	DWORD LastFilledTick;
 
@@ -1516,21 +1513,10 @@ protected:
 public:
 	void Start(void);
 	void CheckBufferSleep();
-
-	void Pause(bool b);
 } static *TVPWaveSoundBufferThread = NULL;
 //---------------------------------------------------------------------------
-static void PauseWaveSoundBufferThread(bool b) {
-	if (TVPWaveSoundBufferThread) {
-		TVPWaveSoundBufferThread->Pause(false);
-	}
-}
-
 void TVPLockSoundMixer() {
-	if (TVPWaveSoundBufferThread) {
-		TVPWaveSoundBufferThread->Pause(true);
-		TVPControlPrimaryBufferRun = false;
-	}
+	TVPPrimaryBufferPlayingByProgram = false;
 }
 void TVPUnlockSoundMixer() {
 	if (TVPWaveSoundBufferThread) TVPEnsurePrimaryBufferPlay();
@@ -1633,6 +1619,17 @@ void tTVPWaveSoundBufferThread::Execute(void)
 		{	// thread-protected
 			tTJSCriticalSectionHolder holder(TVPWaveSoundBufferVectorCS);
 
+			if (TVPPrimaryBufferPlayingByProgram != TVPPrimarySoundBufferPlaying) {
+				TVPPrimarySoundBufferPlaying = TVPPrimaryBufferPlayingByProgram;
+				std::vector<tTJSNI_WaveSoundBuffer *>::iterator i;
+				for (i = TVPWaveSoundBufferVector.begin();
+					i != TVPWaveSoundBufferVector.end(); i++)
+				{
+					if ((*i)->ThreadCallbackEnabled)
+						(*i)->SetBufferPaused(!TVPPrimaryBufferPlayingByProgram); // for preventing buffer runs out on iOS' OpenAL implement
+				}
+			}
+
 			// check PendingLabelEventExists
 			if(PendingLabelEventExists)
 			{
@@ -1643,7 +1640,7 @@ void tTVPWaveSoundBufferThread::Execute(void)
 				}
 			}
 
-			if(time - LastFilledTick >= TVP_WSB_THREAD_SLEEP_TIME)
+			if (TVPPrimarySoundBufferPlaying && time - LastFilledTick >= TVP_WSB_THREAD_SLEEP_TIME)
 			{
 				std::vector<tTJSNI_WaveSoundBuffer *>::iterator i;
 				for(i = TVPWaveSoundBufferVector.begin();
@@ -1681,6 +1678,7 @@ void tTVPWaveSoundBufferThread::Execute(void)
 //---------------------------------------------------------------------------
 void tTVPWaveSoundBufferThread::Start()
 {
+	TVPPrimaryBufferPlayingByProgram = true;
 	Event.Set();
 	Resume();
 }
@@ -1705,18 +1703,6 @@ void tTVPWaveSoundBufferThread::CheckBufferSleep()
 		TVPStopPrimaryBuffer();
 	}
 #endif
-}
-//---------------------------------------------------------------------------
-void tTVPWaveSoundBufferThread::Pause(bool b) {
-	IsPaused = b;
-	std::vector<tTJSNI_WaveSoundBuffer *>::iterator i;
-	for (i = TVPWaveSoundBufferVector.begin();
-		i != TVPWaveSoundBufferVector.end(); i++)
-	{
-		if ((*i)->ThreadCallbackEnabled)
-			(*i)->SetBufferPaused(b); // for preventing buffer runs out on iOS' OpenAL implement
-	}
-	Event.Set();
 }
 //---------------------------------------------------------------------------
 
@@ -2624,6 +2610,7 @@ bool tTJSNI_WaveSoundBuffer::FillBuffer(bool firstwrite, bool allowpause)
 	if(!SoundBuffer) return true;
 	if(!Decoder) return true;
 	if(!BufferPlaying) return true;
+	if (!TVPPrimarySoundBufferPlaying) return true;
 
 	// check paused state
 	if(allowpause)

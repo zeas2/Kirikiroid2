@@ -40,7 +40,7 @@ tTVPImageLoadCommand::~tTVPImageLoadCommand() {
 	bmp_ = NULL;
 }
 
-static int TVPLoadGraphicAsync_SizeCallback(void *callbackdata, tjs_uint w, tjs_uint h)
+static int TVPLoadGraphicAsync_SizeCallback(void *callbackdata, tjs_uint w, tjs_uint h, tTVPGraphicPixelFormat fmt)
 {
 	tTVPTmpBitmapImage* img = (tTVPTmpBitmapImage*)callbackdata;
 	if (!img->bmp) {
@@ -48,6 +48,14 @@ static int TVPLoadGraphicAsync_SizeCallback(void *callbackdata, tjs_uint w, tjs_
 	} else if (img->bmp->GetWidth() != w || img->bmp->GetHeight() != h) {
 		img->bmp->Release();
 		img->bmp = new tTVPBitmap(w, h, 32);
+	}
+	switch (fmt) {
+	case gpfLuminance:
+	case gpfRGB:
+		img->bmp->IsOpaque = true; break;
+	case gpfPalette:
+	case gpfRGBA:
+		img->bmp->IsOpaque = false; break;
 	}
 	return img->bmp->GetPitch();
 }

@@ -40,7 +40,7 @@ void TVPLoadBPG(void* formatdata, void *callbackdata,
 
 	bpg_decoder_get_info(img.get(), &img_info);
 
-	sizecallback(callbackdata, img_info.width, img_info.height);
+	sizecallback(callbackdata, img_info.width, img_info.height, img_info.has_alpha ? gpfRGBA : gpfRGB);
 	bpg_decoder_start(img.get(), BPG_OUTPUT_FORMAT_RGBA32);
 	if (glmNormal == mode) {
 		for (uint32_t y = 0; y < img_info.height; y++) {

@@ -93,6 +93,8 @@ public:
 	tjs_uint* GetPalette() { return Palette; };
 	tjs_uint GetPaletteCount() const { return ActualPalCount; };
 	void SetPaletteCount( tjs_uint count );
+
+	bool IsOpaque = false;
 };
 //---------------------------------------------------------------------------
 
@@ -130,6 +132,7 @@ public:
 
 	bool Is32BPP() const;
 	bool Is8BPP() const;
+	bool IsOpaque() const;
 
 	/* assign */
 	bool Assign(const tTVPNativeBaseBitmap &rhs) ;
