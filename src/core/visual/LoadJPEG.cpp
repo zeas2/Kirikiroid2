@@ -201,7 +201,7 @@ void TVPLoadJPEG(void* formatdata, void *callbackdata, tTVPGraphicSizeCallback s
 	int jpegSubsamp, width, height;
 	tjhandle jpegDecompressor = tjInitDecompress();
 	tjDecompressHeader2( jpegDecompressor, jpegBuf, jpegSize, &width, &height, &jpegSubsamp );
-	sizecallback(callbackdata, width, height);
+	sizecallback(callbackdata, width, height, gpfRGB); // jpeg has no alpha channel
 
 	// decompress option
 	int flags = TJFLAG_FASTDCT;

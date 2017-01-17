@@ -69,7 +69,7 @@ void TVPLoadTLG5(void* formatdata, void *callbackdata,
 
 
 	// decomperss
-	sizecallback(callbackdata, width, height);
+	sizecallback(callbackdata, width, height, colors == 3 ? gpfRGB : gpfRGBA);
 
 	tjs_uint8 *inbuf = NULL;
 	tjs_uint8 *outbuf[4];
@@ -246,7 +246,7 @@ void TVPLoadTLG6(void* formatdata, void *callbackdata,
 	max_bit_length = src->ReadI32LE();
 
 	// set destination size
-	sizecallback(callbackdata, width, height);
+	sizecallback(callbackdata, width, height, colors == 3 ? gpfRGB : gpfRGBA);
 
 	// compute some values
 	tjs_int x_block_count = (tjs_int)((width - 1)/ TVP_TLG6_W_BLOCK_SIZE) + 1;

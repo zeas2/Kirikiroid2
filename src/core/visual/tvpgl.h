@@ -468,9 +468,10 @@ TVP_GL_FUNC_PTR_EXTERN_DECL(void, TVPPsExclusionBlend_HDA,  (tjs_uint32 *dest, c
 TVP_GL_FUNC_PTR_EXTERN_DECL(void, TVPPsExclusionBlend_HDA_o,  (tjs_uint32 *dest, const tjs_uint32 *src, tjs_int len, tjs_int opa));
 /* end function list */
 
-// add by zeas
+// add by ZeaS
 TVP_GL_FUNC_PTR_EXTERN_DECL(void, TVPReverseRGB, (tjs_uint32 *dest, const tjs_uint32 *src, tjs_int len));
 TVP_GL_FUNC_PTR_EXTERN_DECL(void, TVPUpscale65_255, (tjs_uint8 *dest, tjs_int len));
+TVP_GL_FUNC_PTR_EXTERN_DECL(void, TVPConvert32BitTo24Bit, (tjs_uint8 *dest, const tjs_uint8 *buf, tjs_int len));
 /* end function list */
 
 TVP_GL_FUNC_EXTERN_DECL(void, TVPInitTVPGL, ());

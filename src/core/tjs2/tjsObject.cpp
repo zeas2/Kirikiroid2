@@ -405,8 +405,10 @@ tTJSCustomObject::tTJSCustomObject(tjs_int hashbits)
 	if(FinalizeName.IsEmpty())
 	{
 		// first time; initialize 'finalize' name and 'missing' name
-		FinalizeName = TJSMapGlobalStringMap(TJS_W("finalize"));
-		MissingName  = TJSMapGlobalStringMap(TJS_W("missing"));
+		static ttstr _finalize = TJSMapGlobalStringMap(TJS_W("finalize"));
+		static ttstr _missing = TJSMapGlobalStringMap(TJS_W("missing"));
+		FinalizeName = _finalize;
+		MissingName = _missing;
 	}
 	finalize_name = FinalizeName;
 	missing_name = MissingName;

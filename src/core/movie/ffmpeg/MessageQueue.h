@@ -5,6 +5,7 @@
 #include <list>
 #include <algorithm>
 #include "Thread.h"
+#include <string>
 
 NS_KRMOVIE_BEGIN
 

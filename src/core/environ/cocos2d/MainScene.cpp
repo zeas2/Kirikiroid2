@@ -1698,7 +1698,7 @@ bool TVPMainScene::startupFrom(const std::string &path) {
 		popUIForm(nullptr);
 	}
 
-	if (GlobalConfigManager::GetInstance()->GetValueBool("keep_screen_alive", true)) {
+	if (GlobalConfigManager::GetInstance()->GetValue<bool>("keep_screen_alive", true)) {
 		Device::setKeepScreenOn(true);
 	}
 	// 	if (pGlobalCfgMgr->GetValueBool("rot_screen_180", false)) {
@@ -1726,7 +1726,7 @@ void TVPMainScene::doStartup(float dt, std::string path) {
 	// update one frame
 	update(0);
 	//_ResotreGLStatues(); // already in update()
-	GLubyte handlerOpacity = pGlobalCfgMgr->GetValueFloat("menu_handler_opa", 0.15f) * 255;
+	GLubyte handlerOpacity = pGlobalCfgMgr->GetValue<float>("menu_handler_opa", 0.15f) * 255;
 	_gameMenu = TVPGameMainMenu::create(handlerOpacity);
 	GameNode->addChild(_gameMenu, GAME_MENU_ORDER);
 	_gameMenu->shrinkWithTime(1);
@@ -1745,11 +1745,12 @@ void TVPMainScene::doStartup(float dt, std::string path) {
 		pWin = pWin->_prevWindow;
 	}
 
-	if (pGlobalCfgMgr->GetValueBool("showfps", false)) {
+	if (pGlobalCfgMgr->GetValue<bool>("showfps", false)) {
 		_fpsLabel = cocos2d::Label::createWithTTF("", "DroidSansFallback.ttf", 16);
 		_fpsLabel->setAnchorPoint(Vec2(0, 1));
 		_fpsLabel->setPosition(Vec2(0, GameNode->getContentSize().height));
-		_fpsLabel->setColor(Color3B::GRAY);
+		_fpsLabel->setColor(Color3B::WHITE);
+		_fpsLabel->enableOutline(Color4B::BLACK, 1);
 		GameNode->addChild(_fpsLabel, GAME_MENU_ORDER);
 	}
 }
@@ -1834,7 +1835,6 @@ void TVPMainScene::setMaskLayTouchBegain(const std::function<bool(cocos2d::Touch
 	_func_mask_layer_touchbegan = func;
 }
 
-void TVPPrintLog(const char *str);
 static float _getUIScale() {
 	auto glview = Director::getInstance()->getOpenGLView();
 	float factor = (glview->getScaleX() + glview->getScaleY()) / 2;
@@ -1890,6 +1890,15 @@ void TVPMainScene::onKeyPressed(EventKeyboard::KeyCode keyCode, Event* event) {
 	case EventKeyboard::KeyCode::KEY_PAUSE:
 		GameNode->addChild(DebugViewLayerForm::create());
 		return;
+	case EventKeyboard::KeyCode::KEY_F12:
+		if (TVPGetCurrentShiftKeyState() & ssShift) {
+			std::vector<ttstr> btns({ "OK", "Cancel" });
+			ttstr text;
+			if (TVPShowSimpleInputBox(text, "console command", "", btns) == 0) {
+				TVPExecuteExpression(text);
+			}
+		}
+		break;
 #endif
 	default:
 		break;
@@ -2007,7 +2016,7 @@ void TVPMainScene::showVirtualMouseCursor(bool bVisible) {
 		if (!_mouseCursor) return;
 
 		_mouseCursorScale = _mouseCursor->getScale() *
-			convertCursorScale(IndividualConfigManager::GetInstance()->GetValueFloat("vcursor_scale", 0.5f));
+			convertCursorScale(IndividualConfigManager::GetInstance()->GetValue<float>("vcursor_scale", 0.5f));
 		_mouseCursor->setScale(_mouseCursorScale);
 		GameNode->addChild(_mouseCursor, GAME_WINMGR_ORDER);
 		_mouseCursor->setPosition(GameNode->getContentSize() / 2);
@@ -2246,7 +2255,7 @@ void TVPRemoveWindowLayer(iWindowLayer *lay) {
 }
 
 void TVPConsoleLog(const ttstr &l, bool important) {
-	static bool TVPLoggingToConsole = IndividualConfigManager::GetInstance()->GetValueBool("outputlog", true);
+	static bool TVPLoggingToConsole = IndividualConfigManager::GetInstance()->GetValue<bool>("outputlog", true);
 	if (!TVPLoggingToConsole) return;
 	if (_consoleWin) {
 		_consoleWin->addLine(l, important ? Color3B::YELLOW : Color3B::GRAY);

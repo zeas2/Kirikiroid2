@@ -143,10 +143,7 @@ protected:
 		}
 		~BitmapPicture() { Clear(); }
 		void swap(BitmapPicture &r);
-		void Clear() {
-			for (int i = 0; i < sizeof(data) / sizeof(data[0]); ++i)
-				if (data[i]) delete[] data[i], data[i] = nullptr;
-		}
+		void Clear();
 	};
 	BitmapPicture m_picture[MAX_BUFFER_COUNT];
 	int m_curPicture = 0, m_usedPicture = 0;
@@ -166,6 +163,8 @@ protected:
 	void ClearNode();
 public:
 	void PresentPicture(float dt);
+	virtual void Stop() override;
+	virtual void Play() override;
 
 protected:
 	virtual const tTVPRect &GetBounds() = 0;

@@ -24,15 +24,18 @@ LocaleConfigManager* LocaleConfigManager::GetInstance() {
 	return &instance;
 }
 
-std::string LocaleConfigManager::GetText(const std::string &tid) {
+const std::string &LocaleConfigManager::GetText(const std::string &tid) {
 	auto it = AllConfig.find(tid);
-	if (it == AllConfig.end()) return tid;
+	if (it == AllConfig.end()) {
+		AllConfig[tid] = tid;
+		return AllConfig[tid];
+	}
 	return it->second;
 }
 
 void LocaleConfigManager::Initialize(const std::string &sysLang) {
 	// override by global configured lang
-	currentLangCode = GlobalConfigManager::GetInstance()->GetValueString("user_language");
+	currentLangCode = GlobalConfigManager::GetInstance()->GetValue<std::string>("user_language", "");
 	if (currentLangCode.empty()) currentLangCode = sysLang;
 	AllConfig.clear();
 	tinyxml2::XMLDocument doc;

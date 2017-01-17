@@ -1,8 +1,16 @@
 #include "Thread.h"
 #include <thread>
 #include <stdexcept>
+#include "MsgIntf.h"
+#include "ThreadImpl.h"
 
 NS_KRMOVIE_BEGIN
+
+CThread::CThread()
+	: m_bStop(false), m_bRunning(false)
+{
+
+}
 
 CThread::~CThread()
 {
@@ -17,7 +25,7 @@ CThread::~CThread()
 void CThread::Create()
 {
 	if (m_bRunning.exchange(true)) {
-		throw new std::logic_error("thread already in running");
+		TVPThrowExceptionMessage(TJS_W("thread already in running"));
 	}
 	m_bStop = false;
 	if (m_ThreadId) {
@@ -59,6 +67,7 @@ int CThread::entry()
 	Process();
 	OnExit();
 	m_bRunning = false;
+	TVPOnThreadExited();
 	return 0;
 }
 

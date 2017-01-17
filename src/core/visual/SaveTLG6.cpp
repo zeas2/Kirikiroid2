@@ -106,7 +106,7 @@ public:
 			BufferBytePos = 0;
 			BufferBitPos = 0;
 		}
-		free(Buffer);
+		TJS_free(Buffer);
 		BufferCapacity = 0;
 		Buffer = NULL;
 	}
@@ -121,9 +121,9 @@ public:
 			long org_cap = BufferCapacity;
 			BufferCapacity += 0x1000;
 			if(Buffer)
-				Buffer = (unsigned char *)realloc(Buffer, BufferCapacity);
+				Buffer = (unsigned char *)TJS_realloc(Buffer, BufferCapacity);
 			else
-				Buffer = (unsigned char *)malloc(BufferCapacity);
+				Buffer = (unsigned char *)TJS_malloc(BufferCapacity);
 			if(!Buffer) TVPThrowExceptionMessage( TVPTlgInsufficientMemory );
 			memset(Buffer + org_cap, 0, BufferCapacity - org_cap);
 		}

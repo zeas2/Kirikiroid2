@@ -8,6 +8,7 @@
 #include "Application.h"
 #include "Platform.h"
 #include "ui/MessageBox.h"
+#include "ui/GlobalPreferenceForm.h"
 
 USING_NS_CC;
 
@@ -76,6 +77,7 @@ bool TVPAppDelegate::applicationDidFinishLaunching() {
 
 	scene->scheduleOnce([](float dt){
 		TVPMainScene::GetInstance()->unschedule("launch");
+		TVPGlobalPreferenceForm::Initialize();
 		if (!TVPCheckStartupArg())
 		{
 // 			std::string lastpath;

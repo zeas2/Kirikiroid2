@@ -36,9 +36,13 @@
 #include "dirent.h"
 #include "TickCount.h"
 #include <fcntl.h>
+#include <unistd.h>
 #include "win32io.h"
 #include "combase.h"
 #include <sys/stat.h>
+#ifdef CC_TARGET_OS_IPHONE
+#define lseek64 lseek
+#endif
 
 //---------------------------------------------------------------------------
 // tTVPFileMedia
@@ -828,13 +832,13 @@ tjs_uint64 TJS_INTF_METHOD tTVPLocalFileStream::Seek(tjs_int64 offset, tjs_int w
         return MemBuffer->Seek(offset, whence);
 	}
 	return lseek64(Handle, offset, whence);
-	}
+}
 //---------------------------------------------------------------------------
 tjs_uint TJS_INTF_METHOD tTVPLocalFileStream::Read(void *buffer, tjs_uint read_size)
 {
     if(MemBuffer) {
         return MemBuffer->Read(buffer, read_size);
-}
+	}
     return read(Handle, buffer, read_size);
 }
 //---------------------------------------------------------------------------
@@ -842,7 +846,7 @@ tjs_uint TJS_INTF_METHOD tTVPLocalFileStream::Write(const void *buffer, tjs_uint
 {
     if(MemBuffer) {
         return MemBuffer->Write(buffer, write_size);
-}
+	}
     return write(Handle, buffer, write_size);
 }
 //---------------------------------------------------------------------------
@@ -850,7 +854,7 @@ void TJS_INTF_METHOD tTVPLocalFileStream::SetEndOfStorage()
 {
     if(MemBuffer) {
         return MemBuffer->SetEndOfStorage();
-}
+	}
     lseek64(Handle, 0, SEEK_END);
 }
 //---------------------------------------------------------------------------

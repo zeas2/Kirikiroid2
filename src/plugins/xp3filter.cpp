@@ -9,12 +9,7 @@
 #include "SysInitIntf.h"
 #include "ThreadIntf.h"
 #include <memory>
-#ifdef _MSC_VER
 #include <thread>
-#define NOKERNEL
-#define NOUSER
-#include <windows.h>
-#endif
 
 #define NCB_MODULE_NAME TJS_W("xp3filter.dll")
 
@@ -50,12 +45,14 @@ tjs_error TJS_INTF_METHOD CBinaryAccessor::OperationByNum( /* operation with mem
 tjs_error TJS_INTF_METHOD CBinaryAccessor::Operation( /* operation with member */ tjs_uint32 flag, /* calling flag */ const tjs_char *membername, /* member name ( NULL for a default member ) */ tjs_uint32 *hint, /* hint for the member name (in/out) */ tTJSVariant *result, /* result ( can be NULL ) */ const tTJSVariant *param, /* parameters */ iTJSDispatch2 *objthis /* object as "this" */)
 {
 	if (membername) {
+		static const ttstr str_ptr(TJS_W("ptr"));
 		if (hint) {
+			static const tjs_uint32 hash_ptr = tTJSHashFunc<tjs_char *>::Make(str_ptr.c_str());
 			if (!*hint)
-				*hint = !TJS_strcmp(membername, TJS_W("ptr"));
-			if (!*hint)
+				*hint = tTJSHashFunc<tjs_char *>::Make(membername);
+			if (*hint != hash_ptr)
 				return TJS_E_NOTIMPL;
-		} else if (TJS_strcmp(membername, TJS_W("ptr"))) {
+		} else if (str_ptr != membername) {
 			return TJS_E_NOTIMPL;
 		}
 	}
@@ -322,31 +319,37 @@ static XP3FilterDecoder* AddXP3Decoder() {
 	return decoder;
 }
 
-#if defined(_MSC_VER) && _MSC_VER <= 1800
-typedef void (NTAPI* _TLSCB)(HINSTANCE, DWORD, PVOID);
-void NTAPI on_tls_callback(HINSTANCE h, DWORD dwReason, PVOID pv);
-#pragma data_seg(push, old_seg)
-#pragma data_seg(".CRT$XLB")
-_TLSCB p_thread_callback = on_tls_callback;
-#pragma data_seg()
-#pragma data_seg(pop, old_seg)
-static std::map<std::thread::id, XP3FilterDecoder*> _decoders;
-__declspec(thread) static int _thread_id;
-void NTAPI on_tls_callback(HINSTANCE h, DWORD dwReason, PVOID pv) {
-	switch (dwReason) {
-	case DLL_THREAD_DETACH:
-		delete _decoders[std::this_thread::get_id()];
-		_decoders.erase(std::this_thread::get_id());
-		break;
-	}
-}
+#if (defined(_MSC_VER) && _MSC_VER <= 1800) || defined(CC_TARGET_OS_IPHONE)
+static std::mutex _decoders_mtx;
+static std::vector<XP3FilterDecoder*> _cached_decoders;
+static std::map<std::thread::id, XP3FilterDecoder*> _thread_decoders;
 static XP3FilterDecoder *FetchXP3Decoder() {
-	auto it = _decoders.find(std::this_thread::get_id());
-	if (it != _decoders.end()) {
-		return it->second;
+	std::lock_guard<std::mutex> lk(_decoders_mtx);
+	auto it = _thread_decoders.find(std::this_thread::get_id());
+	if (it != _thread_decoders.end()) {
+		XP3FilterDecoder *ret = it->second;
+		return ret;
 	}
-	XP3FilterDecoder *ret = AddXP3Decoder();
-	_decoders[std::this_thread::get_id()] = ret;
+	static bool Inited = false;
+	if (!Inited) {
+		Inited = true;
+		TVPAddOnThreadExitEvent([](){
+			std::lock_guard<std::mutex> lk(_decoders_mtx);
+			auto it = _thread_decoders.find(std::this_thread::get_id());
+			if (it != _thread_decoders.end()) {
+				_cached_decoders.emplace_back(it->second);
+				_thread_decoders.erase(it);
+			}
+		});
+	}
+	XP3FilterDecoder *ret;
+	if(!_cached_decoders.empty()) {
+		ret = _cached_decoders.back();
+		_cached_decoders.pop_back();
+	} else {
+		ret = AddXP3Decoder();
+	}
+	_thread_decoders[std::this_thread::get_id()] = ret;
 	return ret;
 }
 #else
@@ -355,7 +358,7 @@ static XP3FilterDecoder *FetchXP3Decoder() {
 	return ret.get();
 }
 #endif
-
+static void ReleaseXP3Decoder(XP3FilterDecoder *decoder, bool hold = false) { }
 tjs_int TVPXP3ArchiveContentFilterWrapper(const ttstr &filepath, const ttstr &archivename, tjs_uint64 filesize) {
 	if (!_ManagedFilterInited) return 0;
 
@@ -369,7 +372,9 @@ tjs_int TVPXP3ArchiveContentFilterWrapper(const ttstr &filepath, const ttstr &ar
 	};
 	tTJSVariant result;
 	decoder->ManagedFilter.FuncCall(0, NULL, NULL, &result, sizeof(vars) / sizeof(vars[0]), vars, NULL);
-	return result.operator tjs_int();
+	tjs_int ret = result.operator tjs_int();
+	ReleaseXP3Decoder(decoder, ret);
+	return ret;
 }
 
 void TVP_tTVPXP3ArchiveExtractionFilter_CONVENTION
@@ -381,7 +386,9 @@ void TVP_tTVPXP3ArchiveExtractionFilter_CONVENTION
     if (decoder->ManagedDecoder.Object) {
         tTJSVariant FileHash = (tjs_int64)info->FileHash;
         tTJSVariant Offset = (tjs_int64)info->Offset;
-        tTJSVariant Buffer(new CBinaryAccessor((unsigned char*)info->Buffer, info->BufferSize));
+		CBinaryAccessor *buf = new CBinaryAccessor((unsigned char*)info->Buffer, info->BufferSize);
+        tTJSVariant Buffer(buf);
+		buf->Release();
 		tTJSVariant BufferSize((tjs_int64)info->BufferSize);
 		tTJSVariant FileName(info->FileName);
         tTJSVariant *vars[5] = {
@@ -404,6 +411,7 @@ void TVP_tTVPXP3ArchiveExtractionFilter_CONVENTION
         delete []pBackup;
 #endif
     }
+	ReleaseXP3Decoder(decoder);
 }
 
 static void PostRegistCallback()

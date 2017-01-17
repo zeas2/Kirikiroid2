@@ -90,7 +90,7 @@
 /* tjsdate.y */
 /* TJS2 date string parser */
 
-#include <malloc.h>
+#include <memory>
 
 #include "tjsTypes.h"
 #include "tjsDateParser.h"

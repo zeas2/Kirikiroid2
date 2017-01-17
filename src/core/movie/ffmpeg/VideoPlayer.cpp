@@ -1,5 +1,5 @@
 #include "VideoPlayer.h"
-#include <math.h>
+#include <cmath>
 #include <algorithm>
 #include "DemuxFFmpeg.h"
 #include "VideoPlayerVideo.h"
@@ -9,6 +9,8 @@
 #include "krmovie.h"
 #include "TimeUtils.h"
 #include "tjsConfig.h"
+#include "Application.h"
+#include <cstdlib>
 
 NS_KRMOVIE_BEGIN
 
@@ -198,6 +200,7 @@ BasePlayer::BasePlayer(CBaseRenderer *renderer)
 BasePlayer::~BasePlayer() {
 	CloseInputStream();
 	DestroyPlayers();
+	::Application->RegisterActiveEvent(this, nullptr);
 }
 
 void BasePlayer::Play()
@@ -243,6 +246,18 @@ void BasePlayer::SetLoopSegement(int beginFrame, unsigned int endFrame)
 {
 	m_iLoopSegmentBegin = beginFrame;
 	m_iLoopSegmentEnd = endFrame;
+}
+
+void BasePlayer::OnDeactive()
+{
+	m_origSpeed = GetSpeed();
+	m_clock.Pause(true);
+}
+
+void BasePlayer::OnActive()
+{
+	m_clock.Pause(false);
+	SetSpeed(m_origSpeed);
 }
 
 void BasePlayer::VideoParamsChange()

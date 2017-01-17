@@ -2,14 +2,15 @@
 #include "KRMovieDef.h"
 #include <atomic>
 #include <condition_variable>
-
-namespace std { class thread; }
+#include <thread>
+#include <mutex>
 
 NS_KRMOVIE_BEGIN
 typedef std::recursive_mutex CCriticalSection;
 typedef std::unique_lock<std::recursive_mutex> CSingleLock;
 class CThread {
 public:
+	CThread();
 	virtual ~CThread();
 	void Create();
 	bool IsRunning() const { return m_bRunning; }

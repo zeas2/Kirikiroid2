@@ -1,5 +1,5 @@
 static tPreferenceScreen RootPreference;
-static tPreferenceScreen* OpenglOptPreference, *SoftRendererOptPreference;
+static tPreferenceScreen OpenglOptPreference, SoftRendererOptPreference;
 static Size PrefListSize;
 
 class tTVPPreferenceInfoCheckBox : public tTVPPreferenceInfo<bool> {
@@ -11,7 +11,7 @@ public:
 		LocaleConfigManager *locmgr = LocaleConfigManager::GetInstance();
 		return CreatePreferenceItem<tPreferenceItemCheckBox>(PrefListSize, locmgr->GetText(Caption),
 			[mgr, this](tPreferenceItemCheckBox* item) {
-			item->_getter = std::bind(&GlobalConfigManager::GetValueBool, mgr, Key, DefaultValue);
+			item->_getter = std::bind(&GlobalConfigManager::GetValue<bool>, mgr, Key, DefaultValue);
 			item->_setter = [this](bool v){
 				GlobalConfigManager::GetInstance()->SetValueInt(Key, v);
 			};
@@ -29,16 +29,30 @@ public:
 		return CreatePreferenceItem<tPreferenceItemSelectList>(PrefListSize, locmgr->GetText(Caption),
 			[this](tPreferenceItemSelectList* item) {
 			item->initInfo(this);
-			item->_getter = std::bind(&GlobalConfigManager::GetValueString, GlobalConfigManager::GetInstance(), Key, DefaultValue);
-			item->_setter = [this](std::string v){
-				GlobalConfigManager::GetInstance()->SetValue(Key, v);
-			};
+			item->_getter = std::bind(&GlobalConfigManager::GetValue<std::string>, GlobalConfigManager::GetInstance(), Key, DefaultValue);
+			item->_setter = [this](std::string v){ onSetValue(v); };
 		});
 	}
 	virtual const std::vector<std::pair<std::string, std::string> >& getListInfo() const override {
 		return ListInfo;
 	}
+	virtual void onSetValue(const std::string &v) {
+		GlobalConfigManager::GetInstance()->SetValue(Key, v);
+	}
 	std::vector<std::pair<std::string, std::string> > ListInfo;
+};
+
+class tTVPPreferenceInfoSelectRenderer : public tTVPPreferenceInfoSelectList {
+	typedef tTVPPreferenceInfoSelectList inherit;
+public:
+	tTVPPreferenceInfoSelectRenderer(const std::string &cap, const std::string &key, const std::string &defval,
+		const std::initializer_list<std::pair<std::string, std::string> > &listinfo) : inherit(cap, key, defval, listinfo) {}
+	virtual void onSetValue(const std::string &v) {
+		inherit::onSetValue(v);
+		if (v == "opengl") {
+			TVPOnOpenGLRendererSelected();
+		}
+	}
 };
 
 class tTVPPreferenceInfoSelectFile : public tTVPPreferenceInfo<std::string> {
@@ -50,7 +64,7 @@ public:
 		LocaleConfigManager *locmgr = LocaleConfigManager::GetInstance();
 		return CreatePreferenceItem<tPreferenceItemFileSelect>(PrefListSize, locmgr->GetText(Caption),
 			[this](tPreferenceItemFileSelect* item) {
-			item->_getter = std::bind(&GlobalConfigManager::GetValueString, GlobalConfigManager::GetInstance(), Key, DefaultValue);
+			item->_getter = std::bind(&GlobalConfigManager::GetValue<std::string>, GlobalConfigManager::GetInstance(), Key, DefaultValue);
 			item->_setter = [this](std::string v) {
 				GlobalConfigManager::GetInstance()->SetValue(Key, v);
 			};
@@ -58,21 +72,45 @@ public:
 	}
 };
 
-class tTVPPreferenceInfoSubPref : public iTVPPreferenceInfo {
+class tTVPPreferenceInfoRendererSubPref : public iTVPPreferenceInfo {
 public:
-	tTVPPreferenceInfoSubPref(const std::string &cap) { Caption = cap; } // Key is useless
+	tTVPPreferenceInfoRendererSubPref(const std::string &cap) { Caption = cap; } // Key is useless
+	static tPreferenceScreen* GetSubPreferenceInfo() {
+		std::string renderer = GlobalConfigManager::GetInstance()->GetValue<std::string>("renderer", "software");
+		if (renderer == "opengl")
+			return &OpenglOptPreference;
+		else if (renderer == "software")
+			return &SoftRendererOptPreference;
+		return nullptr;
+	}
 	virtual iPreferenceItem *createItem() override {
 		LocaleConfigManager *locmgr = LocaleConfigManager::GetInstance();
 		iPreferenceItem *ret = CreatePreferenceItem<tPreferenceItemSubDir>(PrefListSize, locmgr->GetText(Caption));
 		ret->addClickEventListener([](Ref*){
-			std::string renderer = GlobalConfigManager::GetInstance()->GetValueString("renderer");
-			if (renderer == "opengl")
-				TVPMainScene::GetInstance()->pushUIForm(TVPGlobalPreferenceForm::create(OpenglOptPreference));
-			else if (renderer == "software")
-				TVPMainScene::GetInstance()->pushUIForm(TVPGlobalPreferenceForm::create(SoftRendererOptPreference));
+			TVPMainScene::GetInstance()->pushUIForm(TVPGlobalPreferenceForm::create(GetSubPreferenceInfo()));
 		});
 		return ret;
 	}
+	virtual tPreferenceScreen* GetSubScreenInfo() { return GetSubPreferenceInfo(); }
+};
+
+class tTVPPreferenceInfoSubPref : public iTVPPreferenceInfo {
+	tPreferenceScreen Preference;
+public:
+	tTVPPreferenceInfoSubPref(const std::string &title, const std::initializer_list<iTVPPreferenceInfo*> &elem)
+		: Preference(title, elem)
+	{
+		Caption = title;
+	}
+	virtual iPreferenceItem *createItem() override {
+		LocaleConfigManager *locmgr = LocaleConfigManager::GetInstance();
+		iPreferenceItem *ret = CreatePreferenceItem<tPreferenceItemSubDir>(PrefListSize, locmgr->GetText(Caption));
+		ret->addClickEventListener([this](Ref*){
+			TVPMainScene::GetInstance()->pushUIForm(TVPGlobalPreferenceForm::create(&Preference));
+		});
+		return ret;
+	}
+	virtual tPreferenceScreen* GetSubScreenInfo() { return &Preference; }
 };
 
 class tTVPPreferenceInfoSliderIcon : public tTVPPreferenceInfo<float> {
@@ -85,7 +123,7 @@ public:
 
 		tPreferenceItemCursorSlider * ret = new tPreferenceItemCursorSlider(DefaultValue, TVPMainScene::convertCursorScale);
 		ret->autorelease();
-		ret->_getter = std::bind(&GlobalConfigManager::GetValueFloat, mgr, Key, DefaultValue);
+		ret->_getter = std::bind(&GlobalConfigManager::GetValue<float>, mgr, Key, DefaultValue);
 		ret->_setter = std::bind(&GlobalConfigManager::SetValueFloat, mgr, Key, std::placeholders::_1);
 		ret->initFromInfo(PrefListSize, locmgr->GetText(Caption));
 		return ret;
@@ -109,7 +147,7 @@ public:
 
 		tPreferenceItemTextSlider * ret = new tPreferenceItemTextSlider(DefaultValue, convertPercentScale);
 		ret->autorelease();
-		ret->_getter = std::bind(&GlobalConfigManager::GetValueFloat, mgr, Key, DefaultValue);
+		ret->_getter = std::bind(&GlobalConfigManager::GetValue<float>, mgr, Key, DefaultValue);
 		ret->_setter = std::bind(&GlobalConfigManager::SetValueFloat, mgr, Key, std::placeholders::_1);
 		ret->initFromInfo(PrefListSize, locmgr->GetText(Caption));
 		return ret;
@@ -122,11 +160,11 @@ static void initAllConfig() {
 	RootPreference.Preferences = {
 		new tTVPPreferenceInfoCheckBox("preference_output_log", "outputlog", true),
 		new tTVPPreferenceInfoCheckBox("preference_show_fps", "showfps", false),
-		new tTVPPreferenceInfoSelectList("preference_select_renderer", "renderer", "software", {
+		new tTVPPreferenceInfoSelectRenderer("preference_select_renderer", "renderer", "software", {
 			{ "preference_opengl", "opengl" },
 			{ "preference_software", "software" }
 		}),
-		new tTVPPreferenceInfoSubPref("preference_renderer_opt"),
+		new tTVPPreferenceInfoRendererSubPref("preference_renderer_opt"),
 		new tTVPPreferenceInfoSelectFile("preference_default_font", "default_font", ""),
 		new tTVPPreferenceInfoSelectList("preference_mem_limit", "memusage", "unlimited", {
 			{ "preference_mem_unlimited", "unlimited" },
@@ -146,10 +184,11 @@ static void initAllConfig() {
 #if 0
 			new tTVPPreferenceInfo(tTVPPreferenceInfo::eTypeSubPref, "preference_custom_option"),
 #endif
-			nullptr
+//			nullptr
 	};
 
-	SoftRendererOptPreference = new tPreferenceScreen("preference_soft_renderer_opt", {
+	SoftRendererOptPreference.Title = "preference_soft_renderer_opt";
+	SoftRendererOptPreference.Preferences = {
 		new tTVPPreferenceInfoSelectList("preference_multi_draw_thread", "software_draw_thread", "0", {
 			{ "preference_draw_thread_auto", "0" },
 			{ "preference_draw_thread_1", "1" },
@@ -167,11 +206,24 @@ static void initAllConfig() {
 // 			{ "preference_soft_compress_tex_quarter", "quarter" },
 // 			{ "preference_soft_compress_tex_lz4", "lz4" }
 		}),
-	});
+	};
 
-	OpenglOptPreference = new tPreferenceScreen("preference_opengl_renderer_opt", {
+	OpenglOptPreference.Title = "preference_opengl_renderer_opt";
+	OpenglOptPreference.Preferences = {
+		new tTVPPreferenceInfoSubPref("preference_opengl_extension_opt", {
+			new tTVPPreferenceInfoCheckBox("GL_EXT_shader_framebuffer_fetch", "GL_EXT_shader_framebuffer_fetch", true),
+			new tTVPPreferenceInfoCheckBox("GL_ARM_shader_framebuffer_fetch", "GL_ARM_shader_framebuffer_fetch", true),
+			new tTVPPreferenceInfoCheckBox("GL_ARM_shader_framebuffer_fetch", "GL_NV_shader_framebuffer_fetch", true),
+			new tTVPPreferenceInfoCheckBox("GL_EXT_copy_image", "GL_EXT_copy_image", false),
+			new tTVPPreferenceInfoCheckBox("GL_OES_copy_image", "GL_OES_copy_image", false),
+			new tTVPPreferenceInfoCheckBox("GL_ARB_copy_image", "GL_ARB_copy_image", false),
+			new tTVPPreferenceInfoCheckBox("GL_NV_copy_image", "GL_NV_copy_image", false),
+			new tTVPPreferenceInfoCheckBox("GL_EXT_clear_texture", "GL_EXT_clear_texture", true),
+			new tTVPPreferenceInfoCheckBox("GL_ARB_clear_texture", "GL_ARB_clear_texture", true),
+			new tTVPPreferenceInfoCheckBox("GL_QCOM_alpha_test", "GL_QCOM_alpha_test", true),
+		}),
 		new tTVPPreferenceInfoCheckBox("preference_ogl_accurate_render", "ogl_accurate_render", false),
-		new tTVPPreferenceInfoCheckBox("preference_opengl_dup_target", "ogl_dup_target", true),
+//		new tTVPPreferenceInfoCheckBox("preference_opengl_dup_target", "ogl_dup_target", true),
 		new tTVPPreferenceInfoSelectList("preference_ogl_max_texsize", "ogl_max_texsize", "0", {
 			{ "preference_ogl_texsize_auto", "0" },
 			{ "preference_ogl_texsize_1024", "1024" },
@@ -189,5 +241,5 @@ static void initAllConfig() {
 // 			{ "preference_ogl_render_tex_quality_75", "0.75" },
 // 			{ "preference_ogl_render_tex_quality_50", "0.5" }
 // 		}),
-	});
+	};
 }

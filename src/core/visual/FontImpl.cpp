@@ -33,8 +33,8 @@ void TVPGetAllFontList(std::vector<ttstr>& list) {
 		list.push_back(it.GetKey());
 	}
 }
+static FT_Library TVPFontLibrary;
 FT_Library &TVPGetFontLibrary() {
-	static FT_Library TVPFontLibrary;
 	if (!TVPFontLibrary) {
 		FT_Error error = FT_Init_FreeType(&TVPFontLibrary);
 		if (error) TVPThrowExceptionMessage(
@@ -42,6 +42,11 @@ FT_Library &TVPGetFontLibrary() {
 		TVPInitFontNames();
 	}
 	return TVPFontLibrary;
+}
+void TVPReleaseFontLibrary() {
+	if (TVPFontLibrary) {
+		FT_Done_FreeType(TVPFontLibrary);
+	}
 }
 //---------------------------------------------------------------------------
 int TVPEnumFontsProc(const ttstr &FontPath)
@@ -128,7 +133,7 @@ void TVPInitFontNames()
 	std::vector<ttstr> pathlist = Android_GetExternalStoragePath();
 #endif
 	do {
-		ttstr userFont = IndividualConfigManager::GetInstance()->GetValueString("default_font");
+		ttstr userFont = IndividualConfigManager::GetInstance()->GetValue<std::string>("default_font", "");
 		if (!userFont.IsEmpty() && TVPEnumFontsProc(userFont)) break;
 
 		if (TVPEnumFontsProc(TVPGetAppPath() + "default.ttf")) break;

@@ -1,6 +1,9 @@
 #pragma once
 #include "BaseForm.h"
 #include "ui/UIWidget.h"
+#include "ConfigManager/GlobalConfigManager.h"
+
+void TVPOnOpenGLRendererSelected();
 
 namespace tinyxml2 {
 	class XMLElement;
@@ -25,6 +28,8 @@ class iPreferenceItem;
 class iTVPPreferenceInfo {
 public:
 	virtual iPreferenceItem *createItem() = 0;
+	virtual void InitDefaultConfig() {}
+	virtual tPreferenceScreen* GetSubScreenInfo() { return nullptr; }
 
 	iTVPPreferenceInfo() {}
 	iTVPPreferenceInfo(const std::string &cap, const std::string &key) : Caption(cap), Key(key) {}
@@ -49,8 +54,12 @@ public:
 // 		if (SubPrefScreen) delete SubPrefScreen;
 // 	}
 
+	virtual void InitDefaultConfig() {
+		if (!Key.empty())
+			GlobalConfigManager::GetInstance()->GetValue<T>(Key, DefaultValue);
+	}
 
-	tPreferenceScreen *SubPrefScreen; // eTypeSubPref
+//	tPreferenceScreen *SubPrefScreen = nullptr; // eTypeSubPref
 };
 
 class TVPPreferenceForm : public iTVPBaseForm {

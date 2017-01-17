@@ -2,6 +2,7 @@
 #include "KRMovieDef.h"
 #include "Thread.h"
 #include "RenderFormats.h"
+#include <string>
 
 NS_KRMOVIE_BEGIN
 class CProcessInfo

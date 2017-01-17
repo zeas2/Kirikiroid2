@@ -84,16 +84,13 @@ std::string GlobalConfigManager::GetFilePath() {
 	return TVPGetInternalPreferencePath() + "GlobalPreference.xml";
 }
 
-bool iSysConfigManager::GetValueBool(const std::string &name, bool defVal) {
-	auto it = AllConfig.find(name);
-	if (it == AllConfig.end()) {
-		SetValueInt(name, defVal);
-		return defVal;
-	}
-	return !!atoi(it->second.c_str());
+template<>
+bool iSysConfigManager::GetValue<bool>(const std::string &name, const bool& defVal) {
+	return !!GetValue<int>(name, defVal);
 }
 
-int iSysConfigManager::GetValueInt(const std::string &name, int defVal /*= 0*/) {
+template<>
+int iSysConfigManager::GetValue<int>(const std::string &name, const int& defVal) {
 	auto it = AllConfig.find(name);
 	if (it == AllConfig.end()) {
 		SetValueInt(name, defVal);
@@ -102,13 +99,24 @@ int iSysConfigManager::GetValueInt(const std::string &name, int defVal /*= 0*/) 
 	return atoi(it->second.c_str());
 }
 
-float iSysConfigManager::GetValueFloat(const std::string &name, float defVal /*= 0*/) {
+template<>
+float iSysConfigManager::GetValue<float>(const std::string &name, const float& defVal) {
 	auto it = AllConfig.find(name);
 	if (it == AllConfig.end()) {
 		SetValueFloat(name, defVal);
 		return defVal;
 	}
 	return atof(it->second.c_str());
+}
+
+template<>
+std::string iSysConfigManager::GetValue<std::string>(const std::string &name, const std::string& defVal) {
+	auto it = AllConfig.find(name);
+	if (it == AllConfig.end()) {
+		SetValue(name, defVal);
+		return defVal;
+	}
+	return it->second;
 }
 
 void iSysConfigManager::SetValueInt(const std::string &name, int val) {
@@ -128,15 +136,6 @@ void iSysConfigManager::SetValueFloat(const std::string &name, float val) {
 void iSysConfigManager::SetValue(const std::string &name, const std::string & val) {
 	AllConfig[name] = val;
 	ConfigUpdated = true;
-}
-
-std::string iSysConfigManager::GetValueString(const std::string &name, std::string defVal /*= ""*/) {
-	auto it = AllConfig.find(name);
-	if (it == AllConfig.end()) {
-		SetValue(name, defVal);
-		return defVal;
-	}
-	return it->second;
 }
 
 std::vector<std::string> iSysConfigManager::GetCustomArgumentsForPush() {

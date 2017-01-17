@@ -258,17 +258,17 @@ void tTVPMemoryStream::Init()
 //---------------------------------------------------------------------------
 void * tTVPMemoryStream::Alloc(size_t size)
 {
-	return malloc(size);
+	return TJS_malloc(size);
 }
 //---------------------------------------------------------------------------
 void * tTVPMemoryStream::Realloc(void *orgblock, size_t size)
 {
-	return realloc(orgblock, size);
+	return TJS_realloc(orgblock, size);
 }
 //---------------------------------------------------------------------------
 void tTVPMemoryStream::Free(void *block)
 {
-	free(block);
+	TJS_free(block);
 }
 //---------------------------------------------------------------------------
 

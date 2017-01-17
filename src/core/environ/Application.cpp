@@ -48,6 +48,7 @@ tTVPApplication* Application = new tTVPApplication;
 std::thread::id TVPMainThreadID;
 static tTJSCriticalSection _NoMemCallBackCS;
 static void *_reservedMem = malloc(1024 * 1024 * 4); // 4M reserved mem
+static bool _project_startup = false;
 #define HOOK_MALLOC
 
 static void _do_compact() {
@@ -459,6 +460,7 @@ tTVPApplication::~tTVPApplication() {
 // 		// TTVPWindowForm のデストラクタ内でリストから削除されるはず
 // 	}
 // 	windows_list_.clear();
+	delete image_load_thread_;
 }
 #if 0
 struct SEHException {
@@ -599,7 +601,7 @@ bool tTVPApplication::StartApplication(ttstr path) {
 		image_load_thread_->Resume();
 
 		/*if(TVPProjectDirSelected)*/ TVPInitializeStartupScript();
-
+		_project_startup = true;
 //		Run();
 #if 0
 		try {
@@ -1010,18 +1012,23 @@ void tTVPApplication::FilterUserMessage(const std::function<void(std::vector<std
 void tTVPApplication::OnActivate()
 {
 	application_activating_ = true;
-	
+	if (!_project_startup) return;
+
 //	TVPRestoreFullScreenWindowAtActivation();
 	TVPResetVolumeToAllSoundBuffer();
 	TVPUnlockSoundMixer();
 
 	// trigger System.onActivate event
 	TVPPostApplicationActivateEvent();
+	for (auto & it : m_activeEvents) {
+		it.second(it.first, eTVPActiveEvent::onActive);
+	}
 }
 void tTVPApplication::OnDeactivate(  )
 {
 	application_activating_ = false;
-	
+	if (!_project_startup) return;
+
 //	TVPMinimizeFullScreenWindowAtInactivation();
 	
 	// fire compact event
@@ -1033,6 +1040,9 @@ void tTVPApplication::OnDeactivate(  )
 
 	// trigger System.onDeactivate event
 	TVPPostApplicationDeactivateEvent();
+	for (auto & it : m_activeEvents) {
+		it.second(it.first, eTVPActiveEvent::onDeactive);
+	}
 }
 
 void tTVPApplication::OnExit()
@@ -1080,6 +1090,15 @@ void tTVPApplication::LoadImageRequest( class iTJSDispatch2 *owner, class tTJSNI
 		image_load_thread_->LoadRequest( owner, bmp, name );
 	}
 }
+
+void tTVPApplication::RegisterActiveEvent(void *host, const std::function<void(void*, eTVPActiveEvent)>& func/*empty = unregister*/)
+{
+	if (func)
+		m_activeEvents.emplace(host, func);
+	else
+		m_activeEvents.erase(host);
+}
+
 #if 0
 std::vector<std::string>* LoadLinesFromFile( const std::wstring& path ) {
 	FILE *fp = NULL;

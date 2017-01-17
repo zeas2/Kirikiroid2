@@ -20,7 +20,6 @@ $(LOCAL_PATH)/../core/base  \
 $(LOCAL_PATH)/../core/base/win32 \
 $(LOCAL_PATH)/../core/environ \
 $(LOCAL_PATH)/../core/environ/sdl \
-$(LOCAL_PATH)/../core/environ/my_vcl \
 $(LOCAL_PATH)/../core/msg \
 $(LOCAL_PATH)/../core/msg/win32 \
 $(LOCAL_PATH)/../core/sound \

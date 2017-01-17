@@ -784,6 +784,7 @@ extern void TVPDoSaveSystemVariables()
 	try {
 		// hack for save system variable
 		iTJSDispatch2* global = TVPGetScriptDispatch();
+		if (!global) return;
 		tTJSVariant var;
 		if (global->PropGet(0, TJS_W("kag"), nullptr, &var, global) == TJS_S_OK && var.Type() == tvtObject) {
 			iTJSDispatch2* kag = var.AsObjectNoAddRef();

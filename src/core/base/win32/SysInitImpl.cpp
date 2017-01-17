@@ -1033,7 +1033,7 @@ void TVPBeforeSystemInit()
 
 		TVPAddImportantLog(TVPFormatMessage(TVPInfoTotalPhysicalMemory, tjs_int64(TVPTotalPhysMemory)));
 		if (TVPTotalPhysMemory > 256 * 1024 * 1024) {
-			std::string str = IndividualConfigManager::GetInstance()->GetValueString("memusage", "unlimited");
+			std::string str = IndividualConfigManager::GetInstance()->GetValue<std::string>("memusage", "unlimited");
 			if (str == ("low"))
 				TVPTotalPhysMemory = 0; // assumes zero
 			else if (str == ("medium"))
@@ -1339,11 +1339,11 @@ void TVPAfterSystemInit()
 		}
 	}
 	// check TVPGraphicSplitOperation option
-	std::string _val = IndividualConfigManager::GetInstance()->GetValueString("renderer", "software");
+	std::string _val = IndividualConfigManager::GetInstance()->GetValue<std::string>("renderer", "software");
 	if (_val != "software") {
 		TVPGraphicSplitOperationType = gsotNone;
 	} else {
-		TVPDrawThreadNum = IndividualConfigManager::GetInstance()->GetValueInt("software_draw_thread", 0);
+		TVPDrawThreadNum = IndividualConfigManager::GetInstance()->GetValue<int>("software_draw_thread", 0);
 		if (TVPGetCommandLine(TJS_W("-gsplit"), &opt))
 		{
 			ttstr str(opt);

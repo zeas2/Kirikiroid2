@@ -26,7 +26,7 @@ public:
 
 	void Initialize(const std::string &sysLang);
 
-	std::string GetText(const std::string &tid); // in utf8
+	const std::string &GetText(const std::string &tid); // in utf8
 
 	bool initText(cocos2d::ui::Text *ctrl);
 	bool initText(cocos2d::ui::Text *ctrl, const std::string &tid);

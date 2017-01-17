@@ -13,6 +13,7 @@
 #include "tjsCommHead.h"
 #include <errno.h>
 #include <clocale>
+#include <algorithm>
 #ifdef __WIN32__
 #include <float.h>
 #define isfinite _finite
@@ -696,6 +697,33 @@ tjs_char * TJS_strchr (
         return((tjs_char *)string);
     return(NULL);
 }
+
+void * TJS_malloc(size_t len)
+{
+	char *ret = (char*)malloc(len+sizeof(size_t));
+	if (!ret) return nullptr;
+	*(size_t*)ret = len; // embed size
+	return ret + sizeof(size_t);
+}
+
+void * TJS_realloc(void* buf, size_t len)
+{
+	if (!buf) return TJS_malloc(len);
+	// compare embeded size
+	size_t * ptr = (size_t *)((char*)buf - sizeof(size_t));
+	if (*ptr >= len) return buf; // still adequate
+	char *ret = (char*)TJS_malloc(len);
+	if (!ret) return nullptr;
+	memcpy(ret, ptr + 1, *ptr);
+	TJS_free(buf);
+	return ret;
+}
+
+void TJS_free(void *buf)
+{
+	free((char*)buf - sizeof(size_t));
+}
+
 tjs_char *TJS_strrchr(const tjs_char *s, int c)
 {
 	tjs_char* ret = 0;
@@ -2561,9 +2589,9 @@ double TJS_strtod(const tjs_char* string, tjs_char** endPtr)
 	} else {
 		mantSize -= 1;			/* One of the digits was the point. */
 	}
-	if (mantSize > 18) {
-		fracExp = decPt - 18;
-		mantSize = 18;
+	if (mantSize > 48) {
+		fracExp = decPt - 48;
+		mantSize = 48;
 	} else {
 		fracExp = decPt - mantSize;
 	}

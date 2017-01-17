@@ -27,12 +27,7 @@
 #ifdef USING_THREADPOOL11
 #include "threadpool11/pool.hpp"
 #endif
-
-#ifdef _MSC_VER
-tjs_int WIN32GetProcessorNum();
-#else
-#include <unistd.h>
-#endif
+#include <thread>
 
 //---------------------------------------------------------------------------
 // tTVPThread : a wrapper class for thread
@@ -66,6 +61,7 @@ void * tTVPThread::StartProc(void * arg)
 		_this->_cond.wait(lk);
 	}
 	_this->Execute();
+	TVPOnThreadExited();
 	return nullptr;
 }
 //---------------------------------------------------------------------------
@@ -148,7 +144,7 @@ void tTVPThreadEvent::WaitFor(tjs_uint timeout)
 	// returns true if the event is set, otherwise (when timed out) returns false.
 
 	std::unique_lock<std::mutex> lk(Mutex);
-	if (timeout != (tjs_uint)-1) {
+	if (timeout != 0) {
 		Handle.wait_for(lk, std::chrono::milliseconds(timeout));
 	} else {
 		Handle.wait(lk);
@@ -174,11 +170,7 @@ static tjs_int GetProcesserNum(void)
 {
   static tjs_int processor_num = 0;
   if (! processor_num) {
-#ifdef _MSC_VER
-	processor_num = WIN32GetProcessorNum();
-#else
-	processor_num = sysconf(_SC_NPROCESSORS_CONF);
-#endif
+	  processor_num = std::thread::hardware_concurrency();
 	tjs_char tmp[34];
 	TVPAddLog(ttstr(TJS_W("Detected CPU core(s): ")) + TJS_tTVInt_to_str(processor_num, tmp));
   }
@@ -229,3 +221,16 @@ void TVPExecThreadTask(int numThreads, TVP_THREAD_TASK_FUNC func)
 #endif
 }
 //---------------------------------------------------------------------------
+
+std::vector<std::function<void()>> _OnThreadExitedEvents;
+
+void TVPOnThreadExited() {
+	for (const auto &ev : _OnThreadExitedEvents) {
+		ev();
+	}
+}
+
+void TVPAddOnThreadExitEvent(const std::function<void()> &ev)
+{
+	_OnThreadExitedEvents.emplace_back(ev);
+}

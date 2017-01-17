@@ -48,6 +48,7 @@ void TVPPreferenceForm::bindHeaderController(const NodeMap &allNodes)
 
 void tPreferenceScreen::clear() {
 	for (auto p : Preferences) delete p;
+	Preferences.clear();
 }
 
 void iPreferenceItem::initFromInfo(Size size, const std::string& title) {

@@ -28,6 +28,7 @@ public:
 	virtual cocos2d::extension::TableViewCell* tableCellAtIndex(cocos2d::extension::TableView *table, ssize_t idx) override;
 	virtual ssize_t numberOfCellsInTableView(cocos2d::extension::TableView *table) override;
 	virtual void onCellClicked(int idx);
+	virtual void onCellLongPress(int idx);
 	virtual void rearrangeLayout() override;
 	static std::pair<std::string, std::string> PathSplit(const std::string &path);
 
@@ -134,6 +135,10 @@ protected:
 
 		void onClicked() {
 			_owner->onCellClicked(getIdx());
+		}
+
+		void onLongPress() {
+			_owner->onCellLongPress(getIdx());
 		}
 
 	private:

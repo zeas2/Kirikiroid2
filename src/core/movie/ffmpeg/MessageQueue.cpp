@@ -1,6 +1,7 @@
 #include "MessageQueue.h"
 #include "Clock.h"
 #include "DemuxPacket.h"
+#include <cmath>
 
 NS_KRMOVIE_BEGIN
 CDVDMessageQueue::CDVDMessageQueue(const std::string &owner) : /*m_hEvent(true),*/ m_owner(owner)
@@ -251,7 +252,7 @@ int CDVDMessageQueue::GetLevel()
 	if (IsDataBased())
 		return std::min(100, 100 * m_iDataSize / m_iMaxDataSize);
 
-	int level = std::min(100.0, ceil(100.0 * m_TimeSize * (m_TimeFront - m_TimeBack) / DVD_TIME_BASE));
+	int level = std::min(100.0, std::ceil(100.0 * m_TimeSize * (m_TimeFront - m_TimeBack) / DVD_TIME_BASE));
 
 	// if we added lots of packets with NOPTS, make sure that the queue is not signalled empty
 	if (level == 0 && m_iDataSize != 0)

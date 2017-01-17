@@ -39,6 +39,7 @@
 #include "ConfigManager/IndividualConfigManager.h"
 #include "vkdefine.h"
 #include "RenderManager.h"
+#include <cstdlib>
 
 extern void TVPSetFontRasterizer( tjs_int index );
 extern tjs_int TVPGetFontRasterizer();
@@ -5585,7 +5586,7 @@ void tTJSNI_BaseLayer::QueryUpdateExcludeRect(tTVPRect &rect, bool parentvisible
 	rect.bottom += Rect.top;
 
 	// check visibility & opacity
-	if(parentvisible && DisplayType == ltOpaque && Opacity == 255)
+	if (parentvisible && (DisplayType == ltOpaque || (MainImage && MainImage->IsOpaque())) && Opacity == 255)
 	{
 		if(rect.is_empty())
 		{
@@ -5602,7 +5603,7 @@ void tTJSNI_BaseLayer::QueryUpdateExcludeRect(tTVPRect &rect, bool parentvisible
 void tTJSNI_BaseLayer::BltImage(iTVPBaseBitmap *dest, tTVPLayerType destlayertype,
 	tjs_int destx,
     tjs_int desty, iTVPBaseBitmap *src, const tTVPRect &srcrect,
-	tTVPLayerType drawtype, tjs_int opacity)
+	tTVPLayerType drawtype, tjs_int opacity, bool hda)
 {
 	// draw src to dest according with layer type
 /*
@@ -5616,7 +5617,6 @@ void tTJSNI_BaseLayer::BltImage(iTVPBaseBitmap *dest, tTVPLayerType destlayertyp
 */
 
 	// blt to the target
-	bool hda = false;
 	tTVPBBBltMethod met;
 	switch(drawtype)
 	{
@@ -5646,7 +5646,7 @@ void tTJSNI_BaseLayer::BltImage(iTVPBaseBitmap *dest, tTVPLayerType destlayertyp
 
 	case ltAdditive:
 		// additive blend
-		hda = TVPIsTypeUsingAlphaChannel(destlayertype);
+		hda = hda || TVPIsTypeUsingAlphaChannel(destlayertype);
 			// hda = true if destination has alpha
 			// ( preserving mask )
 		met = bmAdd;
@@ -5654,37 +5654,37 @@ void tTJSNI_BaseLayer::BltImage(iTVPBaseBitmap *dest, tTVPLayerType destlayertyp
 
 	case ltSubtractive:
 		// subtractive blend
-		hda = TVPIsTypeUsingAlphaChannel(destlayertype);
+		hda = hda || TVPIsTypeUsingAlphaChannel(destlayertype);
 		met = bmSub;
 		break;
 
 	case ltMultiplicative:
 		// multiplicative blend
-		hda = TVPIsTypeUsingAlphaChannel(destlayertype);
+		hda = hda || TVPIsTypeUsingAlphaChannel(destlayertype);
 		met = bmMul;
 		break;
 
 	case ltDodge:
 		// color dodge ( "Ooi yaki" in Japanese )
-		hda = TVPIsTypeUsingAlphaChannel(destlayertype);
+		hda = hda || TVPIsTypeUsingAlphaChannel(destlayertype);
 		met = bmDodge;
 		break;
 
 	case ltDarken:
 		// darken blend (select lower luminosity)
-		hda = TVPIsTypeUsingAlphaChannel(destlayertype);
+		hda = hda || TVPIsTypeUsingAlphaChannel(destlayertype);
 		met = bmDarken;
 		break;
 
 	case ltLighten:
 		// lighten blend (select higher luminosity)
-		hda = TVPIsTypeUsingAlphaChannel(destlayertype);
+		hda = hda || TVPIsTypeUsingAlphaChannel(destlayertype);
 		met = bmLighten;
 		break;
 
 	case ltScreen:
 		// screen multiplicative blend
-		hda = TVPIsTypeUsingAlphaChannel(destlayertype);
+		hda = hda || TVPIsTypeUsingAlphaChannel(destlayertype);
 		met = bmScreen;
 		break;
 
@@ -5700,97 +5700,97 @@ void tTJSNI_BaseLayer::BltImage(iTVPBaseBitmap *dest, tTVPLayerType destlayertyp
 
 	case ltPsNormal:
 		// Photoshop compatible normal blend
-		hda = TVPIsTypeUsingAlphaChannel(destlayertype);
+		hda = hda || TVPIsTypeUsingAlphaChannel(destlayertype);
 		met = bmPsNormal;
 		break;
 
 	case ltPsAdditive:
 		// Photoshop compatible additive blend
-		hda = TVPIsTypeUsingAlphaChannel(destlayertype);
+		hda = hda || TVPIsTypeUsingAlphaChannel(destlayertype);
 		met = bmPsAdditive;
 		break;
 
 	case ltPsSubtractive:
 		// Photoshop compatible subtractive blend
-		hda = TVPIsTypeUsingAlphaChannel(destlayertype);
+		hda = hda || TVPIsTypeUsingAlphaChannel(destlayertype);
 		met = bmPsSubtractive;
 		break;
 
 	case ltPsMultiplicative:
 		// Photoshop compatible multiplicative blend
-		hda = TVPIsTypeUsingAlphaChannel(destlayertype);
+		hda = hda || TVPIsTypeUsingAlphaChannel(destlayertype);
 		met = bmPsMultiplicative;
 		break;
 
 	case ltPsScreen:
 		// Photoshop compatible screen blend
-		hda = TVPIsTypeUsingAlphaChannel(destlayertype);
+		hda = hda || TVPIsTypeUsingAlphaChannel(destlayertype);
 		met = bmPsScreen;
 		break;
 
 	case ltPsOverlay:
 		// Photoshop compatible overlay blend
-		hda = TVPIsTypeUsingAlphaChannel(destlayertype);
+		hda = hda || TVPIsTypeUsingAlphaChannel(destlayertype);
 		met = bmPsOverlay;
 		break;
 
 	case ltPsHardLight:
 		// Photoshop compatible hard light blend
-		hda = TVPIsTypeUsingAlphaChannel(destlayertype);
+		hda = hda || TVPIsTypeUsingAlphaChannel(destlayertype);
 		met = bmPsHardLight;
 		break;
 
 	case ltPsSoftLight:
 		// Photoshop compatible soft light blend
-		hda = TVPIsTypeUsingAlphaChannel(destlayertype);
+		hda = hda || TVPIsTypeUsingAlphaChannel(destlayertype);
 		met = bmPsSoftLight;
 		break;
 
 	case ltPsColorDodge:
 		// Photoshop compatible color dodge blend
-		hda = TVPIsTypeUsingAlphaChannel(destlayertype);
+		hda = hda || TVPIsTypeUsingAlphaChannel(destlayertype);
 		met = bmPsColorDodge;
 		break;
 
 	case ltPsColorDodge5:
 		// Photoshop 5.x compatible color dodge blend
-		hda = TVPIsTypeUsingAlphaChannel(destlayertype);
+		hda = hda || TVPIsTypeUsingAlphaChannel(destlayertype);
 		met = bmPsColorDodge5;
 		break;
 
 	case ltPsColorBurn:
 		// Photoshop compatible color burn blend
-		hda = TVPIsTypeUsingAlphaChannel(destlayertype);
+		hda = hda || TVPIsTypeUsingAlphaChannel(destlayertype);
 		met = bmPsColorBurn;
 		break;
 
 	case ltPsLighten:
 		// Photoshop compatible compare (lighten) blend
-		hda = TVPIsTypeUsingAlphaChannel(destlayertype);
+		hda = hda || TVPIsTypeUsingAlphaChannel(destlayertype);
 		met = bmPsLighten;
 		break;
 
 	case ltPsDarken:
 		// Photoshop compatible compare (darken) blend
-		hda = TVPIsTypeUsingAlphaChannel(destlayertype);
+		hda = hda || TVPIsTypeUsingAlphaChannel(destlayertype);
 		met = bmPsDarken;
 		break;
 
 	case ltPsDifference:
 		// Photoshop compatible difference blend
-		hda = TVPIsTypeUsingAlphaChannel(destlayertype);
+		hda = hda || TVPIsTypeUsingAlphaChannel(destlayertype);
 		met = bmPsDifference;
 		break;
 
 	case ltPsDifference5:
 		// Photoshop 5.x compatible difference blend
-		hda = TVPIsTypeUsingAlphaChannel(destlayertype);
+		hda = hda || TVPIsTypeUsingAlphaChannel(destlayertype);
 		met = bmPsDifference5;
 		break;
 
 	case ltPsExclusion:
 		// Photoshop compatible exclusion blend
-		hda = TVPIsTypeUsingAlphaChannel(destlayertype);
+		hda = hda || TVPIsTypeUsingAlphaChannel(destlayertype);
 		met = bmPsExclusion;
 		break;
 
@@ -5968,6 +5968,8 @@ void tTJSNI_BaseLayer::Draw_GPU(tTVPDrawable *target, int x, int y, const tTVPRe
 
     tTVPRect rect;
     if(!TVPIntersectRect(&rect, r, Rect)) return; // no intersection
+	tTVPRect rctar(rect);
+	rctar.add_offsets(x, y);
 
     CurrentDrawTarget = target;
 
@@ -5977,27 +5979,35 @@ void tTJSNI_BaseLayer::Draw_GPU(tTVPDrawable *target, int x, int y, const tTVPRe
 	DirectTransferToParent = false;
 
 	// caching is not enabled
-	tTVPRect rctar(r);
-	rctar.add_offsets(x, y);
 
-	if (InTransition && TransWithChildren)
+	if (Opacity < 255 || (InTransition && TransWithChildren))
 	{
 		// rearrange pipe line for transition
-		TransDrawable.Init(this, target);
-		target = &TransDrawable;
+		if (InTransition && TransWithChildren) {
+			TransDrawable.Init(this, target);
+			target = &TransDrawable;
+		}
 		if (GetVisibleChildrenCount() == 0) {
 			DrawSelf(target, rctar, rect);
 		} else {
 			// rearrange pipe line for transition
-			UpdateBitmapForChild = CacheBitmap;
-
+			if (GetCacheEnabled()) {
+				UpdateBitmapForChild = CacheBitmap;
+			} else {
+				UpdateBitmapForChild = tTVPTempBitmapHolder::GetTemp(
+					rect.get_width(),
+					rect.get_height());
+			}
 			// copy self image to UpdateBitmapForChild
 			if (MainImage != NULL) {
-				CopySelf(UpdateBitmapForChild,
-					rect.left,
-					rect.top, rect); // transfer self image
+				if (UpdateExcludeRect.top <= rect.top && UpdateExcludeRect.bottom >= rect.bottom &&
+					rect.left >= UpdateExcludeRect.left && rect.right <= UpdateExcludeRect.right) {
+				} else
+					CopySelfForRect(UpdateBitmapForChild, 0, 0, rect); // transfer self image
 			}
 
+			x = 0;
+			y = 0;
 			TVP_LAYER_FOR_EACH_CHILD_BEGIN(child)
 			{
 				// for each child...
@@ -6013,21 +6023,27 @@ void tTJSNI_BaseLayer::Draw_GPU(tTVPDrawable *target, int x, int y, const tTVPRe
 				UpdateRectForChildOfsY = UpdateRectForChild.top - child->Rect.top;
 
 				// call children's "Draw" method
-				child->Draw_GPU((tTVPDrawable*)this, x + Rect.left, y + Rect.top, UpdateRectForChild);
+				child->Draw_GPU((tTVPDrawable*)this, x, y, UpdateRectForChild);
 			}
 			TVP_LAYER_FOR_EACH_CHILD_END
-			target->DrawCompleted(rctar, CacheBitmap, rect, DisplayType, Opacity);
+			rect.set_offsets(0, 0);
+			target->DrawCompleted(rctar, UpdateBitmapForChild, rect, DisplayType, Opacity);
 		}
 	} else {
 		if (GetVisibleChildrenCount() == 0) {
 			DrawSelf(target, rctar, rect);
 		} else {
 			DrawnRegion.Clear();
-			tTVPRect updaterectforchild;
-			UpdateBitmapForChild = target->GetDrawTargetBitmap(rctar, updaterectforchild);
-			const tTVPComplexRect & overlapped = GetOverlappedRegion();
 			// send completion message to the target
-			DrawSelf(target, rctar, rect);
+
+			if (UpdateExcludeRect.top <= rect.top && UpdateExcludeRect.bottom >= rect.bottom &&
+				rect.left >= UpdateExcludeRect.left && rect.right <= UpdateExcludeRect.right) {
+			} else {
+				tTVPRect rc(rect);
+				DrawSelf(target, rctar, rc);
+			}
+			x += Rect.left;
+			y += Rect.top;
 			TVP_LAYER_FOR_EACH_CHILD_BEGIN(child)
 			{
 				// for each child...
@@ -6041,12 +6057,11 @@ void tTJSNI_BaseLayer::Draw_GPU(tTVPDrawable *target, int x, int y, const tTVPRe
 					continue;
 
 				// call children's "Draw" method
-				child->Draw_GPU(target, x + Rect.left, y + Rect.top, chrect);
+				child->Draw_GPU(target, x, y, chrect);
 			}
 			TVP_LAYER_FOR_EACH_CHILD_END
 		}
 	}
-
 
     CurrentDrawTarget = NULL;
 }
@@ -6760,6 +6775,15 @@ void tTJSNI_BaseLayer::InternalComplete2(tTVPComplexRect & updateregion,
 
 	updateregion.Clear();
 }
+
+//---------------------------------------------------------------------------
+void tTJSNI_BaseLayer::InternalComplete2_GPU(tTVPRect updateregion, tTVPDrawable *drawable)
+{
+	if (Manager) Manager->QueryUpdateExcludeRect();
+	updateregion.add_offsets(Rect.left, Rect.top);
+	Draw_GPU(drawable, 0, 0, updateregion, false);
+}
+
 //---------------------------------------------------------------------------
 void tTJSNI_BaseLayer::InternalComplete(tTVPComplexRect & updateregion,
 	tTVPDrawable *drawable)
@@ -6770,10 +6794,10 @@ void tTJSNI_BaseLayer::InternalComplete(tTVPComplexRect & updateregion,
 	InCompletion = true;
 
 	static bool isGPU = !TVPIsSoftwareRenderManager()
-		&& !IndividualConfigManager::GetInstance()->GetValueBool("ogl_accurate_render", false);
+		&& !IndividualConfigManager::GetInstance()->GetValue<bool>("ogl_accurate_render", false);
 
 	if (isGPU) {
-		Draw_GPU(drawable, 0, 0, updateregion.GetBound(), false);
+		InternalComplete2_GPU(updateregion.GetBound(), drawable);
 	} else {
 		InternalComplete2(updateregion, drawable);
 	}
@@ -6790,13 +6814,13 @@ void tTJSNI_BaseLayer::CompleteForWindow(tTVPDrawable *drawable)
 
 	InCompletion = true;
 	static bool isGPU = !TVPIsSoftwareRenderManager()
-		&& !IndividualConfigManager::GetInstance()->GetValueBool("ogl_accurate_render", false);
+		&& !IndividualConfigManager::GetInstance()->GetValue<bool>("ogl_accurate_render", false);
 
 	if(Manager) Manager->GetLayerTreeOwner()->StartBitmapCompletion(Manager);
 	try
 	{
 		if (isGPU) {
-			Draw_GPU(drawable, 0, 0, Rect);
+			InternalComplete2_GPU(Rect, drawable);
 		} else {
 			InternalComplete2(Manager->GetUpdateRegionForCompletion(), drawable);
 		}
@@ -6844,12 +6868,16 @@ tTVPBaseTexture * tTJSNI_BaseLayer::Complete(const tTVPRect & rect)
 	class tCompleteDrawable_GPU : public tCompleteDrawable {
 	public:
 		tCompleteDrawable_GPU(tTVPBaseTexture *bmp, tTVPLayerType layertype)
-			: tCompleteDrawable(bmp, layertype) {};
+			: tCompleteDrawable(bmp, layertype) {
+			bmp->Fill(tTVPRect(0, 0, bmp->GetWidth(), bmp->GetHeight()), layertype == ltOpaque ? 0xFF000000 : 0);
+		};
 
 		virtual void DrawCompleted(const tTVPRect &destrect,
 			tTVPBaseTexture *bmp, const tTVPRect &cliprect,
 			tTVPLayerType type, tjs_int opacity) override {
-			Bitmap->Blt(destrect.left, destrect.top, bmp, cliprect, type, opacity, true);
+			if (bmp != Bitmap) {
+				BltImage(Bitmap, LayerType, destrect.left, destrect.top, bmp, cliprect, type, opacity, LayerType == ltOpaque);
+			}
 		}
 	};
 
@@ -6874,7 +6902,7 @@ tTVPBaseTexture * tTJSNI_BaseLayer::Complete(const tTVPRect & rect)
 	}
 
 	static bool isGPU = !TVPIsSoftwareRenderManager()
-		&& !IndividualConfigManager::GetInstance()->GetValueBool("ogl_accurate_render", false);
+		&& !IndividualConfigManager::GetInstance()->GetValue<bool>("ogl_accurate_render", false);
 	tTVPComplexRect ur;
 	ur.Or(rect);
 	if (isGPU) {
@@ -10527,7 +10555,7 @@ TJS_BEGIN_NATIVE_PROP_DECL(mainImageBuffer)
 	TJS_BEGIN_NATIVE_PROP_GETTER
 	{
 		TJS_GET_NATIVE_INSTANCE(/*var. name*/_this, /*var. type*/tTJSNI_Layer);;
-		*result = reinterpret_cast<tjs_intptr_t>(_this->GetMainImagePixelBuffer());
+		*result = (tTVInteger)reinterpret_cast<tjs_intptr_t>(_this->GetMainImagePixelBuffer());
 		return TJS_S_OK;
 	}
 	TJS_END_NATIVE_PROP_GETTER
@@ -10541,7 +10569,7 @@ TJS_BEGIN_NATIVE_PROP_DECL(mainImageBufferForWrite)
 	TJS_BEGIN_NATIVE_PROP_GETTER
 	{
 		TJS_GET_NATIVE_INSTANCE(/*var. name*/_this, /*var. type*/tTJSNI_Layer);;
-		*result = reinterpret_cast<tjs_intptr_t>(_this->GetMainImagePixelBufferForWrite());
+		*result = (tTVInteger)reinterpret_cast<tjs_intptr_t>(_this->GetMainImagePixelBufferForWrite());
 		return TJS_S_OK;
 	}
 	TJS_END_NATIVE_PROP_GETTER
@@ -10569,7 +10597,7 @@ TJS_BEGIN_NATIVE_PROP_DECL(provinceImageBuffer)
 	TJS_BEGIN_NATIVE_PROP_GETTER
 	{
 		TJS_GET_NATIVE_INSTANCE(/*var. name*/_this, /*var. type*/tTJSNI_Layer);;
-		*result = reinterpret_cast<tjs_intptr_t>(_this->GetProvinceImagePixelBuffer());
+		*result = (tTVInteger)reinterpret_cast<tjs_intptr_t>(_this->GetProvinceImagePixelBuffer());
 		return TJS_S_OK;
 	}
 	TJS_END_NATIVE_PROP_GETTER
@@ -10583,7 +10611,7 @@ TJS_BEGIN_NATIVE_PROP_DECL(provinceImageBufferForWrite)
 	TJS_BEGIN_NATIVE_PROP_GETTER
 	{
 		TJS_GET_NATIVE_INSTANCE(/*var. name*/_this, /*var. type*/tTJSNI_Layer);;
-		*result = reinterpret_cast<tjs_intptr_t>(_this->GetProvinceImagePixelBufferForWrite());
+		*result = (tTVInteger)reinterpret_cast<tjs_intptr_t>(_this->GetProvinceImagePixelBufferForWrite());
 		return TJS_S_OK;
 	}
 	TJS_END_NATIVE_PROP_GETTER

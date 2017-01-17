@@ -38,6 +38,7 @@ extern "C" {
 #include "Clock.h"
 #include "CodecUtils.h"
 #include "tp_stub.h"
+#include <cstdlib>
 #include <algorithm>
 
 NS_KRMOVIE_BEGIN

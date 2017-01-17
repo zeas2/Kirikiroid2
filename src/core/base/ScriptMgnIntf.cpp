@@ -52,6 +52,7 @@
 #include "BitmapLayerTreeOwner.h"
 #include "Extension.h"
 #include "Platform.h"
+#include "ConfigManager/LocaleConfigManager.h"
 
 //---------------------------------------------------------------------------
 // Script system initialization script
@@ -880,11 +881,41 @@ bool TVPStartupSuccess = false;
 //---------------------------------------------------------------------------
 void TVPExecuteStartupScript()
 {
+	ttstr strPatchError;
     try {
         ttstr patch = TVPGetAppPath() + "patch.tjs";
         if(TVPIsExistentStorageNoSearch(patch))
-            TVPExecuteStorage(patch);
-    } catch (...) { }
+			TVPExecuteStorage(patch);
+	} catch (const TJS::eTJSScriptError &e) {
+		ttstr &msg = strPatchError;
+		msg += e.GetMessage();
+		const tjs_char *pszBlockName = e.GetBlockName();
+		if (pszBlockName && *pszBlockName) {
+			msg += TJS_W("\n@line(");
+			tjs_char tmp[34];
+			msg += TJS_int_to_str(e.GetSourceLine(), tmp);
+			msg += TJS_W(") ");
+			msg += pszBlockName;
+		}
+		msg += TJS_W("\n");
+		msg += e.GetTrace();
+	} catch (const TJS::eTJS &e) {
+		if (!TVPSystemUninitCalled)
+			strPatchError = e.GetMessage();
+	} catch (const std::exception &e) {
+		strPatchError = e.what();
+	} catch (const char* e) {
+		strPatchError = e;
+	} catch (const tjs_char* e) {
+		strPatchError = e;
+	}
+
+	if (!strPatchError.IsEmpty()) {
+		ttstr msg = LocaleConfigManager::GetInstance()->GetText("startup_patch_fail");
+		msg += "\n";
+		msg += strPatchError;
+		TVPShowSimpleMessageBox(msg, TVPGetPackageVersionString());
+	}
 
 	// execute "startup.tjs"
 // 	try

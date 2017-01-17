@@ -35,6 +35,12 @@ bool TVPIsFirstLaunch = false;
 
 std::deque<std::string> _HistoryPath;
 
+static void _AskExit() {
+	if (TVPShowSimpleMessageBoxYesNo(
+		LocaleConfigManager::GetInstance()->GetText("sure_to_exit"),
+		"Kirikiroid2") == 0) TVPExitApplication(0);
+}
+
 bool TVPCheckIsVideoFile(const char *uri);
 static std::string _GetHistoryXMLPath() {
 	return TVPGetInternalPreferencePath() + FileName_RecentPathListXML;
@@ -246,7 +252,7 @@ void TVPMainFileSelectorForm::startup(const std::string &path) {
 
 void TVPMainFileSelectorForm::doStartup(const std::string &path) {
 	if (TVPMainScene::GetInstance()->startupFrom(path)) {
-		if (GlobalConfigManager::GetInstance()->GetValueBool("remember_last_path", true)) {
+		if (GlobalConfigManager::GetInstance()->GetValue<bool>("remember_last_path", true)) {
 			_AddHistory(path);
 // 			std::string lastpath_file = _getLastPathFilePath();
 // 			FILE* fp = fopen(lastpath_file.c_str(), "wt");
@@ -257,6 +263,8 @@ void TVPMainFileSelectorForm::doStartup(const std::string &path) {
 		}
 	}
 }
+
+std::string TVPGetOpenGLInfo();
 
 void TVPMainFileSelectorForm::showMenu(Ref*) {
 	if (!_menu) {
@@ -331,23 +339,31 @@ void TVPMainFileSelectorForm::showMenu(Ref*) {
 			versionText += "\n";
 			versionText += LocaleConfigManager::GetInstance()->GetText("about_content");
 
-			std::string btnText[2] = {
-				LocaleConfigManager::GetInstance()->GetText("ok"),
-				LocaleConfigManager::GetInstance()->GetText("reactive")
-			};
 			const char * pszBtnText[] = {
-				btnText[0].c_str(),
-				btnText[1].c_str()
+				LocaleConfigManager::GetInstance()->GetText("ok").c_str(),
+				LocaleConfigManager::GetInstance()->GetText("device_info").c_str(),
 			};
 
 			std::string strCaption = LocaleConfigManager::GetInstance()->GetText("menu_about");
-			const char *caption = strCaption.c_str();
-			int n = TVPShowSimpleMessageBox(versionText.c_str(), caption, 1, pszBtnText);
+			int n = TVPShowSimpleMessageBox(versionText.c_str(), strCaption.c_str(),
+				sizeof(pszBtnText) / sizeof(pszBtnText[0]), pszBtnText);
+
+			switch (n) {
+			case 1: {
+				std::string text = TVPGetOpenGLInfo();
+				const char *pOK = LocaleConfigManager::GetInstance()->GetText("ok").c_str();
+				TVPShowSimpleMessageBox(text.c_str(),
+					LocaleConfigManager::GetInstance()->GetText("device_info").c_str(),
+					1, &pOK);
+			} break;
+			}
 		});
 		reader.findWidget("btnExit")->addClickEventListener([](Ref*) {
-			if (TVPShowSimpleMessageBoxYesNo(
-				LocaleConfigManager::GetInstance()->GetText("sure_to_exit"),
-				"Kirikiroid2") == 0) TVPExitApplication(0);
+			_AskExit();
+// 			TVPMessageBoxForm::showYesNo("Kirikiroid2",
+// 				LocaleConfigManager::GetInstance()->GetText("sure_to_exit"), [](int n) {
+// 				if (n == 0) TVPExitApplication(0);
+// 			});
 		});
 	}
 	const Size &uiSize = getContentSize();
@@ -438,7 +454,7 @@ void TVPMainFileSelectorForm::ListHistory()
 			split_path = PathSplit(path);
 			cell = HistoryCell::create(fullpath, split_path.first + "/", split_path.second, "/" + lastname);
 			Widget::ccWidgetClickCallback funcConf;
-			if (FileUtils::getInstance()->isFileExist(path + "/Kirikiroid2Preference.xml"))
+			if (TVPCheckExistentLocalFile(path + "/Kirikiroid2Preference.xml"))
 				funcConf = [this, path](Ref*){ onShowPreferenceConfigAt(path); };
 			cell->initFunction(std::bind(&TVPMainFileSelectorForm::RemoveHistoryCell, this, std::placeholders::_1, cell),
 				[this, path](Ref*){ ListDir(path); }, funcConf, [this, fullpath](Ref*) { startup(fullpath); });
@@ -477,6 +493,8 @@ void TVPMainFileSelectorForm::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCo
 	if (keyCode == cocos2d::EventKeyboard::KeyCode::KEY_BACK) {
 		if (isMenuShowed()) {
 			hideMenu(nullptr);
+		} else {
+			_AskExit();
 		}
 	} else if (keyCode == EventKeyboard::KeyCode::KEY_MENU) {
 		if (isMenuShrinked()) {
@@ -504,6 +522,7 @@ void TVPMainFileSelectorForm::HistoryCell::initInfo(const std::string &fullpath,
 	_panel_delete = reader.findController("panel_delete");
 	if (!_panel_delete) _panel_delete = _btn_delete;
 	_scrollview->setScrollBarEnabled(false);
+	_scrollview->setPropagateTouchEvents(true);
 
 	_prefix->setString(prefix);
 	_path->setString(pathname);

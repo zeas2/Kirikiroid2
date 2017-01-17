@@ -14,12 +14,12 @@ static const char *_yuvRenderProgram_fsh =
 
 	"void main() {"												"\n"
 	"	vec3 yuv;"												"\n"
-	"	yuv.x = texture2D(CC_Texture0, v_texCoord).r;"			"\n"
+	"	yuv.x = texture2D(CC_Texture0, v_texCoord).r - 0.0625;"			"\n"
 	"	yuv.y = texture2D(CC_Texture1, v_texCoord).r - 0.5;"	"\n"
 	"	yuv.z = texture2D(CC_Texture2, v_texCoord).r - 0.5;"	"\n"
-	"	vec3 rgb = mat3(1.0, 1.0, 1.0,"							"\n"
-	"		0.0, -0.39465, 2.03211,"							"\n"
-	"		1.13983, -0.58060, 0.0) * yuv;"						"\n"
+	"	vec3 rgb = mat3(1.164, 1.164, 1.164,"							"\n"
+	"		0.0, -0.392, 2.017,"							"\n"
+	"		1.596, -0.813, 0.0) * yuv;"						"\n"
 	"	gl_FragColor = vec4(rgb, 1.0) * v_fragmentColor;"		"\n"
 	"}"
 ;

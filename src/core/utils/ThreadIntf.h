@@ -11,7 +11,7 @@
 #ifndef ThreadIntfH
 #define ThreadIntfH
 #include "tjsNative.h"
-
+#include <functional>
 
 
 //---------------------------------------------------------------------------

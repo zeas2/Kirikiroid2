@@ -57,9 +57,9 @@ tjs_char * TJS_strncpy (tjs_char * dest, const tjs_char * source, size_t count);
 tjs_char *  TJS_strcat (tjs_char * dst, const tjs_char * src);
 tjs_char * TJS_strstr (const tjs_char * wcs1, const tjs_char * wcs2);
 tjs_char * TJS_strchr (const tjs_char * string, tjs_char ch);
-#define TJS_malloc			malloc
-#define TJS_free			free
-#define TJS_realloc			realloc
+void *TJS_malloc(size_t n);
+void *TJS_realloc(void* orig, size_t n);
+void TJS_free(void *p);
 #define TJS_nsprintf		sprintf
 #define TJS_nstrcpy			strcpy
 #define TJS_nstrcat			strcat

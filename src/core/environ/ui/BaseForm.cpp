@@ -186,7 +186,7 @@ static bool _isModaling;
 int TVPShowSimpleInputBox(ttstr &text, const ttstr &caption, const ttstr &prompt, const std::vector<ttstr> &vecButtons) {
 	Scale9Sprite *bg = Scale9Sprite::create();
 	EditBox *box = EditBox::create(Size(1, 1), bg);
-	box->setInputFlag(EditBox::InputFlag::INITIAL_CAPS_ALL_CHARACTERS);
+	box->setInputFlag(EditBox::InputFlag::SENSITIVE);
 	box->setText(text.AsStdString().c_str());
 	box->setPlaceHolder(prompt.AsStdString().c_str());
 	class Delegate : public EditBoxDelegate {

@@ -22,7 +22,7 @@
 #include "Random.h"
 #include "ScriptMgnIntf.h"
 #include "DebugIntf.h"
-#include "ConfigManager\LocaleConfigManager.h"
+#include "ConfigManager/LocaleConfigManager.h"
 #include "Platform.h"
 
 extern bool TVPStartupSuccess;

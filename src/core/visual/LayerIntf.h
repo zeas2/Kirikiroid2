@@ -920,7 +920,7 @@ private:
 
     static void BltImage(iTVPBaseBitmap *dest, tTVPLayerType targettype, tjs_int destx,
         tjs_int desty, iTVPBaseBitmap *src, const tTVPRect &srcrect,
-		tTVPLayerType drawtype, tjs_int opacity);
+		tTVPLayerType drawtype, tjs_int opacity, bool hda = false);
 
 	void DrawSelf(tTVPDrawable *target, tTVPRect &pr, 
 		tTVPRect &cr);
@@ -941,6 +941,7 @@ private:
 		tTVPLayerType type, tjs_int opacity) override;
 
 	void InternalComplete2(tTVPComplexRect & updateregion, tTVPDrawable *drawable);
+	void InternalComplete2_GPU(tTVPRect updateregion, tTVPDrawable *drawable);
 	void InternalComplete(tTVPComplexRect & updateregion, tTVPDrawable *drawable);
 	void CompleteForWindow(tTVPDrawable *drawable);
 public:

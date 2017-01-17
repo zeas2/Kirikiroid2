@@ -336,6 +336,7 @@ public:
 		Height = rc.get_height();
 	}
 	virtual bool IsStatic() { return true; }
+	virtual bool IsOpaque() { return false; }
 	virtual TVPTextureFormat::e GetFormat() const { return Format; }
 	virtual void SetPoint(int x, int y, tjs_uint32 clr) {
 		assert(false);
@@ -621,6 +622,7 @@ public:
 				src += pitch;
 			}
 		}
+		Bitmap->IsOpaque = false;
 	}
 
 	virtual uint32_t GetPoint(int x, int y) {
@@ -635,8 +637,14 @@ public:
 			*((tjs_uint32*)Bitmap->GetScanLine(y) + x) = clr; // 32bpp
 		else
 			*((tjs_uint8*)Bitmap->GetScanLine(y) + x) = (tjs_uint8)clr; // 8bpp
+		Bitmap->IsOpaque = false;
 	}
 	virtual bool IsStatic() { return false; }
+	virtual bool IsOpaque() { return Bitmap->IsOpaque; }
+	virtual void * GetScanLineForWrite(tjs_uint l) {
+		Bitmap->IsOpaque = false;
+		return (void*)GetScanLineForRead(l);
+	}
 };
 
 class tTVPRenderMethod_Software : public iTVPRenderMethod {
@@ -1632,7 +1640,8 @@ struct TDoBoxBlurLoop {
 
 
 		tARGB * vert_sum = NULL; // vertical sum of the pixel
-		std::vector<std::vector<tjs_uint32> > dest_buf; // destination pixel temporary buffer
+		std::vector<tjs_uint32 *> dest_buf; // destination pixel temporary buffer
+//		std::vector<std::vector<tjs_uint32> > dest_buf;
 
 		tjs_int vert_sum_count;
 
@@ -1646,8 +1655,8 @@ struct TDoBoxBlurLoop {
 			{
 				dest_buf.resize(dest_buf_size);
 				for (tjs_int i = 0; i < dest_buf_size; i++) {
-					dest_buf[i].resize(rect.right - rect.left);
-					_log_ptr("alloc bufN", &dest_buf[i][0], (rect.right - rect.left) * 4);
+					dest_buf[i] = (tjs_uint32 *)TJSAlignedAlloc(rect.right - rect.left, 4);
+//					_log_ptr("alloc bufN", &dest_buf[i][0], (rect.right - rect.left) * 4);
 				}
 			}
 
@@ -1831,20 +1840,24 @@ struct TDoBoxBlurLoop {
 				if (dest_buf_wp >= dest_buf_size) dest_buf_wp = 0;
 				dest_buf_free++;
 			}
-		} catch (...)
-		{
+		} catch (...) {
 			// exception caught
 			if (vert_sum) TJSAlignedDealloc(vert_sum);
+			if (dest_buf_size) {
+				for (tjs_int i = 0; i < dest_buf_size; i++) {
+				//	_log_ptr("free  bufN", &dest_buf[i][0], (rect.right - rect.left) * 4);
+					TJSAlignedDealloc(dest_buf[i]);
+				}
+			}
 			throw;
 		}
 
 		// free buffeers
 		TJSAlignedDealloc(vert_sum);
-		if (dest_buf_size)
-		{
+		if (dest_buf_size) {
 			for (tjs_int i = 0; i < dest_buf_size; i++) {
-				_log_ptr("free  bufN", &dest_buf[i][0], (rect.right - rect.left) * 4);
-				//delete[] dest_buf[i];
+			//	_log_ptr("free  bufN", &dest_buf[i][0], (rect.right - rect.left) * 4);
+				TJSAlignedDealloc(dest_buf[i]);
 			}
 		}
 	}
@@ -1946,51 +1959,48 @@ struct tRenderMethodCache {
 			}
 		}
 
-		iTVPRenderMethod *GetMethodWithOpa(tjs_int opa) {
-			WithOpa->SetParameterOpa(NormalOpaID, opa);
-			return WithOpa;
-		}
-		iTVPRenderMethod *GetMethodWithOpa_HDA(tjs_int opa) {
-			WithOpaHDA->SetParameterOpa(HDAOpaID, opa);
-			return WithOpaHDA;
+		iTVPRenderMethod *GetMethodWithOpa(tjs_int opa, bool hda) {
+			iTVPRenderMethod *ret = hda ? WithOpaHDA : WithOpa;
+			ret->SetParameterOpa(hda ? HDAOpaID : NormalOpaID, opa);
+			return ret;
 		}
 	};
 
 	MethodInfo Info[bmPsExclusion + 1];
 
 	tRenderMethodCache(iTVPRenderManager* mgr) {
-		Info[bmCopy].Init(mgr, "Copy", nullptr, "ConstAlphaBlend", nullptr);
-		Info[bmCopyOnAlpha].Init(mgr, "CopyOpaqueImage", nullptr, "ConstAlphaBlend_d", nullptr);
-		Info[bmAlpha].Init(mgr, nullptr, nullptr, "AlphaBlend", nullptr);
-		Info[bmAlphaOnAlpha].Init(mgr, nullptr, nullptr, "AlphaBlend_d", nullptr);
-		Info[bmAdd].Init(mgr, nullptr, nullptr, "AddBlend", nullptr);
-		Info[bmSub].Init(mgr, nullptr, nullptr, "SubBlend", nullptr);
+		Info[bmCopy].Init(mgr, "Copy", "CopyColor", "ConstAlphaBlend", "ConstAlphaBlend");
+		Info[bmCopyOnAlpha].Init(mgr, "CopyOpaqueImage", "CopyColor", "ConstAlphaBlend_d", "ConstAlphaBlend_d");
+		Info[bmAlpha].Init(mgr, nullptr, nullptr, "AlphaBlend", "AlphaBlend");
+		Info[bmAlphaOnAlpha].Init(mgr, nullptr, nullptr, "AlphaBlend_d", "AlphaBlend_d");
+		Info[bmAdd].Init(mgr, nullptr, nullptr, "AddBlend", "AddBlend");
+		Info[bmSub].Init(mgr, nullptr, nullptr, "SubBlend", "SubBlend");
 		Info[bmMul].Init(mgr, nullptr, nullptr, "MulBlend", "MulBlend_HDA");
-		Info[bmDodge].Init(mgr, nullptr, nullptr, "ColorDodgeBlend", nullptr);
-		Info[bmDarken].Init(mgr, nullptr, nullptr, "DarkenBlend", nullptr);
-		Info[bmLighten].Init(mgr, nullptr, nullptr, "LightenBlend", nullptr);
-		Info[bmScreen].Init(mgr, nullptr, nullptr, "ScreenBlend", nullptr);
-		Info[bmAddAlpha].Init(mgr, nullptr, nullptr, "AdditiveAlphaBlend", nullptr);
-		Info[bmAddAlphaOnAddAlpha].Init(mgr, nullptr, nullptr, "AdditiveAlphaBlend_a", nullptr);
+		Info[bmDodge].Init(mgr, nullptr, nullptr, "ColorDodgeBlend", "ColorDodgeBlend");
+		Info[bmDarken].Init(mgr, nullptr, nullptr, "DarkenBlend", "DarkenBlend");
+		Info[bmLighten].Init(mgr, nullptr, nullptr, "LightenBlend", "LightenBlend");
+		Info[bmScreen].Init(mgr, nullptr, nullptr, "ScreenBlend", "ScreenBlend");
+		Info[bmAddAlpha].Init(mgr, nullptr, nullptr, "AdditiveAlphaBlend", "AdditiveAlphaBlend");
+		Info[bmAddAlphaOnAddAlpha].Init(mgr, nullptr, nullptr, "AdditiveAlphaBlend_a", "AdditiveAlphaBlend_a");
 		//Info[bmAddAlphaOnAlpha].Init(mgr, nullptr, nullptr, nullptr, nullptr);
-		Info[bmAlphaOnAddAlpha].Init(mgr, nullptr, nullptr, "AlphaBlend_a", nullptr);
-		Info[bmCopyOnAddAlpha].Init(mgr, "CopyOpaqueImage", nullptr, "ConstAlphaBlend_a", nullptr);
-		Info[bmPsNormal].Init(mgr, nullptr, nullptr, "PsAlphaBlend", nullptr);
-		Info[bmPsAdditive].Init(mgr, nullptr, nullptr, "PsAddBlend", nullptr);
-		Info[bmPsSubtractive].Init(mgr, nullptr, nullptr, "PsSubBlend", nullptr);
-		Info[bmPsMultiplicative].Init(mgr, nullptr, nullptr, "PsMulBlend", nullptr);
-		Info[bmPsScreen].Init(mgr, nullptr, nullptr, "PsScreenBlend", nullptr);
-		Info[bmPsOverlay].Init(mgr, nullptr, nullptr, "PsOverlayBlend", nullptr);
-		Info[bmPsHardLight].Init(mgr, nullptr, nullptr, "PsHardLightBlend", nullptr);
-		Info[bmPsSoftLight].Init(mgr, nullptr, nullptr, "PsSoftLightBlend", nullptr);
-		Info[bmPsColorDodge].Init(mgr, nullptr, nullptr, "PsColorDodgeBlend", nullptr);
-		Info[bmPsColorDodge5].Init(mgr, nullptr, nullptr, "PsColorDodge5Blend", nullptr);
-		Info[bmPsColorBurn].Init(mgr, nullptr, nullptr, "PsColorBurnBlend", nullptr);
-		Info[bmPsLighten].Init(mgr, nullptr, nullptr, "PsLightenBlend", nullptr);
-		Info[bmPsDarken].Init(mgr, nullptr, nullptr, "PsDarkenBlend", nullptr);
-		Info[bmPsDifference].Init(mgr, nullptr, nullptr, "PsDiffBlend", nullptr);
-		Info[bmPsDifference5].Init(mgr, nullptr, nullptr, "PsDiff5Blend", nullptr);
-		Info[bmPsExclusion].Init(mgr, nullptr, nullptr, "PsExclusionBlend", nullptr);
+		Info[bmAlphaOnAddAlpha].Init(mgr, nullptr, nullptr, "AlphaBlend_a", "AlphaBlend_a");
+		Info[bmCopyOnAddAlpha].Init(mgr, "CopyOpaqueImage", nullptr, "ConstAlphaBlend_a", "ConstAlphaBlend_a");
+		Info[bmPsNormal].Init(mgr, nullptr, nullptr, "PsAlphaBlend", "PsAlphaBlend");
+		Info[bmPsAdditive].Init(mgr, nullptr, nullptr, "PsAddBlend", "PsAddBlend");
+		Info[bmPsSubtractive].Init(mgr, nullptr, nullptr, "PsSubBlend", "PsSubBlend");
+		Info[bmPsMultiplicative].Init(mgr, nullptr, nullptr, "PsMulBlend", "PsMulBlend");
+		Info[bmPsScreen].Init(mgr, nullptr, nullptr, "PsScreenBlend", "PsScreenBlend");
+		Info[bmPsOverlay].Init(mgr, nullptr, nullptr, "PsOverlayBlend", "PsOverlayBlend");
+		Info[bmPsHardLight].Init(mgr, nullptr, nullptr, "PsHardLightBlend", "PsHardLightBlend");
+		Info[bmPsSoftLight].Init(mgr, nullptr, nullptr, "PsSoftLightBlend", "PsSoftLightBlend");
+		Info[bmPsColorDodge].Init(mgr, nullptr, nullptr, "PsColorDodgeBlend", "PsColorDodgeBlend");
+		Info[bmPsColorDodge5].Init(mgr, nullptr, nullptr, "PsColorDodge5Blend", "PsColorDodge5Blend");
+		Info[bmPsColorBurn].Init(mgr, nullptr, nullptr, "PsColorBurnBlend", "PsColorBurnBlend");
+		Info[bmPsLighten].Init(mgr, nullptr, nullptr, "PsLightenBlend", "PsLightenBlend");
+		Info[bmPsDarken].Init(mgr, nullptr, nullptr, "PsDarkenBlend", "PsDarkenBlend");
+		Info[bmPsDifference].Init(mgr, nullptr, nullptr, "PsDiffBlend", "PsDiffBlend");
+		Info[bmPsDifference5].Init(mgr, nullptr, nullptr, "PsDiff5Blend", "PsDiff5Blend");
+		Info[bmPsExclusion].Init(mgr, nullptr, nullptr, "PsExclusionBlend", "PsExclusionBlend");
 	}
 
 	iTVPRenderMethod* GetRenderMethod(const char *name, bool hda) {
@@ -2016,9 +2026,9 @@ iTVPRenderMethod* iTVPRenderManager::GetRenderMethod(tjs_int opa, bool hda, int/
 		// constant ratio alpha blending (assuming source is opaque)
 		// with consideration of destination additive alpha
 		if (opa == 255) {
-			return RenderMethodCache->Info[method].Normal;
+			return hda ? RenderMethodCache->Info[method].HDA : RenderMethodCache->Info[method].Normal;
 		} else {
-			return RenderMethodCache->Info[method].GetMethodWithOpa(opa);
+			return RenderMethodCache->Info[method].GetMethodWithOpa(opa, hda);
 		}
 		break;
 	case bmAlpha:
@@ -2076,14 +2086,9 @@ iTVPRenderMethod* iTVPRenderManager::GetRenderMethod(tjs_int opa, bool hda, int/
 		// Photoshop 5.x compatible difference blend
 	case bmPsExclusion:
 		// Photoshop compatible exclusion blend
-		return RenderMethodCache->Info[method].GetMethodWithOpa(opa);
 	case bmMul:
 		// multiplicative blending ( this does not consider distination alpha )
-		if (hda) {
-			return RenderMethodCache->Info[method].GetMethodWithOpa_HDA(opa);
-		} else {
-			return RenderMethodCache->Info[method].GetMethodWithOpa(opa);
-		}
+		return RenderMethodCache->Info[method].GetMethodWithOpa(opa, hda);
 		break;
 	case bmAddAlphaOnAlpha:
 		// additive alpha on simple alpha
@@ -2366,7 +2371,7 @@ public:
 		, _drawCount(0)
 	{
 		_createStaticTexture2D = tTVPSoftwareTexture2D::Create;
-		std::string compTexMethod = IndividualConfigManager::GetInstance()->GetValueString("software_compress_tex", "none");
+		std::string compTexMethod = IndividualConfigManager::GetInstance()->GetValue<std::string>("software_compress_tex", "none");
 		if (compTexMethod == "halfline") _createStaticTexture2D = tTVPSoftwareTexture2D_half::Create;
 
 		Register_1();
@@ -4064,7 +4069,7 @@ iTVPRenderManager * TVPGetRenderManager(const ttstr &name)
 iTVPRenderManager * TVPGetRenderManager() {
 	static iTVPRenderManager *_RenderManager;
 	if (!_RenderManager) {
-		ttstr str = IndividualConfigManager::GetInstance()->GetValueString("renderer", "software");
+		ttstr str = IndividualConfigManager::GetInstance()->GetValue<std::string>("renderer", "software");
 		_RenderManager = TVPGetRenderManager(str);
 	}
 	return _RenderManager;

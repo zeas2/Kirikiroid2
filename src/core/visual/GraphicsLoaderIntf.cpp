@@ -468,7 +468,15 @@ void TVPInternalLoadBMP(void *callbackdata,
 	height = bi.biHeight<0?-bi.biHeight:bi.biHeight;
 		// positive value of bi.biHeight indicates top-down DIB
 
-	sizecallback(callbackdata, bi.biWidth, height);
+	tTVPGraphicPixelFormat pixfmt;
+	switch (orgbitcount) {
+	case 32: pixfmt = gpfRGBA; break;
+	case 24: case 16: case 15:
+		pixfmt = gpfRGB; break;
+	default:
+		pixfmt = gpfPalette; break;
+	}
+	sizecallback(callbackdata, bi.biWidth, height, pixfmt);
 
 	tjs_int pitch;
 	pitch = (((bi.biWidth * orgbitcount) + 31) & ~31) /8;
@@ -971,7 +979,7 @@ struct tTVPLoadGraphicData
 };
 //---------------------------------------------------------------------------
 static int TVPLoadGraphic_SizeCallback(void *callbackdata, tjs_uint w,
-	tjs_uint h)
+	tjs_uint h, tTVPGraphicPixelFormat fmt)
 {
 	tTVPLoadGraphicData * data = (tTVPLoadGraphicData *)callbackdata;
 
@@ -994,6 +1002,7 @@ static int TVPLoadGraphic_SizeCallback(void *callbackdata, tjs_uint w,
 
 		// allocate line buffer
 		data->Buffer = new tjs_uint8 [w];
+		data->Dest->IsOpaque = false;
 		return w;
 	}
 	else
@@ -1004,6 +1013,14 @@ static int TVPLoadGraphic_SizeCallback(void *callbackdata, tjs_uint w,
 		} else if (data->Dest->GetWidth() != w || data->Dest->GetHeight() != h) {
 			data->Dest->Release();
 			data->Dest = new tTVPBitmap(w, h, data->Type == lgtFullColor ? 32 : 8);
+		}
+		switch(fmt) {
+		case gpfLuminance:
+		case gpfRGB:
+			data->Dest->IsOpaque = true; break;
+		case gpfPalette:
+		case gpfRGBA:
+			data->Dest->IsOpaque = false; break;
 		}
 #if 0
 		data->Dest->Recreate(w, h, data->Type!=lgtFullColor?8:32);

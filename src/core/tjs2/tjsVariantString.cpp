@@ -14,6 +14,7 @@
 #include "tjsError.h"
 #include "tjsUtils.h"
 #include "tjsLex.h"
+#include <algorithm>
 
 
 namespace TJS
@@ -83,10 +84,12 @@ tjs_int TJSGetShorterStrLen(const tjs_char *str, tjs_int max)
 	else
 		len = len + TJSVS_ALLOC_INC_SIZE_L;
 
-	char *ret = (char*)realloc(ptr,
+	char *ret = (char*)malloc(//ptr,
 		len*sizeof(tjs_char) + sizeof(size_t));
 	if(!ret) TJSThrowStringAllocError();
+	memcpy(ret + sizeof(size_t), ptr + 1, *ptr*sizeof(tjs_char));
 	*(size_t *)ret = len; // embed size
+	TJSVS_free(buf);
 	return (tjs_char*)(ret + sizeof(size_t));
 }
 //---------------------------------------------------------------------------

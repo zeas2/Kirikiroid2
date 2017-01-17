@@ -39,3 +39,4 @@ void TVPShowIME(int x, int y, int w, int h);
 void TVPHideIME();
 
 void TVPRelinquishCPU();
+void TVPPrintLog(const char *str);

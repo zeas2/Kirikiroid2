@@ -523,7 +523,7 @@ void TVPLoadJXR(void* formatdata, void *callbackdata, tTVPGraphicSizeCallback si
 		if( width == 0 || height == 0 ) {
 			TVPThrowExceptionMessage( TJS_W("JPEG XR read error/%1"), TJS_W("width or height is zero.") );
 		}
-		sizecallback(callbackdata, width, height);
+		sizecallback(callbackdata, width, height, pDecoder->WMP.wmiSCP.uAlphaMode ? gpfRGBA : gpfRGB);
 		const tjs_uint32 stride = GetStride( (tjs_uint32)width, (tjs_uint32)32 );
 		PKRect rect = {0, 0, width, height};
 #ifdef _DEBUG

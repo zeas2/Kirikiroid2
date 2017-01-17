@@ -82,7 +82,7 @@ int VideoPresentLayer::AddVideoPicture(DVDVideoPicture &pic, int index)
 
 	int width = pic.iWidth, height = pic.iHeight;
 
-	uint8_t *data = new uint8_t[width * height * 4];
+	uint8_t *data = (uint8_t*)TJSAlignedAlloc(width * height * 4, 4);
 	int datasize = width * 4;
 
 	img_convert_ctx = sws_getCachedContext(

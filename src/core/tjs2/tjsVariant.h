@@ -11,7 +11,7 @@
 #ifndef tjsVariantH
 #define tjsVariantH
 
-#include <stdlib.h>
+//#include <stdlib.h>
 //#include <stdexcept>
 
 #ifdef TJS_SUPPORT_VCL

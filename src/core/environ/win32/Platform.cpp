@@ -8,7 +8,9 @@
 #include "StorageImpl.h"
 #include "SysInitIntf.h"
 #include "platform/CCFileUtils.h"
-#include <sys\stat.h>
+#include <sys/stat.h>
+#include "Application.h"
+#include "EventIntf.h"
 
 #pragma comment(lib,"psapi.lib")
 
@@ -23,7 +25,7 @@ tjs_int TVPGetSelfUsedMemory()
 {
 	PROCESS_MEMORY_COUNTERS info;
 	GetProcessMemoryInfo(GetCurrentProcess(), &info, sizeof(info));
-	return info.PeakWorkingSetSize / (1024 * 1024);
+	return info.WorkingSetSize / (1024 * 1024);
 }
 
 void TVPGetMemoryInfo(TVPMemoryInfo &m)
@@ -287,7 +289,15 @@ std::string TVPGetCurrentLanguage() {
 	return ret;
 }
 
+extern tTJS *TVPScriptEngine;
+void TVPReleaseFontLibrary();
 void TVPExitApplication(int code) {
+	// clear some static data for memory leak detect
+	TVPDeliverCompactEvent(TVP_COMPACT_LEVEL_MAX);
+	if (TVPScriptEngine) TVPScriptEngine->Cleanup();
+	TVPReleaseFontLibrary();
+	delete ::Application;
+	TVPMainScene::GetInstance()->removeFromParent();
 	exit(code);
 }
 
@@ -322,12 +332,11 @@ void TVPHideIME() {}
 
 void TVPRelinquishCPU(){ Sleep(0); }
 
-tjs_int WIN32GetProcessorNum() {
-	SYSTEM_INFO info;
-	GetSystemInfo(&info);
-	return info.dwNumberOfProcessors;
-}
 tjs_uint32 TVPGetRoughTickCount32()
 {
 	return timeGetTime();
+}
+
+void TVPPrintLog(const char *str) {
+	printf("%s", str);
 }

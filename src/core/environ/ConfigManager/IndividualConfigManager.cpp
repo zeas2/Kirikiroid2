@@ -57,24 +57,25 @@ bool IndividualConfigManager::UsePreferenceAt(const std::string &folder)
 	return true;
 }
 
-bool IndividualConfigManager::GetValueBool(const std::string &name, bool defVal /*= false*/)
+template<>
+bool IndividualConfigManager::GetValue<bool>(const std::string &name, const bool &defVal /*= false*/)
 {
-	return inherit::GetValueBool(name, GlobalConfigManager::GetInstance()->GetValueBool(name, defVal));
+	return inherit::GetValue<bool>(name, GlobalConfigManager::GetInstance()->GetValue<bool>(name, defVal));
 }
-
-int IndividualConfigManager::GetValueInt(const std::string &name, int defVal /*= 0*/)
+template<>
+int IndividualConfigManager::GetValue<int>(const std::string &name, const int &defVal /*= 0*/)
 {
-	return inherit::GetValueInt(name, GlobalConfigManager::GetInstance()->GetValueInt(name, defVal));
+	return inherit::GetValue<int>(name, GlobalConfigManager::GetInstance()->GetValue<int>(name, defVal));
 }
-
-float IndividualConfigManager::GetValueFloat(const std::string &name, float defVal /*= 0*/)
+template<>
+float IndividualConfigManager::GetValue<float>(const std::string &name, const float &defVal /*= 0*/)
 {
-	return inherit::GetValueFloat(name, GlobalConfigManager::GetInstance()->GetValueFloat(name, defVal));
+	return inherit::GetValue<float>(name, GlobalConfigManager::GetInstance()->GetValue<float>(name, defVal));
 }
-
-std::string IndividualConfigManager::GetValueString(const std::string &name, std::string defVal /*= ""*/)
+template<>
+std::string IndividualConfigManager::GetValue<std::string>(const std::string &name, const std::string &defVal /*= ""*/)
 {
-	return inherit::GetValueString(name, GlobalConfigManager::GetInstance()->GetValueString(name, defVal));
+	return inherit::GetValue<std::string>(name, GlobalConfigManager::GetInstance()->GetValue<std::string>(name, defVal));
 }
 
 std::vector<std::string> IndividualConfigManager::GetCustomArgumentsForPush()

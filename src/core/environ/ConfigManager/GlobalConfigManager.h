@@ -17,10 +17,8 @@ protected:
 public:
 	void SaveToFile();
 
-	bool GetValueBool(const std::string &name, bool defVal = false);
-	int GetValueInt(const std::string &name, int defVal = 0);
-	float GetValueFloat(const std::string &name, float defVal = 0);
-	std::string GetValueString(const std::string &name, std::string defVal = "");
+	template<typename T>
+	T GetValue(const std::string &name, const T& defVal);
 
 	void SetValueInt(const std::string &name, int val);
 	void SetValueFloat(const std::string &name, float val);
@@ -35,6 +33,11 @@ public:
 
 	std::vector<std::string> GetCustomArgumentsForPush();
 };
+
+template<> bool iSysConfigManager::GetValue<bool>(const std::string &name, const bool& defVal);
+template<> int iSysConfigManager::GetValue<int>(const std::string &name, const int& defVal);
+template<> float iSysConfigManager::GetValue<float>(const std::string &name, const float& defVal);
+template<> std::string iSysConfigManager::GetValue<std::string>(const std::string &name, const std::string& defVal);
 
 class GlobalConfigManager : public iSysConfigManager {
 

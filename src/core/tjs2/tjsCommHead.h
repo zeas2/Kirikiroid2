@@ -52,7 +52,7 @@
 #include <wchar.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <malloc.h>
+#include <memory>
 
 #include <vector>
 #include <string>

@@ -83,7 +83,7 @@
 /* TJS2 bison input file */
 
 
-#include <malloc.h>
+#include <memory>
 
 
 #include "tjsInterCodeGen.h"

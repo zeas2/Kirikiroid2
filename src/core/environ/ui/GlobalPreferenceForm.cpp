@@ -18,7 +18,7 @@ namespace {
 };
 
 TVPGlobalPreferenceForm * TVPGlobalPreferenceForm::create(const tPreferenceScreen *config) {
-	initAllConfig();
+	Initialize();
 	if (!config) config = &RootPreference;
 	TVPGlobalPreferenceForm *ret = new TVPGlobalPreferenceForm();
 	ret->autorelease();
@@ -27,4 +27,24 @@ TVPGlobalPreferenceForm * TVPGlobalPreferenceForm::create(const tPreferenceScree
 	ret->initPref(config);
 	ret->setOnExitCallback(std::bind(&GlobalConfigManager::SaveToFile, GlobalConfigManager::GetInstance()));
 	return ret;
+}
+
+static void WalkConfig(tPreferenceScreen* pref) {
+	for (iTVPPreferenceInfo* info : pref->Preferences) {
+		info->InitDefaultConfig();
+		tPreferenceScreen* subpref = info->GetSubScreenInfo();
+		if (subpref) {
+			WalkConfig(subpref);
+		}
+	}
+}
+
+void TVPGlobalPreferenceForm::Initialize()
+{
+	static bool Inited = false;
+	if (!Inited) {
+		Inited = true;
+		initAllConfig();
+		WalkConfig(&RootPreference);
+	}
 }

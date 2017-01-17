@@ -29,8 +29,9 @@
 static bool isDebuggerPresent() {
 	return true;
 }
-#define IsDebuggerPresent() isDebuggerPresent
+#define IsDebuggerPresent isDebuggerPresent
 #endif // ENABLE_DEBUGGER
+#include <thread>
 
 namespace TJS
 {
@@ -723,9 +724,11 @@ void TJSVariantArrayStackCompact()
 //---------------------------------------------------------------------------
 void TJSVariantArrayStackCompactNow()
 {
+#if 0 // due to multi-thread
 	for (tTJSVariantArrayStack* stk : TJSVariantArrayStacks) {
 		stk->Compact();
 	}
+#endif
 }
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
