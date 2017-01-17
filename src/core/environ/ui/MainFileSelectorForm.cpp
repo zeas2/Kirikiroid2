@@ -364,7 +364,12 @@ void TVPMainFileSelectorForm::showMenu(Ref*) {
 // 				LocaleConfigManager::GetInstance()->GetText("sure_to_exit"), [](int n) {
 // 				if (n == 0) TVPExitApplication(0);
 // 			});
+// 			TVPMessageBoxForm::showYesNo("Kirikiroid2",
+// 				LocaleConfigManager::GetInstance()->GetText("sure_to_exit"), [](int n) {
+// 				if (n == 0) TVPExitApplication(0);
+// 			});
 		});
+#endif
 	}
 	const Size &uiSize = getContentSize();
 	const Vec2 &pos = _menu->getPosition();

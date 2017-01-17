@@ -81,4 +81,10 @@
 	<Item id="err_read_error" text="读取错误，数据或已损坏"/>
 	<Item id="err_not_xp3_archive" text="%1 不是有效的XP3包。数据或已损坏。"/>
 	<Item id="err_cannot_suggest_graph_ext" text="%1 无法加载此图片，可能是数据不完整或脚本错误"/>
+	<Item id="delete" text="删除"/>
+	<Item id="file_operate_menu_title" text="文件管理"/>
+	<Item id="file_operate_menu_text" text="请选择操作"/>
+	<Item id="ensure_to_delete_file" text="确定要删除该文件吗："/>
+	<Item id="device_info" text="设备信息"/>
+	<Item id="supported_opengl_extension" text="OpenGL扩展特性（仅列出当前可用的扩展）："/>
 </Locale>

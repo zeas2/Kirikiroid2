@@ -81,4 +81,10 @@
 	<Item id="err_read_error" text="Read Error"/>
 	<Item id="err_not_xp3_archive" text="%1 is not valid XP3 archive. The data may be corrupted."/>
 	<Item id="err_cannot_suggest_graph_ext" text="%1 Cannot suggest extension name of this graphic. The data may lost or there has error in script."/>
+	<Item id="delete" text="Delete"/>
+	<Item id="file_operate_menu_title" text="File Operation"/>
+	<Item id="file_operate_menu_text" text="Please select opreation:"/>
+	<Item id="ensure_to_delete_file" text="Please ensure to delete:"/>
+	<Item id="device_info" text="Device Info"/>
+	<Item id="supported_opengl_extension" text="OpenGL Extensions(Only usable list):"/>
 </Locale>

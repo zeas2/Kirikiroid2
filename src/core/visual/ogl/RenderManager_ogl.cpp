@@ -22,6 +22,7 @@
 #include <deque>
 #include <algorithm>
 #include <unordered_set>
+#include "ConfigManager/LocaleConfigManager.h"
 
 //#define TEST_SHADER_ENABLED
 
@@ -67,6 +68,9 @@ bool TVPCheckGLExtension(const std::string &extname) {
 	return sTVPGLExtensions.find(extname) != sTVPGLExtensions.end();
 }
 static void TVPInitGLExtensionInfo() {
+	static bool inited = false;
+	if (inited) return;
+	inited = true;
 	std::string gl_extensions = (const char*)glGetString(GL_EXTENSIONS);
 	const char *p = gl_extensions.c_str();
 	for (char &c : gl_extensions) {
@@ -120,6 +124,27 @@ typedef void (GLAPIENTRY fAlphaFunc)(GLenum func, GLclampf ref);
 static fAlphaFunc *glAlphaFunc;
 }
 
+struct _UsedGLExtInfo {
+	_UsedGLExtInfo(){}
+	const char *NameBegin = nullptr;
+#define _DEFEXT(name) #name
+#define DEFEXT(name) const char *GLEXT_##name = _DEFEXT(GL_##name)
+	DEFEXT(EXT_unpack_subimage);
+	DEFEXT(EXT_shader_framebuffer_fetch);
+	DEFEXT(ARM_shader_framebuffer_fetch);
+	DEFEXT(NV_shader_framebuffer_fetch);
+	DEFEXT(EXT_copy_image);
+	DEFEXT(OES_copy_image);
+	DEFEXT(ARB_copy_image);
+	DEFEXT(NV_copy_image);
+	DEFEXT(EXT_clear_texture);
+	DEFEXT(ARB_clear_texture);
+	DEFEXT(QCOM_alpha_test);
+#undef DEFEXT
+	const char *NameEnd = nullptr;
+};
+static const _UsedGLExtInfo UsedGLExtInfo;
+
 static void TVPInitGLExtensionFunc() {
 #ifdef _MSC_VER
 	GL::glGetProcAddress = wglGetProcAddress;
@@ -130,21 +155,21 @@ static void TVPInitGLExtensionFunc() {
 #ifdef _MSC_VER
 	GL::glGetTextureImage = (GL::fGetTextureImage*)GL::glGetProcAddress("glGetTextureImage");
 #endif
-
-	if (!GL::glCopyImageSubData && TVPCheckGLExtension("GL_EXT_copy_image"))
-		GL::glCopyImageSubData = (GL::fCopyImageSubData*)GL::glGetProcAddress("glCopyImageSubDataEXT");
-	if (!GL::glCopyImageSubData && TVPCheckGLExtension("GL_OES_copy_image"))
-		GL::glCopyImageSubData = (GL::fCopyImageSubData*)GL::glGetProcAddress("glCopyImageSubDataOES");
-	if (!GL::glCopyImageSubData && TVPCheckGLExtension("GL_ARB_copy_image"))
-		GL::glCopyImageSubData = (GL::fCopyImageSubData*)GL::glGetProcAddress("glCopyImageSubData");
-	if (!GL::glCopyImageSubData && TVPCheckGLExtension("GL_NV_copy_image"))
+#ifdef _MSC_VER
+// 	if (!GL::glCopyImageSubData && TVPCheckGLExtension(UsedGLExtInfo.GLEXT_EXT_copy_image))
+// 		GL::glCopyImageSubData = (GL::fCopyImageSubData*)GL::glGetProcAddress("glCopyImageSubDataEXT");
+// 	if (!GL::glCopyImageSubData && TVPCheckGLExtension(UsedGLExtInfo.GLEXT_OES_copy_image))
+// 		GL::glCopyImageSubData = (GL::fCopyImageSubData*)GL::glGetProcAddress("glCopyImageSubDataOES");
+	if (!GL::glCopyImageSubData && TVPCheckGLExtension(UsedGLExtInfo.GLEXT_NV_copy_image))
 		GL::glCopyImageSubData = (GL::fCopyImageSubData*)GL::glGetProcAddress("glCopyImageSubDataNV");
-
-	if (!GL::glClearTexImage && TVPCheckGLExtension("GL_EXT_clear_texture")) {
+	if (!GL::glCopyImageSubData && TVPCheckGLExtension(UsedGLExtInfo.GLEXT_ARB_copy_image))
+		GL::glCopyImageSubData = (GL::fCopyImageSubData*)GL::glGetProcAddress("glCopyImageSubData");
+#endif
+	if (!GL::glClearTexImage && TVPCheckGLExtension(UsedGLExtInfo.GLEXT_EXT_clear_texture)) {
 		GL::glClearTexImage = (GL::fClearTexImage*)GL::glGetProcAddress("glClearTexImageEXT");
 		GL::glClearTexSubImage = (GL::fClearTexSubImage*)GL::glGetProcAddress("glClearTexSubImageEXT");
 	}
-	if (!GL::glClearTexImage && TVPCheckGLExtension("GL_ARB_clear_texture")) {
+	if (!GL::glClearTexImage && TVPCheckGLExtension(UsedGLExtInfo.GLEXT_ARB_clear_texture)) {
 		GL::glClearTexImage = (GL::fClearTexImage*)GL::glGetProcAddress("glClearTexImage");
 		GL::glClearTexSubImage = (GL::fClearTexSubImage*)GL::glGetProcAddress("glClearTexSubImage");
 	}
@@ -154,8 +179,26 @@ static void TVPInitGLExtensionFunc() {
 #else
 #define GL_ALPHA_TEST                     0x0BC0
 #endif
-	if (!GL::glAlphaFunc && TVPCheckGLExtension("GL_QCOM_alpha_test"))
+	if (!GL::glAlphaFunc && TVPCheckGLExtension(UsedGLExtInfo.GLEXT_QCOM_alpha_test))
 		GL::glAlphaFunc = (GL::fAlphaFunc*)GL::glGetProcAddress("glAlphaFuncQCOM");
+}
+
+std::string TVPGetOpenGLInfo() {
+	TVPInitGLExtensionInfo();
+	std::stringstream ret;
+	ret << "Renderer : "; ret << glGetString(GL_RENDERER); ret << "\n";
+	ret << "Vendor : "; ret << glGetString(GL_VENDOR); ret << "\n";
+	ret << "Version : "; ret << glGetString(GL_VERSION); ret << "\n";
+	GLint maxTextSize; glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxTextSize);
+	ret << "MaxTexureSize : "; ret << int(maxTextSize); ret << "\n";
+	ret << LocaleConfigManager::GetInstance()->GetText("supported_opengl_extension");
+	for (const char *const *name = (&UsedGLExtInfo.NameBegin) + 1; *name; ++name) {
+		if (TVPCheckGLExtension(*name)) {
+			ret << "\n";
+			ret << *name;
+		}
+	}
+	return ret.str();
 }
 
 class tTVPOGLTexture2D;
@@ -223,8 +266,8 @@ static void _RestoreGLStatues() {
 
 static tjs_uint8 *TVPShrinkXYBy2(tjs_uint *dpitch, const tjs_uint8 *src, tjs_int spitch, tjs_uint srcw, tjs_uint srch) {
 	tjs_uint dstw = (srcw + 1) / 2, dsth = (srch + 1) / 2;
-	tjs_uint8 *ret = new tjs_uint8[dstw * dsth * 4], *dst = ret;
-	tjs_uint dp = *dpitch = dstw * 4;
+	tjs_uint dp = *dpitch = (dstw * 4 + 7) &~7;
+	tjs_uint8 *ret = new tjs_uint8[dp * dsth], *dst = ret;
 	tjs_uint wpitch = srcw / 2 * 4, h = srch / 2;
 	bool xtail = srcw & 1;
 	for (tjs_uint y = 0; y < h; y++) {
@@ -280,8 +323,8 @@ static tjs_uint8 *TVPShrinkXYBy2(tjs_uint *dpitch, const tjs_uint8 *src, tjs_int
 
 static tjs_uint8 *TVPShrinkXBy2(tjs_uint *dpitch, const tjs_uint8 *src, tjs_int spitch, tjs_uint srcw, tjs_uint srch) {
 	tjs_uint dstw = (srcw + 1) / 2;
-	tjs_uint dp = *dpitch = dstw * 4;
-	tjs_uint8 *ret = new tjs_uint8[dstw * srch * 4], *dst = ret;
+	tjs_uint dp = *dpitch = (dstw * 4 + 7) &~7;
+	tjs_uint8 *ret = new tjs_uint8[dp * srch], *dst = ret;
 	tjs_uint wpitch = srcw / 2 * 4;
 	bool xtail = srcw & 1;
 	for (tjs_uint y = 0; y < srch; y++) {
@@ -310,8 +353,8 @@ static tjs_uint8 *TVPShrinkXBy2(tjs_uint *dpitch, const tjs_uint8 *src, tjs_int 
 
 static tjs_uint8 *TVPShrinkYBy2(tjs_uint *dpitch, const tjs_uint8 *src, tjs_int spitch, tjs_uint srcw, tjs_uint srch) {
 	tjs_uint dsth = (srch + 1) / 2;
-	tjs_uint8 *ret = new tjs_uint8[srcw * dsth * 4], *dst = ret;
-	tjs_uint dp = *dpitch = srcw * 4;
+	tjs_uint dp = *dpitch = (srcw * 4 + 7) &~7;
+	tjs_uint8 *ret = new tjs_uint8[dp * dsth], *dst = ret;
 	tjs_uint wpitch = srcw * 4, h = srch / 2;
 	for (tjs_uint y = 0; y < h; y++) {
 		const tjs_uint8 *sline = src, *sline2 = src + spitch;
@@ -345,8 +388,8 @@ static tjs_uint8 *TVPShrinkYBy2(tjs_uint *dpitch, const tjs_uint8 *src, tjs_int 
 
 static tjs_uint8 *TVPShrinkXYBy2_8(tjs_uint *dpitch, const tjs_uint8 *src, tjs_int spitch, tjs_uint srcw, tjs_uint srch) {
 	tjs_uint dstw = (srcw + 1) / 2, dsth = (srch + 1) / 2;
-	tjs_uint8 *ret = new tjs_uint8[dstw * dsth], *dst = ret;
-	tjs_uint dp = *dpitch = dstw;
+	tjs_uint dp = *dpitch = (dstw + 7) &~7;
+	tjs_uint8 *ret = new tjs_uint8[dp * dsth], *dst = ret;
 	tjs_uint wpitch = srcw / 2, h = srch / 2;
 	bool xtail = srcw & 1;
 	for (tjs_uint y = 0; y < h; y++) {
@@ -382,8 +425,8 @@ static tjs_uint8 *TVPShrinkXYBy2_8(tjs_uint *dpitch, const tjs_uint8 *src, tjs_i
 
 static tjs_uint8 *TVPShrinkXBy2_8(tjs_uint *dpitch, const tjs_uint8 *src, tjs_int spitch, tjs_uint srcw, tjs_uint srch) {
 	tjs_uint dstw = (srcw + 1) / 2;
-	tjs_uint dp = *dpitch = dstw;
-	tjs_uint8 *ret = new tjs_uint8[dstw * srch], *dst = ret;
+	tjs_uint dp = *dpitch = (dstw + 7) &~7;
+	tjs_uint8 *ret = new tjs_uint8[dp * srch], *dst = ret;
 	tjs_uint wpitch = srcw / 2;
 	bool xtail = srcw & 1;
 	for (tjs_uint y = 0; y < srch; y++) {
@@ -405,8 +448,8 @@ static tjs_uint8 *TVPShrinkXBy2_8(tjs_uint *dpitch, const tjs_uint8 *src, tjs_in
 
 static tjs_uint8 *TVPShrinkYBy2_8(tjs_uint *dpitch, const tjs_uint8 *src, tjs_int spitch, tjs_uint srcw, tjs_uint srch) {
 	tjs_uint dsth = (srch + 1) / 2;
-	tjs_uint8 *ret = new tjs_uint8[srcw * dsth], *dst = ret;
-	tjs_uint dp = *dpitch = srcw;
+	tjs_uint dp = *dpitch = (srcw + 7) &~7;
+	tjs_uint8 *ret = new tjs_uint8[dp * dsth], *dst = ret;
 	tjs_uint wpitch = srcw, h = srch / 2;
 	for (tjs_uint y = 0; y < h; y++) {
 		const tjs_uint8 *sline = src, *sline2 = src + spitch;
@@ -441,10 +484,11 @@ static tjs_uint8 *TVPShrink(tjs_uint *dpitch, const tjs_uint8 *src, tjs_int spit
 			return TVPShrinkXYBy2(dpitch, src, spitch, srcw, srch);
 		}
 	}
-	tjs_uint8 *tmp = new tjs_uint8[dstw * dsth * 4];
+	*dpitch = (dstw * 4 + 7) &~7;
+	tjs_uint8 *tmp = new tjs_uint8[*dpitch * dsth];
 	cv::Size dsize(dstw, dsth);
 	cv::Mat src_img(srch, srcw, CV_8UC4, (void*)src, spitch);
-	cv::Mat dst_img(dsth, dstw, CV_8UC4, (void*)tmp, dstw * 4);
+	cv::Mat dst_img(dsth, dstw, CV_8UC4, (void*)tmp, *dpitch);
 	cv::resize(src_img, dst_img, dsize, 0, 0, cv::INTER_LINEAR);
 	return tmp;
 }
@@ -461,10 +505,11 @@ static tjs_uint8 *TVPShrink_8(tjs_uint *dpitch, const tjs_uint8 *src, tjs_int sp
 			return TVPShrinkXYBy2_8(dpitch, src, spitch, srcw, srch);
 		}
 	}
-	tjs_uint8 *tmp = new tjs_uint8[dstw * dsth];
+	*dpitch = (dstw + 7) &~7;
+	tjs_uint8 *tmp = new tjs_uint8[*dpitch * dsth];
 	cv::Size dsize(dstw, dsth);
 	cv::Mat src_img(srch, srcw, CV_8UC1, (void*)src, spitch);
-	cv::Mat dst_img(dsth, dstw, CV_8UC1, (void*)tmp, dstw);
+	cv::Mat dst_img(dsth, dstw, CV_8UC1, (void*)tmp, *dpitch);
 	cv::resize(src_img, dst_img, dsize, 0, 0, cv::INTER_LINEAR);
 	return tmp;
 }
@@ -648,6 +693,17 @@ protected:
 		return ret;
 	}
 public:
+	virtual bool IsOpaque() override {
+		switch (Format) {
+		case TVPTextureFormat::Gray:
+		case TVPTextureFormat::RGB:
+			return true;
+		case TVPTextureFormat::RGBA:
+		case TVPTextureFormat::None:
+		return false;
+	}
+		return false;
+	}
 
 	virtual bool GetScale(float &x, float &y) {
 		x = _scaleW; y = _scaleH; return true;
@@ -660,7 +716,7 @@ public:
 		unsigned long clr = 0;
 		TVPSetRenderTarget(texture);
 		glViewport(0, 0, internalW, internalH);
-		glPixelStorei(GL_PACK_ALIGNMENT, 1);
+		glPixelStorei(GL_PACK_ALIGNMENT, 4);
 		glReadPixels(x * _scaleW, y * _scaleH, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &clr);
 		return clr;
 	}
@@ -805,6 +861,10 @@ public:
 		TVPThrowExceptionMessage(TJS_W("Static texture cannot set point color."));
 	}
 	virtual bool IsStatic() { return true; }
+	virtual bool IsOpaque() {
+		if (Bitmap) return Bitmap->IsOpaque;
+		return false;
+	}
 	virtual void SyncPixel() {
 // 		if (CachedTexture.size() > 1) {
 // 			;
@@ -1238,6 +1298,7 @@ public:
 	virtual bool IsStatic() override { return false; }
 
 	virtual void AsTarget() override {
+		SyncPixel();
 		TVPSetRenderTarget(texture);
 	}
 };
@@ -1754,7 +1815,7 @@ const void * tTVPOGLTexture2D::GetScanLineForRead(tjs_uint l)
 			PixelData = new unsigned char[internalW * internalH * 4];
 			TVPSetRenderTarget(texture);
 			glViewport(0, 0, internalW, internalH);
-			glPixelStorei(GL_PACK_ALIGNMENT, 1);
+			glPixelStorei(GL_PACK_ALIGNMENT, 4); // always dword aligned
 			glReadPixels(0, 0, internalW, internalH, GL_RGBA, GL_UNSIGNED_BYTE, PixelData);
 		}
 		return &PixelData[l * internalW * 4];
@@ -1780,7 +1841,7 @@ void TVPSetPostUpdateEvent(void(*f)());
 static iTVPTexture2D * (*_CreateStaticTexture2D)(tTVPBitmap* bmp);
 static iTVPTexture2D * (*_CreateMutableTexture2D)(const void *pixel, int pitch, unsigned int w, unsigned int h, TVPTextureFormat::e format);
 static const char *_glExtensions = nullptr;
-static bool _duplicateTargetTexture = true;
+//static bool _duplicateTargetTexture = true;
 class TVPRenderManager_OpenGL : public iTVPRenderManager {
 protected:
 	virtual tTVPOGLRenderMethod_Script* GetRenderMethodFromScript(const char *script, int nTex, unsigned int flags) {
@@ -1891,7 +1952,7 @@ protected:
 #endif
 
 	static iTVPTexture2D *CreateStaticTexture2D(const void *dib, tjs_uint tw, tjs_uint th, tjs_int pitch,
-		TVPTextureFormat::e fmt, tjs_uint dstw, tjs_uint dsth) {
+		TVPTextureFormat::e fmt, tjs_uint dstw, tjs_uint dsth, bool isOpaque) {
 		const tjs_uint8* pixel = (const tjs_uint8*)dib;
 		tjs_uint8 *tmp = nullptr;
 		tjs_uint w = tw, h = th;
@@ -1905,8 +1966,38 @@ protected:
 			pitch = dpitch;
 			sw = (float)(dstw - (tw & 1)) / tw;
 			sh = (float)(dsth - (th & 1)) / th;
+			if (!isOpaque) {
+				isOpaque = true;
+				const tjs_uint8* p = pixel;
+				for (int y = 0; y < h; ++y) {
+					const tjs_uint8* line = p;
+					for (int x = 0; x < w; ++x) {
+						if (line[3] != 0xFF) {
+							isOpaque = false;
+							x = w; y = h;
 		}
-
+						line += 4;
+					}
+					p += dpitch;
+				}
+			}
+		}
+		if (isOpaque) {
+			int dpitch = (w * 3 + 7) & ~7;
+			tjs_uint8 *rgb = new tjs_uint8[dpitch * h + 16];
+			tjs_uint8 *dst = (tjs_uint8*)(((intptr_t)rgb + 7) & ~7);
+			const tjs_uint8 *src = (const tjs_uint8 *)pixel;
+			pixel = dst;
+			for (int y = 0; y < h; ++y) {
+				TVPConvert32BitTo24Bit(dst, src, pitch);
+				src += pitch;
+				dst += dpitch;
+			}
+			if (tmp) delete[] tmp;
+			tmp = rgb;
+			fmt = TVPTextureFormat::RGB;
+			pitch = dpitch;
+		}
 		tTVPOGLTexture2D_static* ret = new tTVPOGLTexture2D_static(pixel, pitch, w, h, fmt, tw, th, sw, sh);
 		if (tmp) delete[] tmp;
 		return ret;
@@ -1927,7 +2018,7 @@ protected:
 		h = (h + n - 1) / n;
 
 		return CreateStaticTexture2D(bmp->GetBits(), bmp->GetWidth(), bmp->GetHeight(), bmp->GetPitch(),
-			bmp->Is32bit() ? TVPTextureFormat::RGBA : TVPTextureFormat::Gray, w, h);
+			bmp->Is32bit() ? TVPTextureFormat::RGBA : TVPTextureFormat::Gray, w, h, bmp->IsOpaque);
 	}
 
 	static iTVPTexture2D *CreateStaticTexture2D_half(tTVPBitmap* bmp) {
@@ -1952,7 +2043,7 @@ protected:
 			h = (h + 1) / 2;
 		}
 		return CreateStaticTexture2D(bmp->GetBits(), bmp->GetWidth(), bmp->GetHeight(), bmp->GetPitch(),
-			bmp->Is32bit() ? TVPTextureFormat::RGBA : TVPTextureFormat::Gray, w, h);
+			bmp->Is32bit() ? TVPTextureFormat::RGBA : TVPTextureFormat::Gray, w, h, bmp->IsOpaque);
 	}
 
 	static iTVPTexture2D *CreateMutableTexture2D(const void *pixel, int pitch, unsigned int w, unsigned int h, float sw, float sh, TVPTextureFormat::e fmt) {
@@ -2052,7 +2143,7 @@ protected:
 		//glDisable(GL_DEPTH_TEST);
 		//glDisable(GL_SCISSOR_TEST);
 
-		_duplicateTargetTexture = IndividualConfigManager::GetInstance()->GetValueBool("ogl_dup_target", true);
+//		_duplicateTargetTexture = IndividualConfigManager::GetInstance()->GetValueBool("ogl_dup_target", true);
 		cocos2d::EventListenerCustom *listener =
 			cocos2d::EventListenerCustom::create(EVENT_RENDERER_RECREATED,
 			[this](cocos2d::EventCustom*)
@@ -2776,8 +2867,8 @@ public:
 
 	virtual iTVPTexture2D* CreateTexture2D(const void *pixel, int pitch, unsigned int w, unsigned int h,
 		TVPTextureFormat::e format, int flags) override {
-		if (pixel)
-			return CreateStaticTexture2D(pixel, w, h, pitch, format, w, h);
+		if (pixel || (flags & RENDER_CREATE_TEXTURE_FLAG_STATIC))
+			return CreateStaticTexture2D(pixel, w, h, pitch, format, w, h, false);
 		return _CreateMutableTexture2D(pixel, pitch, w, h, format);
 	}
 
@@ -2792,7 +2883,9 @@ public:
 	}
 
 	void CopyTexture(tTVPOGLTexture2D *dst, tTVPOGLTexture2D *src, const tTVPRect &rcsrc) {
-		if (GL::glCopyImageSubData && src->_scaleW == dst->_scaleW && src->_scaleH == dst->_scaleH) {
+		while (GL::glCopyImageSubData &&
+			src->_scaleW == dst->_scaleW && src->_scaleH == dst->_scaleH &&
+			src->Format == dst->Format) {
 			tTVPRect rc;
 			rc.left = rcsrc.left * src->_scaleW + 0.5f;
 			rc.right = rcsrc.right * src->_scaleW;
@@ -2915,7 +3008,7 @@ public:
 			tTVPOGLTexture2D *tex = (tTVPOGLTexture2D *)(textures[i].first);
 			tex->SyncPixel();
 			GLVertexInfo &texitem = texlist[i];
-			if (_duplicateTargetTexture && tex == tar) {
+			if (/*_duplicateTargetTexture &&*/ tex == tar) {
 				tTVPOGLTexture2D *newtex;
 				tTVPRect rc = textures[i].second;
 				if (reftar) {
@@ -2933,7 +3026,8 @@ public:
 		if (method->tar_as_src) {
 			tTVPOGLTexture2D *tex = tar;
 			GLVertexInfo &texitem = texlist.back();
-			if (_duplicateTargetTexture) {
+	//		if (_duplicateTargetTexture)
+			{
 				tTVPOGLTexture2D *newtex;
 				tTVPRect rc = rctar;
 				if (reftar) {
@@ -2950,8 +3044,8 @@ public:
 					rc.set_offsets(0, 0);
 				}
 				newtex->ApplyVertex(texitem, rc);
-			} else {
-				tex->ApplyVertex(texitem, rctar);
+// 			} else {
+// 				tex->ApplyVertex(texitem, rctar);
 			}
 		}
 		//if (!method->CustomProc || !(method->*(method->CustomProc))(tar, rctar, texlist)) {
@@ -3021,7 +3115,7 @@ public:
 			tTVPOGLTexture2D *tex = (tTVPOGLTexture2D *)(textures[i].first);
 			tex->SyncPixel();
 			GLVertexInfo &texitem = texlist[i];
-			if (_duplicateTargetTexture && tex == tar) {
+			if (/*_duplicateTargetTexture &&*/ tex == tar) {
 				tTVPOGLTexture2D *newtex;
 				if (reftar) newtex = (tTVPOGLTexture2D *)reftar;
 				else {
@@ -3035,7 +3129,8 @@ public:
 		if (method->tar_as_src) {
 			tTVPOGLTexture2D *tex = tar;
 			GLVertexInfo &texitem = texlist.back();
-			if (_duplicateTargetTexture) {
+		//	if (_duplicateTargetTexture) 
+			{
 				tTVPOGLTexture2D *newtex;
 				tTVPRect rc = rcclip;
 				if (reftar) newtex = (tTVPOGLTexture2D *)reftar;
@@ -3044,8 +3139,8 @@ public:
 					rc.set_offsets(0, 0);
 				}
 				newtex->ApplyVertex(texitem, _pttar, ptcount);
-			} else {
-				tex->ApplyVertex(texitem, _pttar, ptcount);
+// 			} else {
+// 				tex->ApplyVertex(texitem, _pttar, ptcount);
 			}
 		}
 		std::vector<GLfloat> pttar;

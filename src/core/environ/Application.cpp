@@ -1026,6 +1026,7 @@ void tTVPApplication::OnActivate()
 }
 void tTVPApplication::OnDeactivate(  )
 {
+	if (!image_load_thread_) return; // project is not startup yet
 	application_activating_ = false;
 	if (!_project_startup) return;
 

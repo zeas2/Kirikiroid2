@@ -195,6 +195,16 @@ BasePlayer::BasePlayer(CBaseRenderer *renderer)
 	m_streamPlayerSpeed = DVD_PLAYSPEED_NORMAL;
 	m_caching = CACHESTATE_DONE;
 	memset(&m_SpeedState, 0, sizeof(m_SpeedState));
+	::Application->RegisterActiveEvent(this, [](void* p, eTVPActiveEvent ev){
+		switch (ev) {
+		case eTVPActiveEvent::onActive:
+			static_cast<BasePlayer*>(p)->OnActive();
+			break;
+		case eTVPActiveEvent::onDeactive:
+			static_cast<BasePlayer*>(p)->OnDeactive();
+			break;
+		}
+	});
 }
 
 BasePlayer::~BasePlayer() {
