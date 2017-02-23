@@ -11,6 +11,7 @@
 #include "tjsConfig.h"
 #include "Application.h"
 #include <cstdlib>
+#include <iterator>
 
 NS_KRMOVIE_BEGIN
 
@@ -195,6 +196,7 @@ BasePlayer::BasePlayer(CBaseRenderer *renderer)
 	m_streamPlayerSpeed = DVD_PLAYSPEED_NORMAL;
 	m_caching = CACHESTATE_DONE;
 	memset(&m_SpeedState, 0, sizeof(m_SpeedState));
+#if 0
 	::Application->RegisterActiveEvent(this, [](void* p, eTVPActiveEvent ev){
 		switch (ev) {
 		case eTVPActiveEvent::onActive:
@@ -205,6 +207,7 @@ BasePlayer::BasePlayer(CBaseRenderer *renderer)
 			break;
 		}
 	});
+#endif
 }
 
 BasePlayer::~BasePlayer() {

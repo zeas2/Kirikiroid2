@@ -14,7 +14,7 @@
 #endif
 
 #ifdef _MSC_VER
-#pragma comment(lib,"freetype250.lib")
+#pragma comment(lib,"freetype.lib")
 #endif
 #include "platform/CCFileUtils.h"
 #include <sys/stat.h>
@@ -166,27 +166,24 @@ void TVPInitFontNames()
         // set default fontface name
         TVPDefaultFontName = TVPFontNames.GetLast().GetKey();
     }
-    class tLister : public iTVPStorageLister
-    {
-    public:
-        std::vector<ttstr> list;
-        void TJS_INTF_METHOD Add(const ttstr &file)
-        {
-			list.emplace_back(file);
-        }
-    } lister;
 
-#ifdef __ANDROID__
-	TVPGetListAt(Android_GetInternalStoragePath() + "/fonts", &lister);
-	for (const ttstr &path : pathlist) {
-		TVPGetListAt(path + "/fonts", &lister);
-	}
-#endif
     // check exePath + "/fonts/*.ttf"
 	{
-		TVPGetLocalFileListAt(TVPGetAppPath() + "/fonts", &lister, S_IFREG);
-        auto itend = lister.list.end();
-        for (auto it = lister.list.begin(); it != itend; ++it) {
+		std::vector<ttstr> list;
+		auto lister = [&](const ttstr &name, tTVPLocalFileInfo* s) {
+			if (s->Mode & (S_IFREG | S_IFDIR)) {
+				list.emplace_back(name);
+			}
+		};
+#ifdef __ANDROID__
+		TVPGetLocalFileListAt(Android_GetInternalStoragePath() + "/fonts", lister);
+		for (const ttstr &path : pathlist) {
+			TVPGetLocalFileListAt(path + "/fonts", lister);
+		}
+#endif
+		TVPGetLocalFileListAt(TVPGetAppPath() + "/fonts", lister);
+        auto itend = list.end();
+        for (auto it = list.begin(); it != itend; ++it) {
             TVPEnumFontsProc(*it);
         }
     }

@@ -84,7 +84,7 @@ TJS_EXP_FUNC_DEF(void, TVPThrowPluginUnboundFunctionError, (const char *funcname
 TJS_EXP_FUNC_DEF(void, TVPThrowPluginUnboundFunctionError, (const tjs_char *funcname));
 #endif
 inline TJS_EXP_FUNC_DEF(void *, TVP_malloc, (size_t size)) { return malloc(size); }
-inline TJS_EXP_FUNC_DEF(void *, TVP_realloc, (void *pp, size_t size)) { return realloc(pp, size); }
+// inline TJS_EXP_FUNC_DEF(void *, TVP_realloc, (void *pp, size_t size)) { return realloc(pp, size); }
 inline TJS_EXP_FUNC_DEF(void, TVP_free, (void *pp)) { return free(pp); }
 TJS_EXP_FUNC_DEF(tjs_int, TVPGetAutoLoadPluginCount, ());
 //---------------------------------------------------------------------------

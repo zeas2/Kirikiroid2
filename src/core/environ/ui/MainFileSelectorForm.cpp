@@ -254,12 +254,6 @@ void TVPMainFileSelectorForm::doStartup(const std::string &path) {
 	if (TVPMainScene::GetInstance()->startupFrom(path)) {
 		if (GlobalConfigManager::GetInstance()->GetValue<bool>("remember_last_path", true)) {
 			_AddHistory(path);
-// 			std::string lastpath_file = _getLastPathFilePath();
-// 			FILE* fp = fopen(lastpath_file.c_str(), "wt");
-// 			if (fp) {
-// 				fwrite(path.c_str(), 1, path.size(), fp);
-// 				fclose(fp);
-// 			}
 		}
 	}
 }
@@ -333,43 +327,54 @@ void TVPMainFileSelectorForm::showMenu(Ref*) {
 		reader.findWidget("btnHelp")->addClickEventListener([this](Ref*) {
 			TVPTipsHelpForm::show();
 		});
-		reader.findWidget("btnAbout")->addClickEventListener([](Ref*) {
-			std::string versionText = "Version ";
-			versionText += TVPGetPackageVersionString();
-			versionText += "\n";
-			versionText += LocaleConfigManager::GetInstance()->GetText("about_content");
+		bool showSimpleAbout = false;
+		if(showSimpleAbout) {
+			reader.findWidget("btnAbout")->addClickEventListener([](Ref*) {
+				std::string versionText = "Version ";
+				versionText += TVPGetPackageVersionString();
 
-			const char * pszBtnText[] = {
-				LocaleConfigManager::GetInstance()->GetText("ok").c_str(),
-				LocaleConfigManager::GetInstance()->GetText("device_info").c_str(),
-			};
+				std::string btnText = LocaleConfigManager::GetInstance()->GetText("ok");
+				const char *pszBtnText = btnText.c_str();
+				std::string strCaption = LocaleConfigManager::GetInstance()->GetText("menu_about");
+				const char *caption = strCaption.c_str();
+				TVPShowSimpleMessageBox(versionText.c_str(), caption, 1, &pszBtnText);
+			});
+			reader.findWidget("btnExit")->addClickEventListener([](Ref*) {
+				if (TVPShowSimpleMessageBoxYesNo(
+					LocaleConfigManager::GetInstance()->GetText("sure_to_exit"),
+					"XP3Player") == 0) TVPExitApplication(0);
+			});
+		} else {
+			reader.findWidget("btnAbout")->addClickEventListener([](Ref*) {
+				std::string versionText = "Version ";
+				versionText += TVPGetPackageVersionString();
+				versionText += "\n";
+				versionText += LocaleConfigManager::GetInstance()->GetText("about_content");
 
-			std::string strCaption = LocaleConfigManager::GetInstance()->GetText("menu_about");
-			int n = TVPShowSimpleMessageBox(versionText.c_str(), strCaption.c_str(),
-				sizeof(pszBtnText) / sizeof(pszBtnText[0]), pszBtnText);
-
-			switch (n) {
-			case 1: {
-				std::string text = TVPGetOpenGLInfo();
-				const char *pOK = LocaleConfigManager::GetInstance()->GetText("ok").c_str();
-				TVPShowSimpleMessageBox(text.c_str(),
+				const char * pszBtnText[] = {
+					LocaleConfigManager::GetInstance()->GetText("ok").c_str(),
 					LocaleConfigManager::GetInstance()->GetText("device_info").c_str(),
-					1, &pOK);
-			} break;
-			}
-		});
-		reader.findWidget("btnExit")->addClickEventListener([](Ref*) {
-			_AskExit();
-// 			TVPMessageBoxForm::showYesNo("Kirikiroid2",
-// 				LocaleConfigManager::GetInstance()->GetText("sure_to_exit"), [](int n) {
-// 				if (n == 0) TVPExitApplication(0);
-// 			});
-// 			TVPMessageBoxForm::showYesNo("Kirikiroid2",
-// 				LocaleConfigManager::GetInstance()->GetText("sure_to_exit"), [](int n) {
-// 				if (n == 0) TVPExitApplication(0);
-// 			});
-		});
-#endif
+				};
+
+				std::string strCaption = LocaleConfigManager::GetInstance()->GetText("menu_about");
+				int n = TVPShowSimpleMessageBox(versionText.c_str(), strCaption.c_str(),
+					sizeof(pszBtnText) / sizeof(pszBtnText[0]), pszBtnText);
+
+				switch (n) {
+				case 1: {
+							std::string text = TVPGetOpenGLInfo();
+							const char *pOK = LocaleConfigManager::GetInstance()->GetText("ok").c_str();
+							TVPShowSimpleMessageBox(text.c_str(),
+								LocaleConfigManager::GetInstance()->GetText("device_info").c_str(),
+								1, &pOK);
+				} break;
+				}
+			});
+			reader.findWidget("btnExit")->addClickEventListener([](Ref*) {
+				_AskExit();
+			});
+		}
+
 	}
 	const Size &uiSize = getContentSize();
 	const Vec2 &pos = _menu->getPosition();

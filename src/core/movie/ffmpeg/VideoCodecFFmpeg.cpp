@@ -793,7 +793,7 @@ bool CDVDVideoCodecFFmpeg::GetPictureCommon(DVDVideoPicture* pDvdVideoPicture)
 
   pDvdVideoPicture->iWidth = m_pFrame->width;
   pDvdVideoPicture->iHeight = m_pFrame->height;
-
+#if 0
   /* crop of 10 pixels if demuxer asked it */
   if(m_pCodecContext->coded_width  && m_pCodecContext->coded_width  < (int)pDvdVideoPicture->iWidth
                                    && m_pCodecContext->coded_width  > (int)pDvdVideoPicture->iWidth  - 10)
@@ -802,7 +802,7 @@ bool CDVDVideoCodecFFmpeg::GetPictureCommon(DVDVideoPicture* pDvdVideoPicture)
   if(m_pCodecContext->coded_height && m_pCodecContext->coded_height < (int)pDvdVideoPicture->iHeight
                                    && m_pCodecContext->coded_height > (int)pDvdVideoPicture->iHeight - 10)
     pDvdVideoPicture->iHeight = m_pCodecContext->coded_height;
-
+#endif
   double aspect_ratio;
 
   /* use variable in the frame */
@@ -915,25 +915,36 @@ bool CDVDVideoCodecFFmpeg::GetPictureCommon(DVDVideoPicture* pDvdVideoPicture)
 
 bool CDVDVideoCodecFFmpeg::GetPicture(DVDVideoPicture* pDvdVideoPicture)
 {
-  if (m_pHardware)
-    return m_pHardware->GetPicture(m_pCodecContext, m_pFrame, pDvdVideoPicture);
+	if (m_pHardware)
+		return m_pHardware->GetPicture(m_pCodecContext, m_pFrame, pDvdVideoPicture);
 
-  if (!GetPictureCommon(pDvdVideoPicture))
-    return false;
+	AVPixelFormat pix_fmt;
+	pix_fmt = (AVPixelFormat)m_pFrame->format;
+	pDvdVideoPicture->format = CDVDCodecUtils::EFormatFromPixfmt(pix_fmt);
 
-  for (int i = 0; i < 4; i++)
-    pDvdVideoPicture->data[i] = m_pFrame->data[i];
-  for (int i = 0; i < 4; i++)
-    pDvdVideoPicture->iLineSize[i] = m_pFrame->linesize[i];
+	while (m_pCodecContext->coded_width > 0 && m_pCodecContext->coded_height > 0) {
+		if (pDvdVideoPicture->format == RENDER_FMT_YUV420P) {
+			int pitch = m_pFrame->linesize[0];
+			if (pitch < m_pCodecContext->coded_width || pitch > m_pCodecContext->coded_width + 16)
+				break;
+		}
+		m_pFrame->width = m_pCodecContext->coded_width;
+		m_pFrame->height = m_pCodecContext->coded_height;
+		break;
+	}
 
-  pDvdVideoPicture->iFlags |= pDvdVideoPicture->data[0] ? 0 : DVP_FLAG_DROPPED;
-  pDvdVideoPicture->extended_format = 0;
+	if (!GetPictureCommon(pDvdVideoPicture))
+		return false;
 
-  AVPixelFormat pix_fmt;
-  pix_fmt = (AVPixelFormat)m_pFrame->format;
+	for (int i = 0; i < 4; i++)
+		pDvdVideoPicture->data[i] = m_pFrame->data[i];
+	for (int i = 0; i < 4; i++)
+		pDvdVideoPicture->iLineSize[i] = m_pFrame->linesize[i];
 
-  pDvdVideoPicture->format = CDVDCodecUtils::EFormatFromPixfmt(pix_fmt);
-  return true;
+	pDvdVideoPicture->iFlags |= pDvdVideoPicture->data[0] ? 0 : DVP_FLAG_DROPPED;
+	pDvdVideoPicture->extended_format = 0;
+
+	return true;
 }
 
 int CDVDVideoCodecFFmpeg::FilterOpen(const std::string& filters, bool scale)

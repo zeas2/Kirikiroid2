@@ -108,6 +108,31 @@ void tPreferenceItemCheckBox::onPressStateChangedToPressed() {
 void tPreferenceItemConstant::initController(const NodeMap &allNodes) {
 	highlight = allNodes.findController("highlight");
 	allNodes.findController("dir_icon")->setVisible(false);
+	Size origSize = _title->getContentSize();
+	_title->setTextAreaSize(Size::ZERO);
+	std::string s = _title->getString();
+	Size sizeTmp = _title->getVirtualRendererSize();
+	float addHeight = 0;
+	if (sizeTmp.width < origSize.width) { // single line
+		sizeTmp.width = origSize.width;;
+		sizeTmp.height = 0;
+		_title->setTextAreaSize(sizeTmp);
+		addHeight = _title->getVirtualRendererSize().height - origSize.height;
+		if (addHeight < 0) addHeight = 0;
+	} else { // multi line
+		sizeTmp.width = origSize.width;;
+		sizeTmp.height = 0;
+		_title->setTextAreaSize(sizeTmp);
+		sizeTmp = _title->getVirtualRendererSize();
+		_title->setContentSize(sizeTmp);
+		addHeight = sizeTmp.height - origSize.height;
+	}
+	Node *root = getChildren().front();
+	sizeTmp = root->getContentSize();
+	sizeTmp.height += addHeight;
+	root->setContentSize(sizeTmp);
+	ui::Helper::doLayout(root);
+	setContentSize(sizeTmp);
 }
 
 const char* tPreferenceItemSubDir::getUIFileName() const  {

@@ -160,6 +160,7 @@ typedef struct {
 } RECT, RECTL;
 typedef intptr_t			LONG_PTR;
 typedef LONG HRESULT;
+#define TYPE_GUID_DEFINED
 typedef struct {
 	DWORD Data1;
 	WORD  Data2;

@@ -2,6 +2,30 @@
 #include "tinyxml2/tinyxml2.h"
 #include "platform/CCFileUtils.h"
 #include "Platform.h"
+#include "UtilStreams.h"
+#include "LocaleConfigManager.h"
+
+bool TVPWriteDataToFile(const ttstr &filepath, const void *data, unsigned int len);
+class XMLMemPrinter : public tinyxml2::XMLPrinter {
+	tTVPMemoryStream _stream;
+	char _buffer[4096];
+public:
+	virtual void Print(const char* format, ...) override {
+		va_list param;
+		va_start(param, format);
+		int n = vsnprintf(_buffer, 4096, format, param);
+		va_end(param);
+		_stream.Write(_buffer, n);
+	}
+	void SaveFile(const std::string &path) {
+		if (!TVPWriteDataToFile(path, _stream.GetInternalBuffer(), _stream.GetSize())) {
+			TVPShowSimpleMessageBox(
+				LocaleConfigManager::GetInstance()->GetText("cannot_create_preference"),
+				LocaleConfigManager::GetInstance()->GetText("readonly_storage"));
+		}
+	}
+};
+
 
 GlobalConfigManager::GlobalConfigManager() {
 	Initialize();
@@ -68,16 +92,16 @@ void iSysConfigManager::SaveToFile() {
 	}
 
 	doc.LinkEndChild(rootElement);
-	FILE *fp = nullptr;
-#ifdef _MSC_VER
-	fp = _wfopen(ttstr(GetFilePath()).c_str(), TJS_W("w"));
-#else
-	fp = fopen(GetFilePath().c_str(), "w");
-#endif
-	doc.SaveFile(fp);
-	fclose(fp);
-
+	XMLMemPrinter stream;
+	doc.Print(&stream);
+	stream.SaveFile(GetFilePath());
 	ConfigUpdated = false;
+}
+
+bool iSysConfigManager::IsValueExist(const std::string &name)
+{
+	auto it = AllConfig.find(name);
+	return it != AllConfig.end();
 }
 
 std::string GlobalConfigManager::GetFilePath() {

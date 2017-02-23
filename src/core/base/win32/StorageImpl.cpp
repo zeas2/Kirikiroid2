@@ -44,6 +44,29 @@
 #define lseek64 lseek
 #endif
 
+#ifdef WIN32
+typedef struct _stat64 tTVP_stat;
+#else
+typedef struct ::stat64 tTVP_stat;
+#endif
+
+static bool TVP_stat(const tjs_char *name, tTVP_stat &s) {
+#ifdef WIN32
+	return !_wstat64(name, &s);
+#else
+	tTJSNarrowStringHolder holder(name);
+	return !::stat64(holder, &s);
+#endif
+}
+static bool TVP_stat(const char *name, tTVP_stat &s) {
+#ifdef WIN32
+	ttstr filename(name);
+	return !_wstat64(filename.c_str(), &s);
+#else
+	return !::stat64(name, &s);
+#endif
+}
+
 //---------------------------------------------------------------------------
 // tTVPFileMedia
 //---------------------------------------------------------------------------
@@ -126,51 +149,53 @@ tTJSBinaryStream * TJS_INTF_METHOD tTVPFileMedia::Open(const ttstr & name, tjs_u
 
 	return new tTVPLocalFileStream(origname, _name, flags);
 }
+
 void TVPListDir(const std::string &folder, std::function<void(const std::string&, int)> cb) {
 	DIR *dirp;
 	struct dirent *direntp;
-	struct stat stat_buf;
+	tTVP_stat stat_buf;
 	if ((dirp = opendir(folder.c_str())))
 	{
 		while ((direntp = readdir(dirp)) != NULL)
 		{
 			std::string fullpath = folder + "/" + direntp->d_name;
-			if (stat(fullpath.c_str(), &stat_buf) == -1) {
+			if (!TVP_stat(fullpath.c_str(), stat_buf))
 				continue;
-			}
 			cb(direntp->d_name, stat_buf.st_mode);
 		}
 		closedir(dirp);
 	}
 }
 
-void TVPGetLocalFileListAt(const ttstr &name, iTVPStorageLister *lister, int stat_mask) {
+void TVPGetLocalFileListAt(const ttstr &name, const std::function<void(const ttstr&, tTVPLocalFileInfo*)>& cb) {
 	DIR *dirp;
 	struct dirent *direntp;
-	struct stat stat_buf;
+	tTVP_stat stat_buf;
 	std::string folder(name.AsNarrowStdString());
 	if ((dirp = opendir(folder.c_str())))
 	{
 		while ((direntp = readdir(dirp)) != NULL)
 		{
 			std::string fullpath = folder + "/" + direntp->d_name;
-			if (stat(fullpath.c_str(), &stat_buf) == -1)
-			{
+			if (!TVP_stat(fullpath.c_str(), stat_buf))
 				continue;
-			}
-			if (stat_buf.st_mode & stat_mask)
+			ttstr file(direntp->d_name);
+			tjs_char *p = file.Independ();
+			while (*p)
 			{
-				ttstr file(direntp->d_name);
-				tjs_char *p = file.Independ();
-				while (*p)
-				{
-					// make all characters small
-					if (*p >= TJS_W('A') && *p <= TJS_W('Z'))
-						*p += TJS_W('a') - TJS_W('A');
-					p++;
-				}
-				lister->Add(file);
+				// make all characters small
+				if (*p >= TJS_W('A') && *p <= TJS_W('Z'))
+					*p += TJS_W('a') - TJS_W('A');
+				p++;
 			}
+			tTVPLocalFileInfo info;
+			info.NativeName = direntp->d_name;
+			info.Mode = stat_buf.st_mode;
+			info.Size = stat_buf.st_size;
+			info.AccessTime = stat_buf.st_atime;
+			info.ModifyTime = stat_buf.st_mtime;
+			info.CreationTime = stat_buf.st_ctime;
+			cb(file, &info);
 		}
 		closedir(dirp);
 	}
@@ -210,7 +235,11 @@ void TJS_INTF_METHOD tTVPFileMedia::GetListAt(const ttstr &_name, iTVPStorageLis
 		FindClose(handle);
 	}
 #endif
-	TVPGetLocalFileListAt(name, lister, S_IFREG);
+	TVPGetLocalFileListAt(name, [lister](const ttstr &name, tTVPLocalFileInfo* s) {
+		if (s->Mode & (S_IFREG)) {
+			lister->Add(name);
+		}
+	});
 }
 
 static int _utf8_strcasecmp(const char *a, const char *b) {
@@ -546,10 +575,8 @@ bool TVPCheckExistentLocalFile(const ttstr &name)
 	else
 		return true; // a file
 #endif
-    struct stat s;
-    tTJSNarrowStringHolder holder(name.c_str());
-    if(stat(holder, &s))
-    {
+	tTVP_stat s;
+    if(!TVP_stat(name.c_str(), s)) {
         return false; // not exist
     }
     return s.st_mode & S_IFREG;
@@ -564,7 +591,6 @@ bool TVPCheckExistentLocalFile(const ttstr &name)
 //---------------------------------------------------------------------------
 bool TVPCheckExistentLocalFolder(const ttstr &name)
 {
-#ifdef WIN32
 #if 0
 	DWORD attrib = GetFileAttributes(name.c_str());
 	if(attrib != 0xffffffff && (attrib & FILE_ATTRIBUTE_DIRECTORY))
@@ -572,18 +598,8 @@ bool TVPCheckExistentLocalFolder(const ttstr &name)
 	else
 		return false; // not a folder
 #endif
-    struct _stat s = {0};
-    if(_wstat(name.c_str(), &s))
-#else // posix utf-8
-    struct stat s = {0};
-    tTJSNarrowStringHolder holder(name.c_str());
-    char* p = (char*)holder.operator const tjs_nchar *();
-    char* t = p; while(*t) ++t;
-    while(t > p && (t[-1] == '\\' || t[-1] == '/')) --t;
-    *t = 0;
-    if(stat(p, &s))
-#endif
-    {
+	tTVP_stat s;
+	if (!TVP_stat(name.c_str(), s)) {
         return false; // not exist
     }
 

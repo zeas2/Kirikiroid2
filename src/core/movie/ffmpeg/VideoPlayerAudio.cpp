@@ -447,7 +447,7 @@ void CVideoPlayerAudio::Process()
 							msg.cachetime = cachetime;
 							msg.timestamp = audioframe.hasTimestamp ? audioframe.pts : DVD_NOPTS_VALUE;
 							m_messageParent.Put(new CDVDMsgType<SStartMsg>(CDVDMsg::PLAYER_STARTED, msg));
-
+#if 0
 							if (consumed < pPacket->iSize)
 							{
 								pPacket->iSize -= consumed;
@@ -455,6 +455,7 @@ void CVideoPlayerAudio::Process()
 								m_messageQueue.Put(pMsg->AddRef(), 0, false);
 								break;
 							}
+#endif
 						}
 					}
 				}
@@ -462,12 +463,17 @@ void CVideoPlayerAudio::Process()
 				// guess next pts
 				m_audioClock += audioframe.duration;
 
-				int ret = m_pAudioCodec->Decode(nullptr, 0, DVD_NOPTS_VALUE, DVD_NOPTS_VALUE);
+				if (consumed >= pPacket->iSize)
+					break;
+				int ret = m_pAudioCodec->Decode(pPacket->pData + consumed, pPacket->iSize - consumed, DVD_NOPTS_VALUE, DVD_NOPTS_VALUE);
 				if (ret < 0)
 				{
 				//	CLog::Log(LOGERROR, "CVideoPlayerAudio::DecodeFrame - Decode Error. Skipping audio packet (%d)", ret);
 					m_pAudioCodec->Reset();
 					break;
+				}
+				else {
+					consumed += ret;
 				}
 			} // while decoder produces output
 

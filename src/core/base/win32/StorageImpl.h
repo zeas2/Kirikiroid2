@@ -26,8 +26,16 @@ void TVPUnloadArchiveSPI(HINSTANCE inst);
 //---------------------------------------------------------------------------
 #endif
 
+struct tTVPLocalFileInfo {
+	const char * NativeName;
+	unsigned short Mode; // S_IFMT
+	tjs_uint64         Size;
+	time_t         AccessTime;
+	time_t         ModifyTime;
+	time_t         CreationTime;
+};
 
-void TVPGetLocalFileListAt(const ttstr &name, iTVPStorageLister *lister, int stat_mask);
+void TVPGetLocalFileListAt(const ttstr &name, const std::function<void(const ttstr&, tTVPLocalFileInfo*)>& cb);
 
 //---------------------------------------------------------------------------
 // tTVPLocalFileStream

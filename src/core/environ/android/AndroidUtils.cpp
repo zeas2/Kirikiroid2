@@ -596,6 +596,7 @@ void TVPForceSwapBuffer() {
 }
 
 bool TVPCheckStartupPath(const std::string &path) {
+	// check writing permission first
 	int pos = path.find_last_of('/');
 	if (pos == path.npos) return false;
 	std::string parent = path.substr(0, pos);
@@ -605,19 +606,16 @@ bool TVPCheckStartupPath(const std::string &path) {
 		jstring jstrPath = methodInfo.env->NewStringUTF(parent.c_str());
 		success = methodInfo.env->CallStaticBooleanMethod(methodInfo.classID, methodInfo.methodID, jstrPath);
 		methodInfo.env->DeleteLocalRef(jstrPath);
+		if (success) {
+			parent += "/savedata";
+			if (!TVPCheckExistentLocalFolder(parent)) {
+				TVPCreateFolders(parent);
+			}
+			jstrPath = methodInfo.env->NewStringUTF(parent.c_str());
+			success = methodInfo.env->CallStaticBooleanMethod(methodInfo.classID, methodInfo.methodID, jstrPath);
+			methodInfo.env->DeleteLocalRef(jstrPath);
+		}
 	}
-
-	//pos = parent.find_last_of('/');
-	//if (pos == parent.npos) return false;
-	//std::string parentName = parent.substr(pos + 1);
-// 	FILE* fp;
-// 	std::string testfile = parent + "/.___test_for_kr2_write";
-// 	fp = fopen(testfile.c_str(), "wb");
-// 	bool success = false;
-// 	if (fp) {
-// 		fclose(fp);
-// 		success = !remove(testfile.c_str());
-// 	}
 
 	if (!success) {
 		std::vector<std::string> paths;
@@ -630,9 +628,33 @@ bool TVPCheckStartupPath(const std::string &path) {
 				msg = msg.replace(msg.begin() + pos, msg.begin() + pos + 2, paths.back());
 			}
 		}
-		int result = TVPShowSimpleMessageBoxYesNo(msg, LocaleConfigManager::GetInstance()->GetText("readonly_storage"));
-		return result == 0;
+		std::vector<ttstr> btns;
+		btns.push_back(LocaleConfigManager::GetInstance()->GetText("continue_run"));
+		JNIEnv *pEnv = JniHelper::getEnv();
+		jclass classID = pEnv->FindClass("android/os/Build$VERSION");
+		jfieldID idSDK_INT = methodInfo.env->GetStaticFieldID(classID, "SDK_INT", "I");
+		jint sdkid = pEnv->GetStaticIntField(classID, idSDK_INT);
+		bool isLOLLIPOP = sdkid >= 21;
+		if (isLOLLIPOP)
+			btns.push_back(LocaleConfigManager::GetInstance()->GetText("get_sdcard_permission"));
+		else
+			btns.push_back(LocaleConfigManager::GetInstance()->GetText("cancel"));
+		int result = TVPShowSimpleMessageBox(msg, LocaleConfigManager::GetInstance()->GetText("readonly_storage"), btns);
+		if (isLOLLIPOP && result == 1) {
+			if (JniHelper::getStaticMethodInfo(methodInfo, "org/tvp/kirikiri2/KR2Activity", "requireLEXA", "(Ljava/lang/String;)V")) {
+				jstring jstrPath = methodInfo.env->NewStringUTF(paths.back().c_str());
+				methodInfo.env->CallStaticVoidMethod(methodInfo.classID, methodInfo.methodID, jstrPath);
+				methodInfo.env->DeleteLocalRef(jstrPath);
+			}
+		}
+		if (result != 0)
+			return false;
 	}
+
+	// check adreno GPU issue
+// 	if (IndividualConfigManager::GetInstance()->GetValue<std::string>("renderer", "software") == "opengl") {
+// 		TVPOnOpenGLRendererSelected(false);
+// 	}
 	return true;
 }
 

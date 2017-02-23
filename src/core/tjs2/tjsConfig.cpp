@@ -21,6 +21,7 @@
 #define isfinite std::isfinite
 #endif
 #define INTMAX_MAX		0x7fffffffffffffff
+#include <assert.h>
 
 /*
  * core/utils/cp932_uni.cpp

@@ -196,6 +196,36 @@ public:
 	T* operator->() const { return get(); }
 };
 
+template <typename T>
+class tRefPtr
+{
+private:
+	T *_ptr;
+public:
+	tRefPtr() : _ptr(nullptr) {}
+	tRefPtr(T* p) : _ptr(nullptr) { if (p) p->AddRef(), _ptr = p; }
+	tRefPtr(const tRefPtr<T> &ref) { _ptr = ref._ptr; if (_ptr) _ptr->AddRef(); }
+	~tRefPtr() { if (_ptr) _ptr->Release(); }
+	const tRefPtr & operator = (const tRefPtr & rhs) {
+		if (rhs._ptr != _ptr) {
+			if (_ptr)_ptr->Release();
+			_ptr = rhs._ptr;
+			if (_ptr) _ptr->AddRef();
+		}
+		return *this;
+	}
+	const tRefPtr & operator = (T *rhs) {
+		if (rhs != _ptr) {
+			if (_ptr)_ptr->Release();
+			_ptr = rhs;
+			if (_ptr) _ptr->AddRef();
+		}
+		return *this;
+	}
+	T* get() const { return _ptr; }
+	operator T*() const { return get(); }
+	T* operator->() const { return get(); }
+};
 
 /*]*/
 

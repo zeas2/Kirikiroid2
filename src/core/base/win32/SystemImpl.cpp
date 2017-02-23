@@ -30,7 +30,7 @@
 #include "TVPScreen.h"
 //#include "CompatibleNativeFuncs.h"
 #include "DebugIntf.h"
-#include "VersionFormUnit.h"
+//#include "VersionFormUnit.h"
 #include "vkdefine.h"
 #include "ScriptMgnIntf.h"
 #include "tjsArray.h"

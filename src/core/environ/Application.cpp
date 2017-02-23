@@ -21,7 +21,7 @@
 #include "Exception.h"
 //#include "Resource.h"
 #include "SystemControl.h"
-#include "MouseCursor.h"
+//#include "MouseCursor.h"
 #include "SystemImpl.h"
 #include "WaveImpl.h"
 #include "GraphicsLoadThread.h"
@@ -1026,7 +1026,6 @@ void tTVPApplication::OnActivate()
 }
 void tTVPApplication::OnDeactivate(  )
 {
-	if (!image_load_thread_) return; // project is not startup yet
 	application_activating_ = false;
 	if (!_project_startup) return;
 
@@ -1054,6 +1053,12 @@ void tTVPApplication::OnExit()
 	TVPSystemControl = NULL;
 
 	CloseConsole();
+}
+
+void tTVPApplication::OnLowMemory()
+{
+	if (!_project_startup) return;
+	TVPDeliverCompactEvent(TVP_COMPACT_LEVEL_MAX);
 }
 
 bool tTVPApplication::GetNotMinimizing() const

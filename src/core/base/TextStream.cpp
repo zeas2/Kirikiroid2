@@ -231,7 +231,7 @@ public:
 				// check UTF-8 BOM
 				if(mark[0] == 0xef && mark[1] == 0xbb && mark[2] == 0xbf) {
 					// UTF-8 BOM
-					tjs_uint size = (tjs_uint)(Stream->GetSize()-3);
+					tjs_uint size = (tjs_uint)(Stream->GetSize() - 3) - ofs;
 					tjs_uint8 *nbuf = new tjs_uint8[size + 1];
 					try
 					{
@@ -254,7 +254,7 @@ public:
 					// ansi/mbcs
 					// read whole and hold it
 					Stream->SetPosition(ofs);
-					tjs_uint size = (tjs_uint)(Stream->GetSize());
+					tjs_uint size = (tjs_uint)(Stream->GetSize()) - ofs;
 					tjs_uint8 *nbuf = new tjs_uint8[size + 1];
 					try
 					{

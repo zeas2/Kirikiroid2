@@ -17,6 +17,8 @@ protected:
 public:
 	void SaveToFile();
 
+	bool IsValueExist(const std::string &name);
+
 	template<typename T>
 	T GetValue(const std::string &name, const T& defVal);
 

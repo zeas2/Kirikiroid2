@@ -119,7 +119,7 @@ void TVPBaseFileSelectorForm::ListDir(std::string path) {
 	if (_title) {
 #if CC_PLATFORM_WIN32 == CC_TARGET_PLATFORM
 		// for better screenshot
-		_title->setTitleFontName("SIMHEI");
+		_title->setTitleFontName("SIMHEI.ttf");
 		if (!split_path.second.empty() && (split_path.second.back() == '/' || split_path.second.back() == '\\')) {
 			split_path.second.pop_back();
 		}
@@ -513,7 +513,7 @@ void TVPBaseFileSelectorForm::FileItemCellImpl::initFromFile(const char * filena
 		CellTextAreaSize.height = 0;
 		OrigCellTextSize = FileNameNode->getContentSize();
 #if CC_PLATFORM_WIN32 == CC_TARGET_PLATFORM
-		FileNameNode->setFontName("SIMHEI");
+		FileNameNode->setFontName("SIMHEI.ttf");
 #endif
 	}
 	static const std::string str_highlight("highlight");

@@ -59,71 +59,6 @@ static void ShowInMessageBox(const char *format, ...) {
 	} while (false)
 #endif
 
-static std::unordered_set<std::string> sTVPGLExtensions;
-// some quick check flags
-static bool GL_CHECK_unpack_subimage;
-static bool GL_CHECK_shader_framebuffer_fetch;
-
-bool TVPCheckGLExtension(const std::string &extname) {
-	return sTVPGLExtensions.find(extname) != sTVPGLExtensions.end();
-}
-static void TVPInitGLExtensionInfo() {
-	static bool inited = false;
-	if (inited) return;
-	inited = true;
-	std::string gl_extensions = (const char*)glGetString(GL_EXTENSIONS);
-	const char *p = gl_extensions.c_str();
-	for (char &c : gl_extensions) {
-		if (c == ' ') {
-			c = 0;
-			sTVPGLExtensions.emplace(p);
-			p = &c;
-			++p;
-		}
-	}
-	if (*p) sTVPGLExtensions.emplace(p);
-#ifdef WIN32
-	sTVPGLExtensions.erase("GL_EXT_unpack_subimage");
-#endif
-#ifdef TEST_SHADER_ENABLED
-	for (const std::string &line : sTVPGLExtensions) {
-		cocos2d::log("%s", line.c_str());
-	}
-#endif
-	GL_CHECK_unpack_subimage = TVPCheckGLExtension("GL_EXT_unpack_subimage");
-	GL_CHECK_shader_framebuffer_fetch =
-		TVPCheckGLExtension("GL_EXT_shader_framebuffer_fetch") ||
-		TVPCheckGLExtension("GL_ARM_shader_framebuffer_fetch") ||
-		TVPCheckGLExtension("GL_NV_shader_framebuffer_fetch");
-}
-
-namespace GL { // independ from global gl functions
-#ifndef GLAPIENTRY
-#define GLAPIENTRY
-#endif
-#ifdef _MSC_VER
-typedef PROC (WINAPI fGetProcAddress)(LPCSTR);
-#else
-typedef void* (EGLAPIENTRY fGetProcAddress)(const char *);
-#endif
-static fGetProcAddress *glGetProcAddress;
-
-typedef void (GLAPIENTRY fCopyImageSubData)(GLuint srcName, GLenum srcTarget, GLint srcLevel, GLint srcX, GLint srcY, GLint srcZ, GLuint dstName, GLenum dstTarget, GLint dstLevel, GLint dstX, GLint dstY, GLint dstZ, GLsizei width, GLsizei height, GLsizei depth);
-static fCopyImageSubData *glCopyImageSubData;
-typedef void (GLAPIENTRY fClearTexImage)(uint texture, int level, GLenum format, GLenum type, const void * data);
-static fClearTexImage *glClearTexImage;
-typedef void (GLAPIENTRY fClearTexSubImage)(uint texture, int level, int xoffset, int yoffset, int zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const void * data);
-static fClearTexSubImage *glClearTexSubImage;
-
-#ifdef _MSC_VER
-typedef void (GLAPIENTRY fGetTextureImage)(GLuint texture, GLint level, GLenum format, GLenum type, GLsizei bufSize, void *pixels);
-static fGetTextureImage *glGetTextureImage;
-#endif
-
-typedef void (GLAPIENTRY fAlphaFunc)(GLenum func, GLclampf ref);
-static fAlphaFunc *glAlphaFunc;
-}
-
 struct _UsedGLExtInfo {
 	_UsedGLExtInfo(){}
 	const char *NameBegin = nullptr;
@@ -145,6 +80,76 @@ struct _UsedGLExtInfo {
 };
 static const _UsedGLExtInfo UsedGLExtInfo;
 
+static std::unordered_set<std::string> sTVPGLExtensions;
+// some quick check flags
+static bool GL_CHECK_unpack_subimage;
+static bool GL_CHECK_shader_framebuffer_fetch;
+
+bool TVPCheckGLExtension(const std::string &extname) {
+	return sTVPGLExtensions.find(extname) != sTVPGLExtensions.end();
+}
+static bool TVPGLExtensionInfoInited = false;
+static void TVPInitGLExtensionInfo() {
+	if (TVPGLExtensionInfoInited) return;
+	TVPGLExtensionInfoInited = true;
+	std::string gl_extensions = (const char*)glGetString(GL_EXTENSIONS);
+	const char *p = gl_extensions.c_str();
+	for (char &c : gl_extensions) {
+		if (c == ' ') {
+			c = 0;
+			sTVPGLExtensions.emplace(p);
+			p = &c;
+			++p;
+		}
+	}
+	if (*p) sTVPGLExtensions.emplace(p);
+	IndividualConfigManager *cfgMgr = IndividualConfigManager::GetInstance();
+	for (const char *const *name = (&UsedGLExtInfo.NameBegin) + 1; *name; ++name) {
+		if (!cfgMgr->GetValue<int>(*name, 1)) {
+#ifndef _MSC_VER
+			sTVPGLExtensions.erase(*name);
+#endif
+		}
+	}
+#ifdef WIN32
+	sTVPGLExtensions.erase("GL_EXT_unpack_subimage");
+#endif
+#ifdef TEST_SHADER_ENABLED
+	for (const std::string &line : sTVPGLExtensions) {
+		cocos2d::log("%s", line.c_str());
+	}
+#endif
+}
+
+namespace GL { // independ from global gl functions
+#ifndef GLAPIENTRY
+#define GLAPIENTRY
+#endif
+#ifdef _MSC_VER
+typedef PROC (WINAPI fGetProcAddress)(LPCSTR);
+#elif defined(TARGET_OS_IPHONE)
+typedef void* (fGetProcAddress)(const char *);
+#else
+typedef void* (EGLAPIENTRY fGetProcAddress)(const char *);
+#endif
+static fGetProcAddress *glGetProcAddress = nullptr;
+
+typedef void (GLAPIENTRY fCopyImageSubData)(GLuint srcName, GLenum srcTarget, GLint srcLevel, GLint srcX, GLint srcY, GLint srcZ, GLuint dstName, GLenum dstTarget, GLint dstLevel, GLint dstX, GLint dstY, GLint dstZ, GLsizei width, GLsizei height, GLsizei depth);
+static fCopyImageSubData *glCopyImageSubData;
+typedef void (GLAPIENTRY fClearTexImage)(uint texture, int level, GLenum format, GLenum type, const void * data);
+static fClearTexImage *glClearTexImage;
+typedef void (GLAPIENTRY fClearTexSubImage)(uint texture, int level, int xoffset, int yoffset, int zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const void * data);
+static fClearTexSubImage *glClearTexSubImage;
+
+#ifdef _MSC_VER
+typedef void (GLAPIENTRY fGetTextureImage)(GLuint texture, GLint level, GLenum format, GLenum type, GLsizei bufSize, void *pixels);
+static fGetTextureImage *glGetTextureImage;
+#endif
+
+typedef void (GLAPIENTRY fAlphaFunc)(GLenum func, GLclampf ref);
+static fAlphaFunc *glAlphaFunc;
+}
+
 static void TVPInitGLExtensionFunc() {
 #ifdef _MSC_VER
 	GL::glGetProcAddress = wglGetProcAddress;
@@ -152,28 +157,34 @@ static void TVPInitGLExtensionFunc() {
 	GL::glGetProcAddress = (GL::fGetProcAddress*)eglGetProcAddress;
 #endif
 
-#ifdef _MSC_VER
-	GL::glGetTextureImage = (GL::fGetTextureImage*)GL::glGetProcAddress("glGetTextureImage");
-#endif
-#ifdef _MSC_VER
-// 	if (!GL::glCopyImageSubData && TVPCheckGLExtension(UsedGLExtInfo.GLEXT_EXT_copy_image))
-// 		GL::glCopyImageSubData = (GL::fCopyImageSubData*)GL::glGetProcAddress("glCopyImageSubDataEXT");
-// 	if (!GL::glCopyImageSubData && TVPCheckGLExtension(UsedGLExtInfo.GLEXT_OES_copy_image))
-// 		GL::glCopyImageSubData = (GL::fCopyImageSubData*)GL::glGetProcAddress("glCopyImageSubDataOES");
-	if (!GL::glCopyImageSubData && TVPCheckGLExtension(UsedGLExtInfo.GLEXT_NV_copy_image))
-		GL::glCopyImageSubData = (GL::fCopyImageSubData*)GL::glGetProcAddress("glCopyImageSubDataNV");
-	if (!GL::glCopyImageSubData && TVPCheckGLExtension(UsedGLExtInfo.GLEXT_ARB_copy_image))
-		GL::glCopyImageSubData = (GL::fCopyImageSubData*)GL::glGetProcAddress("glCopyImageSubData");
-#endif
-	if (!GL::glClearTexImage && TVPCheckGLExtension(UsedGLExtInfo.GLEXT_EXT_clear_texture)) {
-		GL::glClearTexImage = (GL::fClearTexImage*)GL::glGetProcAddress("glClearTexImageEXT");
-		GL::glClearTexSubImage = (GL::fClearTexSubImage*)GL::glGetProcAddress("glClearTexSubImageEXT");
-	}
-	if (!GL::glClearTexImage && TVPCheckGLExtension(UsedGLExtInfo.GLEXT_ARB_clear_texture)) {
-		GL::glClearTexImage = (GL::fClearTexImage*)GL::glGetProcAddress("glClearTexImage");
-		GL::glClearTexSubImage = (GL::fClearTexSubImage*)GL::glGetProcAddress("glClearTexSubImage");
-	}
+	GL_CHECK_unpack_subimage = TVPCheckGLExtension("GL_EXT_unpack_subimage");
+	GL_CHECK_shader_framebuffer_fetch =
+		TVPCheckGLExtension("GL_EXT_shader_framebuffer_fetch") ||
+		TVPCheckGLExtension("GL_ARM_shader_framebuffer_fetch") ||
+		TVPCheckGLExtension("GL_NV_shader_framebuffer_fetch");
 
+	if (GL::glGetProcAddress) {
+#ifdef _MSC_VER
+		GL::glGetTextureImage = (GL::fGetTextureImage*)GL::glGetProcAddress("glGetTextureImage");
+#endif
+		if (!GL::glCopyImageSubData && TVPCheckGLExtension(UsedGLExtInfo.GLEXT_EXT_copy_image))
+			GL::glCopyImageSubData = (GL::fCopyImageSubData*)GL::glGetProcAddress("glCopyImageSubDataEXT");
+		if (!GL::glCopyImageSubData && TVPCheckGLExtension(UsedGLExtInfo.GLEXT_OES_copy_image))
+			GL::glCopyImageSubData = (GL::fCopyImageSubData*)GL::glGetProcAddress("glCopyImageSubDataOES");
+		if (!GL::glCopyImageSubData && TVPCheckGLExtension(UsedGLExtInfo.GLEXT_NV_copy_image))
+			GL::glCopyImageSubData = (GL::fCopyImageSubData*)GL::glGetProcAddress("glCopyImageSubDataNV");
+		if (!GL::glCopyImageSubData && TVPCheckGLExtension(UsedGLExtInfo.GLEXT_ARB_copy_image))
+			GL::glCopyImageSubData = (GL::fCopyImageSubData*)GL::glGetProcAddress("glCopyImageSubData");
+
+		if (!GL::glClearTexImage && TVPCheckGLExtension(UsedGLExtInfo.GLEXT_EXT_clear_texture)) {
+			GL::glClearTexImage = (GL::fClearTexImage*)GL::glGetProcAddress("glClearTexImageEXT");
+			GL::glClearTexSubImage = (GL::fClearTexSubImage*)GL::glGetProcAddress("glClearTexSubImageEXT");
+		}
+		if (!GL::glClearTexImage && TVPCheckGLExtension(UsedGLExtInfo.GLEXT_ARB_clear_texture)) {
+			GL::glClearTexImage = (GL::fClearTexImage*)GL::glGetProcAddress("glClearTexImage");
+			GL::glClearTexSubImage = (GL::fClearTexSubImage*)GL::glGetProcAddress("glClearTexSubImage");
+		}
+	}
 #ifdef GL_ALPHA_TEST
 	GL::glAlphaFunc = glAlphaFunc;
 #else
@@ -184,7 +195,20 @@ static void TVPInitGLExtensionFunc() {
 }
 
 std::string TVPGetOpenGLInfo() {
-	TVPInitGLExtensionInfo();
+//	TVPInitGLExtensionInfo();
+	std::unordered_set<std::string> Extensions;
+	std::string gl_extensions = (const char*)glGetString(GL_EXTENSIONS);
+	const char *p = gl_extensions.c_str();
+	for (char &c : gl_extensions) {
+		if (c == ' ') {
+			c = 0;
+			Extensions.emplace(p);
+			p = &c;
+			++p;
+		}
+	}
+	if (*p) Extensions.emplace(p);
+
 	std::stringstream ret;
 	ret << "Renderer : "; ret << glGetString(GL_RENDERER); ret << "\n";
 	ret << "Vendor : "; ret << glGetString(GL_VENDOR); ret << "\n";
@@ -193,13 +217,38 @@ std::string TVPGetOpenGLInfo() {
 	ret << "MaxTexureSize : "; ret << int(maxTextSize); ret << "\n";
 	ret << LocaleConfigManager::GetInstance()->GetText("supported_opengl_extension");
 	for (const char *const *name = (&UsedGLExtInfo.NameBegin) + 1; *name; ++name) {
-		if (TVPCheckGLExtension(*name)) {
+		if (Extensions.find(*name) != Extensions.end()) {
 			ret << "\n";
 			ret << *name;
 		}
 	}
 	return ret.str();
 }
+
+// bool TVPOnOpenGLRendererSelected(bool forceNotice) {
+// 	if (!strstr((const char*)glGetString(GL_RENDERER), "Adreno")) {
+// 		return false;
+// 	}
+// //	TVPInitGLExtensionInfo();
+// 	bool ret = false;
+// 	if (strstr((const char*)glGetString(GL_EXTENSIONS), "GL_EXT_shader_framebuffer_fetch")) {
+// 		ret = true;
+// 		if (forceNotice || GlobalConfigManager::GetInstance()->GetValue<int>("noticed_adreno_issue", 0) < 1) {
+// 			const char *btnText[2] = {
+// 				LocaleConfigManager::GetInstance()->GetText("msgbox_ok").c_str(),
+// 				LocaleConfigManager::GetInstance()->GetText("msgbox_nerver_notice").c_str(),
+// 			};
+// 			int n = TVPShowSimpleMessageBox(LocaleConfigManager::GetInstance()->GetText
+// 				("issue_GL_EXT_shader_framebuffer_fetch").c_str(), "Info", forceNotice ? 1 : 2, btnText);
+// 			if (n == 1) {
+// 				GlobalConfigManager::GetInstance()->SetValueInt("noticed_adreno_issue", 1);
+// 				GlobalConfigManager::GetInstance()->SaveToFile();
+// 			}
+// 		}
+// 	}
+// //	TVPGLExtensionInfoInited = false;
+// 	return ret;
+// }
 
 class tTVPOGLTexture2D;
 struct GLVertexInfo {
@@ -1129,13 +1178,13 @@ public:
 		: tTVPOGLTexture2D(tw, th, format, mode)
 	{
 		_scaleW = sw; _scaleH = sh;
-		assert(pixel); // pixel must be exist
+	//	assert(pixel); // pixel must be exist
 		int pixsize = getPixelSize();
 		if (pitch == iw * pixsize || ((pitch & 7) == 0 && pitch - iw * pixsize < 8)) {
 			InternalInit(pixel, iw, ih, pitch);
 		} else if (GL_CHECK_unpack_subimage) {
 			InternalInit(nullptr, iw, ih, 0);
-			Update(pixel, Format, pitch, tTVPRect(0, 0, iw, ih));
+			InternalUpdate(pixel, pitch, 0, 0, iw, ih);
 		} else { // rearrange
 			InternalInit(nullptr, iw, ih, 0);
 			PixelData = new unsigned char[internalW * internalH * 4];
@@ -1147,7 +1196,7 @@ public:
 				src += pitch;
 				dst += dstpitch;
 			}
-			Update(PixelData, Format, dstpitch, tTVPRect(0, 0, internalW, internalH));
+			InternalUpdate(PixelData, dstpitch, 0, 0, internalW, internalH);
 			delete[]PixelData;
 			PixelData = nullptr;
 		}
@@ -1155,6 +1204,10 @@ public:
 	}
 
 	virtual void Update(const void *pixel, TVPTextureFormat::e format, int pitch, const tTVPRect& rc) {
+		if (PixelData) {
+			delete[] PixelData;
+			PixelData = nullptr;
+		}
 		InternalUpdate(pixel, pitch, rc.left, rc.top, rc.get_width(), rc.get_height());
 	};
 
@@ -1185,7 +1238,7 @@ class tTVPOGLTexture2D_mutatble : public tTVPOGLTexture2D {
 
 public:
 	tTVPOGLTexture2D_mutatble(const void *pixel, int pitch, unsigned int w, unsigned int h, TVPTextureFormat::e format, float sw, float sh)
-		: tTVPOGLTexture2D(w, h, format, GL_LINEAR)
+		: tTVPOGLTexture2D(w, h, format == TVPTextureFormat::RGB ? TVPTextureFormat::RGBA : format, GL_LINEAR)
 	{
 		if (!pixel) {
 			_scaleW = sw; _scaleH = sh;
@@ -1503,8 +1556,14 @@ public:
 	}
 
 	virtual void Rebuild() {
-		program = CombineProgram(GetVertShader(m_nTex),
-			CompileShader(GL_FRAGMENT_SHADER, m_strScript));
+		try {
+			program = CombineProgram(GetVertShader(m_nTex),
+				CompileShader(GL_FRAGMENT_SHADER, m_strScript));
+		} catch (eTJSError &e) {
+			e.AppendMessage("\n");
+			e.AppendMessage(Name);
+			throw;
+		}
 		cocos2d::GL::useProgram(program);
 		std::string tex("tex");
 		std::string coord("a_texCoord");
@@ -1626,13 +1685,22 @@ class tTVPOGLRenderMethod_Script_BlendColor : public tTVPOGLRenderMethod_Script 
 		}
 		return inherit::EnumParameterID(name);
 	}
-	virtual void SetParameterOpa(int id, int Value) {
+	virtual void SetParameterOpa(int id, int Value) override {
 		if (id == 0x709AC167) {
 			float v = Value / 255.f;
 			cocos2d::GL::useProgram(program);
 			glBlendColor(v, v, v, v);
 		} else {
 			inherit::SetParameterOpa(id, Value);
+		}
+	};
+	virtual void SetParameterFloat(int id, float Value) override {
+		if (id == 0x709AC167) {
+			float v = Value;
+			cocos2d::GL::useProgram(program);
+			glBlendColor(v, v, v, v);
+		} else {
+			inherit::SetParameterFloat(id, Value);
 		}
 	};
 };
@@ -1813,6 +1881,10 @@ const void * tTVPOGLTexture2D::GetScanLineForRead(tjs_uint l)
 	if (_scaleW == 1.f && _scaleH == 1.f) {
 		if (!PixelData) {
 			PixelData = new unsigned char[internalW * internalH * 4];
+#ifdef _MSC_VER
+			GL::glGetTextureImage(texture, 0, GL_RGBA, GL_UNSIGNED_BYTE, internalH * internalW * 4, PixelData);
+			return &PixelData[l * internalW * 4];
+#endif
 			TVPSetRenderTarget(texture);
 			glViewport(0, 0, internalW, internalH);
 			glPixelStorei(GL_PACK_ALIGNMENT, 4); // always dword aligned
@@ -1870,6 +1942,8 @@ protected:
 		"#define gl_LastFragColor gl_LastFragData[0]"		   "\n"
 		"#elif defined(GL_NV_shader_framebuffer_fetch)"	   "\n"
 		"#extension GL_NV_shader_framebuffer_fetch : require" "\n"
+		"#else"											   "\n"
+		"#error noy any framebuffer fetch extension available"   "\n"
 		"#endif"											   "\n"
 		;
 
@@ -1982,7 +2056,7 @@ protected:
 				}
 			}
 		}
-		if (isOpaque) {
+		if (fmt == TVPTextureFormat::RGBA && isOpaque) {
 			int dpitch = (w * 3 + 7) & ~7;
 			tjs_uint8 *rgb = new tjs_uint8[dpitch * h + 16];
 			tjs_uint8 *dst = (tjs_uint8*)(((intptr_t)rgb + 7) & ~7);
@@ -2095,7 +2169,7 @@ protected:
 		// test
 		//_CreateStaticTexture2D = CreateStaticTexture2D_half;
 		//_CreateMutableTexture2D = CreateMutableTexture2D_half;
-		std::string compTexMethod = IndividualConfigManager::GetInstance()->GetValueString("ogl_compress_tex", "none");
+		std::string compTexMethod = IndividualConfigManager::GetInstance()->GetValue<std::string>("ogl_compress_tex", "none");
 		if (compTexMethod == "half") {
 			_CreateStaticTexture2D = CreateStaticTexture2D_half;
 		//	_CreateMutableTexture2D = CreateMutableTexture2D_half;
@@ -2103,7 +2177,7 @@ protected:
 		GLint maxTextSize;
 		glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxTextSize);
 		TVPMaxTextureSize = maxTextSize;
-		maxTextSize = IndividualConfigManager::GetInstance()->GetValueInt("ogl_max_texsize", 0);
+		maxTextSize = IndividualConfigManager::GetInstance()->GetValue<int>("ogl_max_texsize", 0);
 		if (maxTextSize > 0 && (maxTextSize < TVPMaxTextureSize || TVPMaxTextureSize < 1024)) {
 			TVPMaxTextureSize = maxTextSize; // override by user config
 		}
@@ -2475,17 +2549,29 @@ public:
 			"}", 1)->SetBlendFuncSeparate(GL_FUNC_ADD, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ZERO, GL_ONE);
 		TEST_SHADER_BLTO(AlphaBlend);
 
+		CompileAndRegScript<tTVPOGLRenderMethod_Script>("AlphaBlend_color", colorPrefix + ScriptCommonPrefix +
+			"    s *= color;\n"
+			"    gl_FragColor = s;\n"
+			"}", 1)->SetBlendFuncSeparate(GL_FUNC_ADD, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ZERO, GL_ONE);
+
 		if (GL::glAlphaFunc) {
-			CompileAndRegScript<tTVPOGLRenderMethod_AlphaTest>("AlphaBlend_AlphaTest", opacityPrefix + ScriptCommonPrefix +
-				"    s.a *= opacity;\n"
+			CompileAndRegScript<tTVPOGLRenderMethod_AlphaTest>("AlphaBlend_color_AlphaTest", colorPrefix + ScriptCommonPrefix +
+				"    s *= color;\n"
 				"    gl_FragColor = s;\n"
 				"}", 1)->SetBlendFuncSeparate(GL_FUNC_ADD, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ZERO, GL_ONE);
+			CompileAndRegScript<tTVPOGLRenderMethod_AlphaTest>("AlphaTest", ScriptCommonPrefix +
+				"    gl_FragColor = s;\n"
+				"}", 1)->SetBlendFuncSeparate(GL_FUNC_ADD, GL_ZERO, GL_ONE, GL_ZERO, GL_ONE);
 		} else {
-			CompileAndRegScript<tTVPOGLRenderMethod_Script>("AlphaBlend_AlphaTest", opacityPrefix + alpha_thresholdPrefix + ScriptCommonPrefix +
-				"    s.a *= opacity;\n"
+			CompileAndRegScript<tTVPOGLRenderMethod_Script>("AlphaBlend_color_AlphaTest", colorPrefix + alpha_thresholdPrefix + ScriptCommonPrefix +
+				"    s *= color;\n"
 				"    if(s.a < alpha_threshold) discard;\n"
 				"    else gl_FragColor = s;\n"
 				"}", 1)->SetBlendFuncSeparate(GL_FUNC_ADD, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ZERO, GL_ONE);
+			CompileAndRegScript<tTVPOGLRenderMethod_Script>("AlphaTest", alpha_thresholdPrefix + ScriptCommonPrefix +
+				"    if(s.a < alpha_threshold) discard;\n"
+				"    gl_FragColor = s;\n"
+				"}", 1)->SetBlendFuncSeparate(GL_FUNC_ADD, GL_ZERO, GL_ONE, GL_ZERO, GL_ONE);
 		}
 
 		CompileAndRegScript<tTVPOGLRenderMethod_Script_BlendColor>("AlphaBlend_SD", /*opacityPrefix +*/ ScriptCommonPrefix +
@@ -2515,14 +2601,19 @@ public:
 		TEST_SHADER(AlphaBlend_a,
 			TVPAlphaBlend_ao(testdest, testdata1, 256 * 256, TEST_SHADER_OPA));
 
+		CompileAndRegScript<tTVPOGLRenderMethod_Script>("AlphaBlend_color_a", colorPrefix + ScriptCommonPrefix +
+			"    s *= color;\n"
+			"    gl_FragColor = s;\n"
+			"}", 1)->SetBlendFuncSeparate(GL_FUNC_ADD, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
 		if (GL::glAlphaFunc) {
-			CompileAndRegScript<tTVPOGLRenderMethod_AlphaTest>("AlphaBlend_a_AlphaTest", opacityPrefix + ScriptCommonPrefix +
-				"    s.a *= opacity;\n"
+			CompileAndRegScript<tTVPOGLRenderMethod_AlphaTest>("AlphaBlend_color_a_AlphaTest", colorPrefix + ScriptCommonPrefix +
+				"    s *= color;\n"
 				"    gl_FragColor = s;\n"
 				"}", 1)->SetBlendFuncSeparate(GL_FUNC_ADD, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 		} else {
-			CompileAndRegScript<tTVPOGLRenderMethod_Script>("AlphaBlend_a_AlphaTest", opacityPrefix + alpha_thresholdPrefix + ScriptCommonPrefix +
-				"    s.a *= opacity;\n"
+			CompileAndRegScript<tTVPOGLRenderMethod_Script>("AlphaBlend_color_a_AlphaTest", colorPrefix + alpha_thresholdPrefix + ScriptCommonPrefix +
+				"    s *= color;\n"
 				"    if(s.a < alpha_threshold) discard;\n"
 				"    gl_FragColor = s;\n"
 				"}", 1)->SetBlendFuncSeparate(GL_FUNC_ADD, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
@@ -2538,11 +2629,18 @@ public:
 		TEST_SHADER(AlphaBlend_d,
 			TVPAlphaBlend_do(testdest, testdata1, 256 * 256, TEST_SHADER_OPA));
 
+		shader_AlphaBlend_d =
+			"    s *= color;\n"
+			"    d.a = s.a + d.a - s.a * d.a;\n"
+			"    d.rgb = mix(d.rgb, s.rgb, s.a / (d.a + 0.0001));\n"
+			"    gl_FragColor = d;\n"
+			"}";
+		CompileAndRegRegularBlendMethod("AlphaBlend_color_d", colorPrefix, shader_AlphaBlend_d);
 		if (GL::glAlphaFunc) {
-			CompileAndRegRegularBlendMethod<tTVPOGLRenderMethod_AlphaTest>("AlphaBlend_d_AlphaTest", opacityPrefix, shader_AlphaBlend_d);
+			CompileAndRegRegularBlendMethod<tTVPOGLRenderMethod_AlphaTest>("AlphaBlend_color_d_AlphaTest", colorPrefix, shader_AlphaBlend_d);
 		} else {
-			CompileAndRegRegularBlendMethod("AlphaBlend_d_AlphaTest", opacityPrefix + alpha_thresholdPrefix,
-				"    s.a *= opacity;\n"
+			CompileAndRegRegularBlendMethod("AlphaBlend_color_d_AlphaTest", colorPrefix + alpha_thresholdPrefix,
+				"    s *= color;\n"
 				"    if(s.a < alpha_threshold) discard;\n"
 				"    d.a = s.a + d.a - s.a * d.a;\n"
 				"    d.rgb = mix(d.rgb, s.rgb, s.a / (d.a + 0.0001));\n"
@@ -2625,17 +2723,21 @@ public:
 		CompileAndRegRegularBlendMethod("PsAddBlend", opacityPrefix, shader_PsAddBlend);
 		TEST_SHADER_BLTO(PsAddBlend);
 
+		shader_PsAddBlend =
+			"    s *= color;\n"
+			"    d.rgb = mix(d.rgb, clamp(s.rgb + d.rgb, 0.0, 1.0), s.a);\n"
+			"    gl_FragColor = d;\n"
+			"}";
+		CompileAndRegRegularBlendMethod("PsAddBlend_color", colorPrefix, shader_PsAddBlend);
 		if (GL::glAlphaFunc) {
-			CompileAndRegRegularBlendMethod<tTVPOGLRenderMethod_AlphaTest>("PsAddBlend_AlphaTest", opacityPrefix,
+			CompileAndRegRegularBlendMethod<tTVPOGLRenderMethod_AlphaTest>("PsAddBlend_color_AlphaTest", colorPrefix,
 				shader_PsAddBlend);
 		} else {
-			CompileAndRegRegularBlendMethod("PsAddBlend_AlphaTest", opacityPrefix + alpha_thresholdPrefix,
-				"    s.a *= opacity;\n"
+			CompileAndRegRegularBlendMethod("PsAddBlend_color_AlphaTest", colorPrefix + alpha_thresholdPrefix,
+				"    s *= color;\n"
 				"    if(s.a < alpha_threshold) discard;\n"
-				"    else {\n"
-				"        d.rgb = mix(d.rgb, clamp(s.rgb + d.rgb, 0.0, 1.0), s.a);\n"
-				"        gl_FragColor = d;\n"
-				"    }\n"
+				"    d.rgb = mix(d.rgb, clamp(s.rgb + d.rgb, 0.0, 1.0), s.a);\n"
+				"    gl_FragColor = d;\n"
 				"}");
 		}
 
@@ -2646,16 +2748,21 @@ public:
 		CompileAndRegRegularBlendMethod("PsSubBlend", opacityPrefix, shader_PsSubBlend);
 		TEST_SHADER_BLTO(PsSubBlend);
 
+		shader_PsSubBlend =
+			"    s *= color;\n"
+			"    d.rgb = mix(d.rgb, clamp(d.rgb + s.rgb - 1.0, 0.0, 1.0), s.a);\n"
+			"    gl_FragColor = d;\n"
+			"}";
+		CompileAndRegRegularBlendMethod("PsSubBlend_color", colorPrefix, shader_PsSubBlend);
 		if (GL::glAlphaFunc) {
-			CompileAndRegRegularBlendMethod<tTVPOGLRenderMethod_AlphaTest>("PsSubBlend_AlphaTest", opacityPrefix,
+			CompileAndRegRegularBlendMethod<tTVPOGLRenderMethod_AlphaTest>("PsSubBlend_color_AlphaTest", colorPrefix,
 				shader_PsSubBlend);
 		} else {
-			CompileAndRegRegularBlendMethod("PsSubBlend_AlphaTest", opacityPrefix + alpha_thresholdPrefix,
-				"    s.a *= opacity;\n"
+			CompileAndRegRegularBlendMethod("PsSubBlend_color_AlphaTest", colorPrefix + alpha_thresholdPrefix,
+				"    s *= color;\n"
 				"    if(s.a < alpha_threshold) discard;\n"
-				"    else {\n"
 				"    d.rgb = mix(d.rgb, clamp(d.rgb + s.rgb - 1.0, 0.0, 1.0), s.a);\n"
-				"        gl_FragColor = d;\n    }\n"
+				"    gl_FragColor = d;\n"
 				"}");
 		}
 
@@ -2669,17 +2776,24 @@ public:
 			shader_PsMulBlend, 1)->SetBlendFuncSeparate(GL_FUNC_ADD, GL_ZERO, GL_SRC_COLOR, GL_ZERO, GL_ONE);
 		TEST_SHADER_BLTO(PsMulBlend);
 
+		shader_PsMulBlend =
+			"    s *= color;\n"
+			"    s.rgb *= s.a;\n"
+			"    s.rgb += 1.0 - s.a;\n"
+			"    gl_FragColor = s;\n"
+			"}";
+		CompileAndRegScript<tTVPOGLRenderMethod_Script>("PsMulBlend_color", colorPrefix + ScriptCommonPrefix +
+			shader_PsMulBlend, 1)->SetBlendFuncSeparate(GL_FUNC_ADD, GL_ZERO, GL_SRC_COLOR, GL_ZERO, GL_ONE);
 		if (GL::glAlphaFunc) {
-			CompileAndRegScript<tTVPOGLRenderMethod_AlphaTest>("PsMulBlend_AlphaTest", opacityPrefix + ScriptCommonPrefix +
+			CompileAndRegScript<tTVPOGLRenderMethod_AlphaTest>("PsMulBlend_color_AlphaTest", colorPrefix + ScriptCommonPrefix +
 				shader_PsMulBlend, 1)->SetBlendFuncSeparate(GL_FUNC_ADD, GL_ZERO, GL_SRC_COLOR, GL_ZERO, GL_ONE);
 		} else {
-			CompileAndRegScript<tTVPOGLRenderMethod_Script>("PsMulBlend_AlphaTest", opacityPrefix + alpha_thresholdPrefix + ScriptCommonPrefix +
-				"    s.a *= opacity;\n"
+			CompileAndRegScript<tTVPOGLRenderMethod_Script>("PsMulBlend_color_AlphaTest", colorPrefix + alpha_thresholdPrefix + ScriptCommonPrefix +
+				"    s *= color;\n"
 				"    if(s.a < alpha_threshold) discard;\n"
-				"    else {\n"
 				"    s.rgb *= s.a;\n"
 				"    s.rgb += 1.0 - s.a;\n"
-				"    gl_FragColor = s;\n    }\n"
+				"    gl_FragColor = s;\n"
 				"}", 1)->SetBlendFuncSeparate(GL_FUNC_ADD, GL_ZERO, GL_SRC_COLOR, GL_ZERO, GL_ONE);
 		}
 
@@ -2771,16 +2885,22 @@ public:
 			shader_PsScreenBlend, 1)->SetBlendFuncSeparate(GL_FUNC_ADD, GL_ONE_MINUS_DST_COLOR, GL_ONE, GL_ZERO, GL_ONE);
 		TEST_SHADER_BLTO(PsScreenBlend);
 
+		shader_PsScreenBlend =
+			"    s *= color;\n"
+			"    s.rgb *= s.a;\n"
+			"    gl_FragColor = s;\n"
+			"}";
+		CompileAndRegScript<tTVPOGLRenderMethod_Script>("PsScreenBlend_color", colorPrefix + ScriptCommonPrefix +
+			shader_PsScreenBlend, 1)->SetBlendFuncSeparate(GL_FUNC_ADD, GL_ONE_MINUS_DST_COLOR, GL_ONE, GL_ZERO, GL_ONE);
 		if (GL::glAlphaFunc) {
-			CompileAndRegScript<tTVPOGLRenderMethod_AlphaTest>("PsScreenBlend_AlphaTest", opacityPrefix + ScriptCommonPrefix +
+			CompileAndRegScript<tTVPOGLRenderMethod_AlphaTest>("PsScreenBlend_color_AlphaTest", colorPrefix + ScriptCommonPrefix +
 				shader_PsScreenBlend, 1)->SetBlendFuncSeparate(GL_FUNC_ADD, GL_ONE_MINUS_DST_COLOR, GL_ONE, GL_ZERO, GL_ONE);
 		} else {
-			CompileAndRegScript<tTVPOGLRenderMethod_Script>("PsScreenBlend_AlphaTest", opacityPrefix + alpha_thresholdPrefix + ScriptCommonPrefix +
-				"    s.a *= opacity;\n"
+			CompileAndRegScript<tTVPOGLRenderMethod_Script>("PsScreenBlend_color_AlphaTest", colorPrefix + alpha_thresholdPrefix + ScriptCommonPrefix +
+				"    s *= color;\n"
 				"    if(s.a < alpha_threshold) discard;\n"
-				"    else {\n"
 				"    s.rgb *= s.a;\n"
-				"    gl_FragColor = s;\n    }\n"
+				"    gl_FragColor = s;\n"
 				"}", 1)->SetBlendFuncSeparate(GL_FUNC_ADD, GL_ONE_MINUS_DST_COLOR, GL_ONE, GL_ZERO, GL_ONE);
 		}
 		// AdditiveAlpha <-> Alpha
@@ -2850,6 +2970,54 @@ public:
 			"    gl_FragColor = s / vec4(9, 9, 9, 9);\n"
 			"}", 1)/*->SetTargetAsSrc()*/;
 		//TEST_SHADER(BoxBlur, TVPDoGrayScale(testdest, 256 * 256)); let it pass
+#if 0
+		// GL_EXT_shader_framebuffer_fetch issue in some adreno GPUs
+		if (TVPCheckGLExtension("GL_EXT_shader_framebuffer_fetch")) {
+			tTVPBitmap *testbmp1 = new tTVPBitmap(256, 256, 32);
+			tTVPBitmap *testbmp2 = new tTVPBitmap(256, 256, 32);
+			for (int y = 0; y < 256; ++y) {
+				uint8_t *pix1 = (uint8_t *)testbmp1->GetScanLine(y);
+				uint8_t *pix2 = (uint8_t *)testbmp2->GetScanLine(y);
+				for (int x = 0; x < 256; ++x) {
+					pix2[2] = pix1[0] = 255 - x;
+					pix2[3] = pix1[1] = x;
+					pix2[1] = pix1[2] = y;
+					pix2[0] = pix1[3] = 255 - y;
+					pix1 += 4;
+					pix2 += 4;
+				}
+			}
+			tTVPRect rc(0, 0, 256, 256);
+			iTVPTexture2D *testtex1 = CreateTexture2D(nullptr, 0, 256, 256, TVPTextureFormat::RGBA, 0);
+			testtex1->Update(testbmp1->GetScanLine(0), TVPTextureFormat::RGBA, testbmp1->GetPitch(), rc);
+			iTVPTexture2D *testtex2 = CreateTexture2D(testbmp2);
+			// test GL_EXT_shader_framebuffer_fetch
+			TVPPsAddBlend_HDA((tjs_uint32*)testbmp1->GetScanLine(0), (tjs_uint32*)testbmp2->GetScanLine(0),
+				testbmp1->GetPitch() * 256 / 4);
+
+			tTVPOGLRenderMethod_Script *method = (tTVPOGLRenderMethod_Script *)GetRenderMethod("PsAddBlend");
+			method->SetParameterOpa(method->EnumParameterID("opacity"), 255);
+			std::vector<tRenderTexRectArray::Element> src_tex;
+			src_tex.emplace_back(testtex2, rc);
+			OperateRect(method, testtex1, testtex1, rc, tRenderTexRectArray(&src_tex[0], src_tex.size()));
+
+			uint8_t *pix1 = (uint8_t *)testbmp1->GetScanLine(0);
+			uint8_t *pix2 = (uint8_t *)testtex1->GetScanLineForRead(0);
+			for (int i = 0; i < 256 * 256 * 4; ++i) {
+				if (std::abs(pix1[i] - pix2[i]) > 2) {
+					const char *btnText = "OK";
+					TVPShowSimpleMessageBox(LocaleConfigManager::GetInstance()->GetText
+						("issue_GL_EXT_shader_framebuffer_fetch").c_str(), "Info", 1, &btnText);
+					break;
+				}
+			}
+			
+			delete testbmp1;
+			delete testbmp2;
+			delete testtex1;
+			delete testtex2;
+		}
+#endif
 	}
 
 	tTVPOGLTexture2D *tempTexture;
@@ -2883,7 +3051,7 @@ public:
 	}
 
 	void CopyTexture(tTVPOGLTexture2D *dst, tTVPOGLTexture2D *src, const tTVPRect &rcsrc) {
-		while (GL::glCopyImageSubData &&
+		if (GL::glCopyImageSubData &&
 			src->_scaleW == dst->_scaleW && src->_scaleH == dst->_scaleH &&
 			src->Format == dst->Format) {
 			tTVPRect rc;
@@ -3211,7 +3379,11 @@ public:
 				GL::glGetTextureImage(texlist[i].tex->texture, 0, GL_BGRA, GL_UNSIGNED_BYTE, texlist[i].tex->internalH * texlist[i].tex->internalW * 4, _src[i]->ptr(0, 0));
 			}
 			cv::Mat _tar(tar->internalH, tar->internalW, CV_8UC4);
+			cv::Mat _stencil(tar->internalH, tar->internalW, CV_8U);
 			GL::glGetTextureImage(tar->texture, 0, GL_BGRA, GL_UNSIGNED_BYTE, tar->internalH * tar->internalW * 4, _tar.ptr(0, 0));
+			if (glIsEnabled(GL_STENCIL_TEST)) {
+				glReadPixels(0, 0, tar->internalW, tar->internalH, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, _stencil.ptr(0, 0));
+			}
 			tar = tar;
 			for (unsigned int i = 0; i < texlist.size(); ++i) {
 				delete _src[i];

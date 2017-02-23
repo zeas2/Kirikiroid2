@@ -36,20 +36,14 @@ class tGetDirListFunction : public tTJSDispatch
 		iTJSDispatch2 * array = TJSCreateArrayObject();
 		if (!result) return TJS_S_OK;
 		try {
-			class tLister : public iTVPStorageLister
-			{
-			public:
-				tTJSArrayNI* ni;
-				tLister(iTJSDispatch2 * arr) {
-					arr->NativeInstanceSupport(TJS_NIS_GETINSTANCE, TJSGetArrayClassID(), (iTJSNativeInstance**)&ni);
-				}
-				void TJS_INTF_METHOD Add(const ttstr &file)
-				{
-					ni->Items.emplace_back(file);
-				}
-			} lister(array);
+			tTJSArrayNI* ni;
+			array->NativeInstanceSupport(TJS_NIS_GETINSTANCE, TJSGetArrayClassID(), (iTJSNativeInstance**)&ni);
 			TVPGetLocalName(dir);
-			TVPGetLocalFileListAt(dir, &lister, S_IFMT);
+			TVPGetLocalFileListAt(dir, [ni](const ttstr &name, tTVPLocalFileInfo* s) {
+				if (s->Mode & (S_IFREG | S_IFDIR)) {
+					ni->Items.emplace_back(name);
+				}
+			});
 			*result = tTJSVariant(array, array);
 			array->Release();
 		}

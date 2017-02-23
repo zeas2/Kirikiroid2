@@ -219,6 +219,8 @@ struct tTVPTouchCaptureLayer {
 // texture for last render target
 class tTVPDestTexture : public tTVPBaseTexture
 {
+	bool HoldAlpha = true;
+
 public:
     tTVPDestTexture(tjs_uint w, tjs_uint h) : tTVPBaseTexture(w, h) {}
 
@@ -226,14 +228,8 @@ public:
 // 		tTVPRect refrect, tTVPBBBltMethod method, tjs_int opa);
 	virtual bool CopyRect(tjs_int x, tjs_int y, const iTVPBaseBitmap *ref,
 		tTVPRect refrect, tjs_int plane = (TVP_BB_COPY_MAIN | TVP_BB_COPY_MASK));
-};
 
-class tTVPDestBitmap : public tTVPBaseBitmap
-{
-public:
-	tTVPDestBitmap(tjs_uint w, tjs_uint h) : tTVPBaseBitmap(w, h) {}
-	virtual bool CopyRect(tjs_int x, tjs_int y, const iTVPBaseBitmap *ref,
-		tTVPRect refrect, tjs_int plane = (TVP_BB_COPY_MAIN | TVP_BB_COPY_MASK));
+	void SetHoldAlpha(bool b) { HoldAlpha = b; }
 };
 
 //---------------------------------------------------------------------------
@@ -278,7 +274,7 @@ class tTVPLayerManager : public iTVPLayerManager, public tTVPDrawable
 	bool ReleaseCaptureCalled;
 
 	bool InNotifyingHintOrCursorChange;
-
+	bool HoldAlpha = true;
 public:
 	tTVPLayerManager(class iTVPLayerTreeOwner *owner);
 
@@ -297,6 +293,7 @@ public:
 
 public:
 	virtual void TJS_INTF_METHOD SetDesiredLayerType(tTVPLayerType type) { DesiredLayerType = type; }
+	void SetHoldAlpha(bool b);
 
 public: // methods from tTVPDrawable
 	virtual tTVPBaseTexture * GetDrawTargetBitmap(const tTVPRect &rect,

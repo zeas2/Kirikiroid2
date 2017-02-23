@@ -175,6 +175,7 @@ public:
 	void OnActivate(  );
 	void OnDeactivate(  );
 	void OnExit();
+	void OnLowMemory();
 
 	bool GetActivating() const { return application_activating_; }
 	bool GetNotMinimizing() const;

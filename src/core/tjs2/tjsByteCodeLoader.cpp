@@ -217,7 +217,7 @@ void tTJSByteCodeLoader::ReadObjects( tTJSScriptBlock* block, const tjs_uint8* b
 		count = read4byte( &(buff[offset]) );
 		const tjs_int codeSize = count;
 		offset += 4;
-		tjs_int32* code = new tjs_int32[count];
+		tjs_int32* code = (tjs_int32*)TJS_malloc(count * sizeof(tjs_int32));
 		for( int i = 0; i < count; i++ ) {
 			tjs_int16 c = (tjs_int16)read2byte( &(buff[offset]) );
 			code[i] = c;

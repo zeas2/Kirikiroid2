@@ -75,6 +75,18 @@ void tTVPLayerManager::UnregisterSelfFromWindow()
 {
 	LayerTreeOwner->UnregisterLayerManager(this);
 }
+
+void tTVPLayerManager::SetHoldAlpha(bool b)
+{
+	HoldAlpha = b;
+	if (!DrawBuffer) {
+		tjs_int w, h;
+		if (!GetPrimaryLayerSize(w, h)) return;
+		DrawBuffer = new tTVPDestTexture(w, h);
+	}
+	static_cast<tTVPDestTexture*>(DrawBuffer)->SetHoldAlpha(b);
+}
+
 //---------------------------------------------------------------------------
 tTVPBaseTexture * tTVPLayerManager::GetDrawTargetBitmap(const tTVPRect &rect,
 	tTVPRect &cliprect)
@@ -139,7 +151,7 @@ void tTVPLayerManager::DrawCompleted(const tTVPRect &destrect,
 		}
     }
 
-    DrawBuffer->Blt(destrect.left, destrect.top, bmp, cliprect, type, opacity, true);
+	DrawBuffer->Blt(destrect.left, destrect.top, bmp, cliprect, type, opacity, HoldAlpha);
 #endif
 }
 //---------------------------------------------------------------------------
@@ -1122,10 +1134,9 @@ void TJS_INTF_METHOD tTVPLayerManager::DumpLayerStructure()
 
 bool tTVPDestTexture::CopyRect(tjs_int x, tjs_int y, const iTVPBaseBitmap *ref, tTVPRect refrect, tjs_int plane /*= (TVP_BB_COPY_MAIN | TVP_BB_COPY_MASK)*/)
 {
-	return tTVPBaseTexture::CopyRect(x, y, ref, refrect, TVP_BB_COPY_MAIN);
-}
-
-bool tTVPDestBitmap::CopyRect(tjs_int x, tjs_int y, const iTVPBaseBitmap *ref, tTVPRect refrect, tjs_int plane /*= (TVP_BB_COPY_MAIN | TVP_BB_COPY_MASK)*/)
-{
-	return tTVPBaseBitmap::CopyRect(x, y, ref, refrect, TVP_BB_COPY_MAIN);
+	if (HoldAlpha) {
+		return tTVPBaseTexture::CopyRect(x, y, ref, refrect, TVP_BB_COPY_MAIN);
+	} else {
+		return tTVPBaseTexture::CopyRect(x, y, ref, refrect, plane);
+	}
 }

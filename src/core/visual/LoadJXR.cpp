@@ -405,9 +405,9 @@ external/jxrlib/jxrgluelib/JXRGlueLib_vc11.vcxproj
 */
 #if defined( WIN32 )
 #ifdef _DEBUG
-#pragma comment(lib, "JXRCommonLib_d.lib")
-#pragma comment(lib, "JXRDecodeLib_d.lib")
-#pragma comment(lib, "JXREncodeLib_d.lib")
+// #pragma comment(lib, "JXRCommonLib_d.lib")
+// #pragma comment(lib, "JXRDecodeLib_d.lib")
+// #pragma comment(lib, "JXREncodeLib_d.lib")
 #pragma comment(lib, "JXRGlueLib_d.lib")
 #else
 #pragma comment(lib, "JXRCommonLib.lib")

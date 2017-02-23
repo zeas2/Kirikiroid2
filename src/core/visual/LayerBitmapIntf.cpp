@@ -1780,12 +1780,12 @@ bool iTVPBaseBitmap::Blt(tjs_int x, tjs_int y, const iTVPBaseBitmap *ref,
 
 	case ltOpaque: // formerly ltCoverRect
 				   // copy
-		met = opa == 255 ? bmCopyOnAlpha : bmCopy;
+		met = opa == 255 ? bmCopy : bmCopyOnAlpha;
 		break;
 
 	case ltAlpha: // formerly ltTransparent
 				  // alpha blend
-		met = bmAlpha;
+		met = hda ? bmAlpha : bmAlphaOnAlpha;
 		break;
 
 	case ltAdditive:

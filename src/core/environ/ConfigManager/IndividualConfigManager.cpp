@@ -29,19 +29,19 @@ bool IndividualConfigManager::CheckExistAt(const std::string &folder) {
 
 bool IndividualConfigManager::CreatePreferenceAt(const std::string &folder) {
 	std::string fullpath = folder + "/" FILENAME;
-	FILE *fp =
-#ifdef _MSC_VER
-		_wfopen(ttstr(fullpath).c_str(), TJS_W("w"));
-#else
-		fopen(fullpath.c_str(), "w");
-#endif
+// 	FILE *fp =
+// #ifdef _MSC_VER
+// 		_wfopen(ttstr(fullpath).c_str(), TJS_W("w"));
+// #else
+// 		fopen(fullpath.c_str(), "w");
+// #endif
 	Clear();
-	if (!fp) {
-		TVPShowSimpleMessageBox(
-			LocaleConfigManager::GetInstance()->GetText("cannot_create_preference"),
-			LocaleConfigManager::GetInstance()->GetText("readonly_storage"));
-		return false;
-	}
+// 	if (!fp) {
+// 		TVPShowSimpleMessageBox(
+// 			LocaleConfigManager::GetInstance()->GetText("cannot_create_preference"),
+// 			LocaleConfigManager::GetInstance()->GetText("readonly_storage"));
+// 		return false;
+// 	}
 	CurrentPath = fullpath;
 	return true;
 }

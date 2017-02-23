@@ -1,5 +1,5 @@
 #include "Platform.h"
-#include "cocos2d\MainScene.h"
+#include "cocos2d/MainScene.h"
 //#undef WIN32
 #include <windows.h>
 #include <mmsystem.h>
@@ -11,6 +11,8 @@
 #include <sys/stat.h>
 #include "Application.h"
 #include "EventIntf.h"
+#include "cocos/base/CCDirector.h"
+#include <shellapi.h>
 
 #pragma comment(lib,"psapi.lib")
 
@@ -68,19 +70,9 @@ extern "C" int usleep(unsigned long us) {
 	return 0;
 }
 
-extern "C" __declspec(dllimport) int __cdecl __wgetmainargs(int * _Argc, wchar_t *** _Argv, wchar_t *** _Env, int _DoWildCard, void * _StartInfo);
+//extern "C" __declspec(dllimport) int __cdecl __wgetmainargs(int * _Argc, wchar_t *** _Argv, wchar_t *** _Env, int _DoWildCard, void * _StartInfo);
 std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
 std::string TVPGetDefaultFileDir() {
-	wchar_t **argv, **env;
-	int argc;
-	struct
-	{
-		int newmode;
-	} info = { 0 };
-	__wgetmainargs(&argc, &argv, &env, 0, &info);
-// 	if (argc > 1) {
-// 		return converter.to_bytes(argv[1]);
-// 	}
 	wchar_t buf[MAX_PATH];
 	_wgetcwd(buf, sizeof(buf) / sizeof(buf[0]));
 	wchar_t *p = buf;
@@ -94,13 +86,14 @@ std::string TVPGetDefaultFileDir() {
 int TVPCheckArchive(const ttstr &localname);
 void TVPCheckAndSendDumps(const std::string &dumpdir, const std::string &packageName, const std::string &versionStr);
 bool TVPCheckStartupArg() {
-	wchar_t **argv, **env;
-	int argc;
+	wchar_t **argv = __wargv, **env;
+	int argc = __argc;
 	struct
 	{
 		int newmode;
 	} info = { 0 };
-	__wgetmainargs(&argc, &argv, &env, 0, &info);
+	argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+//	__wgetmainargs(&argc, &argv, &env, 0, &info);
 	TVPCheckAndSendDumps(TVPGetDefaultFileDir() + "/dumps", "win32-test", "test");
 	if (argc > 1) {
 		std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;

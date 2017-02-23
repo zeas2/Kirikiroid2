@@ -2,6 +2,15 @@ static tPreferenceScreen RootPreference;
 static tPreferenceScreen OpenglOptPreference, SoftRendererOptPreference;
 static Size PrefListSize;
 
+class tTVPPreferenceInfoConstant : public iTVPPreferenceInfo {
+public:
+	tTVPPreferenceInfoConstant(const std::string &cap) : iTVPPreferenceInfo(cap, "") {}
+	virtual iPreferenceItem *createItem() override {
+		LocaleConfigManager *locmgr = LocaleConfigManager::GetInstance();
+		return CreatePreferenceItem<tPreferenceItemConstant>(PrefListSize, locmgr->GetText(Caption));
+	}
+};
+
 class tTVPPreferenceInfoCheckBox : public tTVPPreferenceInfo<bool> {
 public:
 	tTVPPreferenceInfoCheckBox(const std::string &cap, const std::string &key, bool defval)
@@ -42,18 +51,18 @@ public:
 	std::vector<std::pair<std::string, std::string> > ListInfo;
 };
 
-class tTVPPreferenceInfoSelectRenderer : public tTVPPreferenceInfoSelectList {
-	typedef tTVPPreferenceInfoSelectList inherit;
-public:
-	tTVPPreferenceInfoSelectRenderer(const std::string &cap, const std::string &key, const std::string &defval,
-		const std::initializer_list<std::pair<std::string, std::string> > &listinfo) : inherit(cap, key, defval, listinfo) {}
-	virtual void onSetValue(const std::string &v) {
-		inherit::onSetValue(v);
-		if (v == "opengl") {
-			TVPOnOpenGLRendererSelected();
-		}
-	}
-};
+// class tTVPPreferenceInfoSelectRenderer : public tTVPPreferenceInfoSelectList {
+// 	typedef tTVPPreferenceInfoSelectList inherit;
+// public:
+// 	tTVPPreferenceInfoSelectRenderer(const std::string &cap, const std::string &key, const std::string &defval,
+// 		const std::initializer_list<std::pair<std::string, std::string> > &listinfo) : inherit(cap, key, defval, listinfo) {}
+// 	virtual void onSetValue(const std::string &v) {
+// 		inherit::onSetValue(v);
+// 		if (v == "opengl") {
+// 			TVPOnOpenGLRendererSelected(true);
+// 		}
+// 	}
+// };
 
 class tTVPPreferenceInfoSelectFile : public tTVPPreferenceInfo<std::string> {
 public:
@@ -160,13 +169,17 @@ static void initAllConfig() {
 	RootPreference.Preferences = {
 		new tTVPPreferenceInfoCheckBox("preference_output_log", "outputlog", true),
 		new tTVPPreferenceInfoCheckBox("preference_show_fps", "showfps", false),
-		new tTVPPreferenceInfoSelectRenderer("preference_select_renderer", "renderer", "software", {
+		new tTVPPreferenceInfoSelectList("preference_select_renderer", "renderer", "software", {
 			{ "preference_opengl", "opengl" },
 			{ "preference_software", "software" }
 		}),
 		new tTVPPreferenceInfoRendererSubPref("preference_renderer_opt"),
 		new tTVPPreferenceInfoSelectFile("preference_default_font", "default_font", ""),
+#ifdef CC_TARGET_OS_IPHONE
+		new tTVPPreferenceInfoSelectList("preference_mem_limit", "memusage", "high", {
+#else
 		new tTVPPreferenceInfoSelectList("preference_mem_limit", "memusage", "unlimited", {
+#endif
 			{ "preference_mem_unlimited", "unlimited" },
 			{ "preference_mem_high", "high" },
 			{ "preference_mem_medium", "medium" },
@@ -211,9 +224,14 @@ static void initAllConfig() {
 	OpenglOptPreference.Title = "preference_opengl_renderer_opt";
 	OpenglOptPreference.Preferences = {
 		new tTVPPreferenceInfoSubPref("preference_opengl_extension_opt", {
+			new tTVPPreferenceInfoConstant("preference_opengl_extension_desc"),
+#ifdef CC_TARGET_OS_IPHONE
 			new tTVPPreferenceInfoCheckBox("GL_EXT_shader_framebuffer_fetch", "GL_EXT_shader_framebuffer_fetch", true),
+#else
+			new tTVPPreferenceInfoCheckBox("GL_EXT_shader_framebuffer_fetch", "GL_EXT_shader_framebuffer_fetch", false),
+#endif
 			new tTVPPreferenceInfoCheckBox("GL_ARM_shader_framebuffer_fetch", "GL_ARM_shader_framebuffer_fetch", true),
-			new tTVPPreferenceInfoCheckBox("GL_ARM_shader_framebuffer_fetch", "GL_NV_shader_framebuffer_fetch", true),
+			new tTVPPreferenceInfoCheckBox("GL_NV_shader_framebuffer_fetch", "GL_NV_shader_framebuffer_fetch", true),
 			new tTVPPreferenceInfoCheckBox("GL_EXT_copy_image", "GL_EXT_copy_image", false),
 			new tTVPPreferenceInfoCheckBox("GL_OES_copy_image", "GL_OES_copy_image", false),
 			new tTVPPreferenceInfoCheckBox("GL_ARB_copy_image", "GL_ARB_copy_image", false),

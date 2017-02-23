@@ -14,7 +14,7 @@
 #include "StorageIntf.h"
 #include "EmergencyExit.h" // for TVPCPUClock
 #include "DebugIntf.h"
-#include "VersionFormUnit.h"
+//#include "VersionFormUnit.h"
 #include "WaveImpl.h"
 #include "SystemImpl.h"
 #include "UserEvent.h"
@@ -112,14 +112,12 @@ bool tTVPSystemControl::ApplicationIdle() {
 	return cont;
 }
 
-void stop_profile();
 void tTVPSystemControl::DeliverEvents() {
 	if(ContinuousEventCalling)
 		TVPProcessContinuousHandlerEventFlag = true; // set flag
 
 	if (EventEnable) {
 		TVPDeliverAllEvents();
-		stop_profile();
 	}
 }
 

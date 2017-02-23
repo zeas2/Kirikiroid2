@@ -21,7 +21,7 @@
 
 #if defined(CC_TARGET_OS_IPHONE) || defined(__aarch64__)
 #else
-#define USING_THREADPOOL11
+//#define USING_THREADPOOL11
 #endif
 
 #ifdef USING_THREADPOOL11
@@ -135,6 +135,7 @@ void tTVPThread::Resume()
 //---------------------------------------------------------------------------
 void tTVPThreadEvent::Set()
 {
+	std::unique_lock<std::mutex> lk(Mutex);
 	Handle.notify_one();
 }
 //---------------------------------------------------------------------------
@@ -193,7 +194,7 @@ tjs_int TVPGetThreadNum(void)
 //---------------------------------------------------------------------------
 void TVPExecThreadTask(int numThreads, TVP_THREAD_TASK_FUNC func)
 {
-  if (TVPThreadTaskCount >= TVPThreadTaskNum - 1) {
+  if (numThreads == 1) {
     func(0);
     return;
   }

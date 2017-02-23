@@ -12,9 +12,6 @@ extern "C" {
 	extern void* valloc(int n);
 	extern void vfree(void *p);
 	extern void logStack(std::string &out);
-	struct _stat_win32 : public stat {};
-	int _stat_win32(const char * _Filename, struct stat * _Stat);
-#define stat _stat_win32
 	FILE * fopen(const char * _Filename, const char * _Mode);
 }
 #endif

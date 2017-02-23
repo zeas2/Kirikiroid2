@@ -350,7 +350,7 @@ public:
 	virtual tjs_int GetHeight() const = 0;
 	virtual void GetWinSize(tjs_int &w, tjs_int &h) = 0;
 	virtual void SetZoom(tjs_int numer, tjs_int denom) = 0;
-	virtual void UpdateDrawBuffer(const iTVPBaseBitmap *buf) = 0;
+	virtual void UpdateDrawBuffer(iTVPTexture2D *tex) = 0;
 #if 0
 	virtual void AddOverlay(tTJSNI_BaseVideoOverlay *ovl) = 0;
 	virtual void RemoveOverlay(tTJSNI_BaseVideoOverlay *ovl) = 0;

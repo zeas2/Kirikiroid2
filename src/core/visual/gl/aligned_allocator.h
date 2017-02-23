@@ -3,7 +3,6 @@
 #ifndef __ALIGNED_ALLOCATOR_H__
 #define __ALIGNED_ALLOCATOR_H__
 
-#include <malloc.h>		// _aligned_malloc and _aligned_free
 #include <memory>		// std::allocator
 
 // STL allocator

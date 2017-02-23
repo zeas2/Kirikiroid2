@@ -115,7 +115,7 @@ int TVPDrawSceneOnce(int interval) {
 	static tjs_uint64 lastTick = TVPGetRoughTickCount32();
 	tjs_uint64 curTick = TVPGetRoughTickCount32();
 	int remain = interval - (curTick - lastTick);
-	if (remain < 0) {
+	if (remain <= 0) {
 		if (_postUpdate) _postUpdate();
 		Director* director = Director::getInstance();
 		director->drawScene(/*true*/);
@@ -350,7 +350,7 @@ class TVPWindowLayer : public cocos2d::extension::ScrollView, public iWindowLaye
 	TVPWindowLayer *_prevWindow, *_nextWindow;
 	friend class TVPWindowManagerOverlay;
 	friend class TVPMainScene;
-	int _LastMouseX, _LastMouseY;
+	int _LastMouseX = 0, _LastMouseY = 0;
 	std::string _caption;
 //	std::map<tTJSNI_BaseVideoOverlay*, Sprite*> _AllOverlay;
 	float _drawSpriteScaleX = 1.0f, _drawSpriteScaleY = 1.0f;
@@ -861,9 +861,8 @@ public:
 		RecalcPaintBox();
 	}
 
-	virtual void UpdateDrawBuffer(const iTVPBaseBitmap *buf) {
-		if (!buf) return;
-		iTVPTexture2D *tex = buf->GetTexture();
+	virtual void UpdateDrawBuffer(iTVPTexture2D *tex) {
+		if (!tex) return;
 //		iTVPRenderManager *mgr = TVPGetRenderManager();
 // 		if (!mgr->IsSoftware()) {
 // 			static iTVPRenderMethod *method = TVPGetRenderManager()->GetRenderMethod("CopyOpaqueImage");
@@ -1268,6 +1267,7 @@ public:
 				} else {
 					CanCloseWork = true;
 					TVPPostEvent(obj, obj, eventname, 0, TVP_EPT_IMMEDIATE, 1, arg);
+					TVPDrawSceneOnce(0); // for post event
 					// this event happens immediately
 					// and does not return until done
 					return CanCloseWork; // CanCloseWork is set by the event handler
@@ -1893,10 +1893,11 @@ void TVPMainScene::onKeyPressed(EventKeyboard::KeyCode keyCode, Event* event) {
 	case EventKeyboard::KeyCode::KEY_F12:
 		if (TVPGetCurrentShiftKeyState() & ssShift) {
 			std::vector<ttstr> btns({ "OK", "Cancel" });
-			ttstr text;
+			ttstr text; tTJSVariant result;
 			if (TVPShowSimpleInputBox(text, "console command", "", btns) == 0) {
-				TVPExecuteExpression(text);
+				TVPExecuteExpression(text, &result);
 			}
+			result = text;
 		}
 		break;
 #endif

@@ -3,8 +3,6 @@
 #include "ui/UIWidget.h"
 #include "ConfigManager/GlobalConfigManager.h"
 
-void TVPOnOpenGLRendererSelected();
-
 namespace tinyxml2 {
 	class XMLElement;
 }
