@@ -25,10 +25,10 @@
     <Item id="preference_ogl_compress_tex" text="テクスチャ圧縮"/>
     <Item id="preference_ogl_compress_tex_none" text="オリジナル"/>
     <Item id="preference_ogl_compress_tex_half" text="半減"/>
-    <Item id="preference_remember_last_path" text="最後のパスに使用します"/>
-    <Item id="preference_keep_screen_alive" text="常に画面を保ちます"/>
+    <Item id="preference_remember_last_path" text="最後に使用したパスを保存する"/>
+    <Item id="preference_keep_screen_alive" text="画面がスリープに入らないようにする"/>
     <Item id="preference_custom_option" text="カスタムオプション"/>
-    <Item id="preference_opengl_dup_target" text="ターゲットテクスチャをコピーします"/>
+    <Item id="preference_opengl_dup_target" text="ターゲットテクスチャをコピーする"/>
     <Item id="preference_ogl_accurate_render" text="正確なレンダリング"/>
     <Item id="preference_ogl_max_texsize" text="最大テクスチャサイズ"/>
     <Item id="preference_ogl_texsize_auto" text="自動"/>
@@ -37,29 +37,29 @@
     <Item id="preference_ogl_texsize_4096" text="4096"/>
     <Item id="preference_ogl_texsize_8192" text="8192"/>
     <Item id="preference_ogl_texsize_16384" text="16384"/>
-    <Item id="preference_mem_limit" text="メモリ用量を制限（ゲームに応じて）"/>
+    <Item id="preference_mem_limit" text="メモリ使用量を制限（ゲームに応じて）"/>
     <Item id="preference_mem_unlimited" text="制限なし"/>
     <Item id="preference_mem_high" text="多く(<300MB)"/>
-    <Item id="preference_mem_medium" text="中等(<200MB)"/>
-    <Item id="preference_mem_low" text="少量(<100MB)"/>
+    <Item id="preference_mem_medium" text="中(<200MB)"/>
+    <Item id="preference_mem_low" text="少なく(<100MB)"/>
     <Item id="preference_show_fps" text="FPSを表示する"/>
-    <Item id="preference_hide_loading_ad" text="ロード時に広告を表示しません"/>
+    <Item id="preference_hide_loading_ad" text="ロード時に広告を表示しない"/>
     <Item id="preference_rotate_screen_180" text="画面反転"/>
     <Item id="preference_virtual_cursor_scale" text="仮想マウスの拡大縮小"/>
     <Item id="preference_menu_handler_opacity" text="メニューハンドラの不透明度"/>
     <Item id="preference_reset" text="RESET"/>
-    <Item id="preference_hide_android_sys_btn" text="バーを隠し（再起動必要）"/>
-    <Item id="preference_default_font" text="デフォルトフォント（空白のままに組み込みのを使用する）"/>
+    <Item id="preference_hide_android_sys_btn" text="ナビバーを隠す（再起動必要）"/>
+    <Item id="preference_default_font" text="デフォルトフォント（空白の場合は組み込みのを使用する）"/>
     <Item id="ok" text="OK"/>
     <Item id="cancel" text="キャンセル"/>
     <Item id="retry" text="再試行"/>
     <Item id="reactive" text="再認証"/>
-    <Item id="ensure_to_override_file" text="上書きを確認します："/>
-    <Item id="readonly_storage" text="読み取り専用外部記憶装置を検出します"/>
-    <Item id="cannot_create_preference" text="個別設定を作成することはできない"/>
-    <Item id="use_internal_path" text="この警告を回避するため、そして内部パスにデータを移動しかないと、SaveDataをなくなったかもしれません：&#10;%1&#10;&#10;このまま続けていますか？"/>
+    <Item id="ensure_to_override_file" text="上書きしますか："/>
+    <Item id="readonly_storage" text="読み取り専用ストレージを検出します"/>
+    <Item id="cannot_create_preference" text="個別設定を作成することが出来ません"/>
+    <Item id="use_internal_path" text="この警告を回避するため、内部ストレージにファイルをコピーしてください。続行するとセーブデータが消える可能性があります。：&#10;%1&#10;&#10;このまま続けていますか？"/>
     <Item id="crash_report" text="クラッシュ報告"/>
-    <Item id="crash_report_msg" text="クラッシュデータを検出するには、このアプリを改善するのを助けるためにデータ（%dファイル）をアップロードすることができますか？"/>
+    <Item id="crash_report_msg" text="このアプリを改善するためにクラッシュデータ（%dファイル）をアップロードしますか？"/>
     <Item id="menu_rotate" text="画面回転"/>
     <Item id="menu_global_preference" text="全体設定"/>
     <Item id="menu_new_local_pref" text="新規設定を作成"/>
@@ -67,16 +67,16 @@
     <Item id="menu_about" text="バージョン情報"/>
     <Item id="menu_help" text="ヘルプ"/>
     <Item id="menu_exit" text="終了"/>
-    <Item id="about_content" text="ご質問がある場合は、掲示板をご覧ください：&#10;https://groups.google.com/forum/#!forum/kirikiroid2（英語）"/>
+    <Item id="about_content" text="質問がある場合は、掲示板をご覧ください：&#10;https://groups.google.com/forum/#!forum/kirikiroid2（英語）"/>
     <Item id="about_content_i" text=""/>
     <Item id="sure_to_exit" text="終了しますか？"/>
     <Item id="msgbox_yes" text="はい"/>
     <Item id="msgbox_no" text="いいえ"/>
     <Item id="msgbox_ok" text="OK"/>
-    <Item id="use_last_path" text="最後のパスを使用しますか"/>
+    <Item id="use_last_path" text="前回のパスを開きますか"/>
 	
-    <Item id="err_narrow_to_wide" text="ANSI 文字列を UNICODE 文字列に変換できません。&#10;現在のコードページで解釈できない文字が含まれてます。patch.tjsて正しいコードページを指定ください。&#10;正しいデータが指定されているかを確認してください。データが破損している可能性もあります。もしデータは暗号化され、xp3filter.tjsが必要かもしれない。"/>
-	<Item id="err_no_memory" text="メモリが足りません（もしこの問題によく現れ、オプションに「メモリの用量を制限する」にしてみる）"/>
+    <Item id="err_narrow_to_wide" text="ANSI 文字列を UNICODE 文字列に変換できません。&#10;現在のコードページで解釈できない文字が含まれてます。patch.tjsで正しいコードページを指定してください。&#10;正しいデータが指定されているかを確認してください。データが破損している可能性もあります。データが暗号化されている場合はxp3filter.tjsが必要かもしれない。"/>
+	<Item id="err_no_memory" text="メモリが足りません（もしこの問題がよく発生する場合は、オプションの「メモリ使用量を制限」を使用してみる）"/>
 	<Item id="err_occured" text="エラーが発生しました"/>
 	<Item id="err_read_error" text="読み込みエラーが発生しました。ファイルが破損している可能性や、デバイスからの読み込みに失敗した可能性があります"/>
 	<Item id="err_not_xp3_archive" text="%1 は正しいXP3アーカイブではありません。ファイルが破損している可能性があります。"/>
@@ -85,6 +85,6 @@
 	<Item id="file_operate_menu_title" text="ファイル管理"/>
 	<Item id="file_operate_menu_text" text="操作を選択してください"/>
 	<Item id="ensure_to_delete_file" text="このファイルを削除しますか："/>
-	<Item id="device_info" text="設備情報"/>
-	<Item id="supported_opengl_extension" text="OpenGL拡張特性（利用可能の拡張）："/>
+	<Item id="device_info" text="デバイス情報"/>
+	<Item id="supported_opengl_extension" text="OpenGL拡張（利用可能なもの）："/>
 </Locale>
