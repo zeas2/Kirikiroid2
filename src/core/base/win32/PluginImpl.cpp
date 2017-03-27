@@ -44,7 +44,6 @@
 
 #include "FilePathUtil.h"
 #include "Application.h"
-#include <sys/stat.h>
 #include "SysInitImpl.h"
 #include <set>
 #ifdef _MSC_VER

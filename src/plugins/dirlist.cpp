@@ -3,7 +3,6 @@
 //#include "tp_stub.h"
 #include "tp_stub.h"
 #include "ncbind/ncbind.hpp"
-#include <sys/stat.h>
 //---------------------------------------------------------------------------
 
 #define NCB_MODULE_NAME TJS_W("dirlist.dll")

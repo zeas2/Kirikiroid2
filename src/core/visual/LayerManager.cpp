@@ -79,11 +79,7 @@ void tTVPLayerManager::UnregisterSelfFromWindow()
 void tTVPLayerManager::SetHoldAlpha(bool b)
 {
 	HoldAlpha = b;
-	if (!DrawBuffer) {
-		tjs_int w, h;
-		if (!GetPrimaryLayerSize(w, h)) return;
-		DrawBuffer = new tTVPDestTexture(w, h);
-	}
+	if (!DrawBuffer) return;
 	static_cast<tTVPDestTexture*>(DrawBuffer)->SetHoldAlpha(b);
 }
 
@@ -101,18 +97,19 @@ tTVPBaseTexture * tTVPLayerManager::GetDrawTargetBitmap(const tTVPRect &rect,
             const tTVPRect & rc = Primary->GetRect();
             w = rc.get_width();
             h = rc.get_height();
-	}
+		}
         DrawBuffer = new tTVPDestTexture(w, h);
 		DrawBuffer->Fill(tTVPRect(0, 0, w, h), 0xFF000000);
+		static_cast<tTVPDestTexture*>(DrawBuffer)->SetHoldAlpha(HoldAlpha);
     } else {
 		tjs_int bw = DrawBuffer->GetWidth();
 		tjs_int bh = DrawBuffer->GetHeight();
-		if(bw < w || bh  < h)
-		{
+		if(bw < w || bh  < h) {
 			// insufficient size; resize the draw buffer
-			tjs_uint neww = bw > w ? bw:w;
+			tjs_uint neww = bw > w ? bw:w, newh = bh > h ? bh : h;
 			neww += (neww & 1); // align to even
-			DrawBuffer->SetSize(neww, bh > h ? bh:h, false);
+			DrawBuffer->SetSize(neww, newh, false);
+			DrawBuffer->Fill(tTVPRect(0, 0, neww, newh), 0xFF000000);
 		}
 	}
 
@@ -140,20 +137,35 @@ void tTVPLayerManager::DrawCompleted(const tTVPRect &destrect,
         // create draw buffer
 		DrawBuffer = new tTVPDestTexture(w, h);
 		DrawBuffer->Fill(tTVPRect(0, 0, w, h), 0xFF000000);
+		static_cast<tTVPDestTexture*>(DrawBuffer)->SetHoldAlpha(HoldAlpha);
 	} else {
         tjs_int bw = DrawBuffer->GetWidth();
         tjs_int bh = DrawBuffer->GetHeight();
         if (bw < w || bh  < h) {
             // insufficient size; resize the draw buffer
-            tjs_uint neww = bw > w ? bw : w;
+            tjs_uint neww = bw > w ? bw : w, newh = bh > h ? bh : h;
             neww += (neww & 1); // align to even
-            DrawBuffer->SetSize(neww, bh > h ? bh : h);
+            DrawBuffer->SetSize(neww, newh, false);
+			DrawBuffer->Fill(tTVPRect(0, 0, neww, newh), 0xFF000000);
 		}
     }
 
 	DrawBuffer->Blt(destrect.left, destrect.top, bmp, cliprect, type, opacity, HoldAlpha);
 #endif
 }
+
+tTVPBaseTexture* tTVPLayerManager::GetOrCreateDrawBuffer()
+{
+	if (!DrawBuffer) {
+		tjs_int w, h;
+		if (!GetPrimaryLayerSize(w, h)) return nullptr;
+		DrawBuffer = new tTVPDestTexture(w, h);
+		DrawBuffer->Fill(tTVPRect(0, 0, w, h), 0xFF000000);
+		static_cast<tTVPDestTexture*>(DrawBuffer)->SetHoldAlpha(HoldAlpha);
+	}
+	return DrawBuffer;
+}
+
 //---------------------------------------------------------------------------
 void tTVPLayerManager::AttachPrimary(tTJSNI_BaseLayer *pri)
 {

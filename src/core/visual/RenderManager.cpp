@@ -26,6 +26,7 @@ extern "C" {
 #include "xxhash/xxhash.h"
 #include "tjsHashSearch.h"
 #include "EventIntf.h"
+#include "lz4/lz4.h"
 
 #ifdef _MSC_VER
 #pragma comment(lib,"opencv_ts300d.lib")
@@ -303,6 +304,8 @@ void iTVPTexture2D::RecycleProcess()
 	}
 	_toDeleteTextures.clear();
 }
+static tTVPAtExit
+	TVPReleaseTexture2D(TVP_ATEXIT_PRI_RELEASE + 500, iTVPTexture2D::RecycleProcess);
 
 void iTVPTexture2D::Release() {
 	if (RefCount == 1)
@@ -374,21 +377,103 @@ public:
 static const tjs_uint8 __empty_line[EMPTY_LINE_BYTES + 32] = {}; // at most 2048 pixels per line
 static const tjs_uint8* _empty_line = (const tjs_uint8*)(((intptr_t)(&__empty_line) + 15)&~15);
 
-class tTVPSoftwareTexture2D_half : public tTVPSoftwareTexture2D_static, public tTVPContinuousEventCallbackIntf {
-	std::vector<const tjs_uint8*> _scanline;
-	std::vector<tjs_uint8*> _scanlineData;
-	//tTVPBitmap *Bitmap = nullptr;
-	tjs_uint8 *PixelData = nullptr;
+class tTVPSoftwareTexture2D_compress : public tTVPSoftwareTexture2D_static, public tTVPContinuousEventCallbackIntf {
+protected:
 	tjs_int PixelFrameLife = 0;
+
+	tTVPSoftwareTexture2D_compress(int pitch, unsigned int w, unsigned int h, TVPTextureFormat::e format)
+		: tTVPSoftwareTexture2D_static(nullptr, pitch, w, h, format) {}
+
+	~tTVPSoftwareTexture2D_compress() {
+		if (BmpData) {
+			TVPFreeBitmapBits(BmpData);
+			BmpData = nullptr;
+			TVPRemoveContinuousEventHook(this);
+		}
+	}
 
 	static bool all_of_zero(const tjs_uint8 *p, int n) {
 		while (--n > 0 && !p[n]);
 		return n < 0;
 	}
 
+	// return filled lines
+	virtual tjs_uint DecompressLineData(tjs_uint line, tjs_uint8 *buf) = 0;
+
+public:
+	virtual const void * GetPixelData() override {
+		if (!BmpData) {
+			BmpData = (tjs_uint8*)TVPAllocBitmapBits(Pitch * Height, Width, Height);
+			tjs_uint8 *dst = BmpData;
+			tjs_int w = Width * (GetFormat() == TVPTextureFormat::RGBA ? sizeof(tjs_uint32) : sizeof(tjs_uint8));
+			tjs_uint8 *dstend = dst + Pitch * Height;
+			tjs_uint line = 0;
+			while (dst < dstend) {
+				tjs_uint decodedLines = DecompressLineData(line, dst);
+				dst += decodedLines * Pitch;
+				line += decodedLines;
+			}
+		}
+		if (PixelFrameLife == 0) TVPAddContinuousEventHook(this);
+		PixelFrameLife = 3; // free pixel if not used in next 3 frames
+		return BmpData;
+	}
+
+	virtual void OnContinuousCallback(tjs_uint64 tick) override {
+		if (--PixelFrameLife) return;
+		if (BmpData) {
+			TVPFreeBitmapBits(BmpData);
+			BmpData = nullptr;
+		}
+		PixelFrameLife = 0;
+		TVPRemoveContinuousEventHook(this);
+	}
+
+	virtual uint32_t GetPoint(int x, int y) override {
+		GetPixelData();
+		if (Format == TVPTextureFormat::RGBA)
+			return  *((const tjs_uint32*)(BmpData + y * Pitch) + x); // 32bpp
+		else if (Format == TVPTextureFormat::Gray)
+			return  *((const tjs_uint8*)(BmpData + y * Pitch) + x); // 8bpp
+		return 0;
+	}
+
+	virtual const void * GetScanLineForRead(tjs_uint l) override {
+		GetPixelData();
+		return BmpData + l * Pitch;
+	}
+
+	virtual void * GetScanLineForWrite(tjs_uint l) {
+		assert(0);
+		return nullptr;
+	}
+
+	virtual void Update(const void *pixel, TVPTextureFormat::e format, int pitch, const tTVPRect& rc) override {
+		assert(0);
+	}
+
+	virtual cocos2d::Texture2D* GetAdapterTexture(cocos2d::Texture2D* origTex) override {
+		GetPixelData();
+		if (!origTex || origTex->getPixelsWide() != Width || origTex->getPixelsHigh() != Height) {
+			origTex = new cocos2d::Texture2D;
+			origTex->autorelease();
+			origTex->initWithData(BmpData, Pitch * Height,
+				CCPixelFormat::RGBA8888, Width, Height,
+				cocos2d::Size::ZERO);
+		} else {
+			origTex->updateWithData(BmpData, 0, 0, Width, Height);
+		}
+		return origTex;
+	}
+};
+
+class tTVPSoftwareTexture2D_half : public tTVPSoftwareTexture2D_compress {
+	std::vector<const tjs_uint8*> _scanline;
+	std::vector<tjs_uint8*> _scanlineData;
+
 public:
 	tTVPSoftwareTexture2D_half(tTVPBitmap *bmp, const void *pixel, int pitch, unsigned int w, unsigned int h, TVPTextureFormat::e format)
-		: tTVPSoftwareTexture2D_static(nullptr, pitch, w, h, format)
+		: tTVPSoftwareTexture2D_compress(pitch, w, h, format)
 	{
 		const tjs_uint8 *src = static_cast<const tjs_uint8*>(pixel);
 		if (format == TVPTextureFormat::RGB) w *= 3;
@@ -421,14 +506,9 @@ public:
 		if (Format == TVPTextureFormat::RGB) w *= 3;
 		else if (Format == TVPTextureFormat::RGBA) w *= 4;
 		_totalVMemSize -= _scanlineData.size() * w;
-		if (BmpData) {
-			TVPFreeBitmapBits(BmpData);
-			BmpData = nullptr;
-		}
 		for (tjs_uint8* line : _scanlineData) {
 			TVPFreeBitmapBits(line);
 		}
-		if (PixelData) delete[] PixelData;
 	}
 
 	static iTVPTexture2D* Create(tTVPBitmap *bmp, const void *pixel, int pitch, unsigned int w, unsigned int h, TVPTextureFormat::e format) {
@@ -447,13 +527,9 @@ public:
 		return 0;
 	}
 
-// 	virtual tjs_int GetPitch() const {
-// 		//assert(0);
-// 		return 0;
-// 	}
-
-	virtual void Update(const void *pixel, TVPTextureFormat::e format, int pitch, const tTVPRect& rc) {
-		assert(0);
+	virtual tjs_uint DecompressLineData(tjs_uint line, tjs_uint8 *buf) override {
+		memcpy(buf, tTVPSoftwareTexture2D_half::GetScanLineForRead(line), Pitch);
+		return 1;
 	}
 
 	virtual cocos2d::Texture2D* GetAdapterTexture(cocos2d::Texture2D* origTex) override {
@@ -472,42 +548,229 @@ public:
 		return origTex;
 	}
 
-	virtual void * GetScanLineForWrite(tjs_uint l) {
-		assert(0);
-		return nullptr;
-	}
-
 	virtual tjs_uint GetInternalHeight() const override { return _scanline.size(); }
 
-	virtual const void * GetPixelData() {
-		if (!PixelData) {
-			PixelData = new tjs_uint8[Pitch * Height];
-			tjs_uint8 *dst = PixelData;
-			tjs_int w = Width * (GetFormat() == TVPTextureFormat::RGBA ? sizeof(tjs_uint32) : sizeof(tjs_uint8));
-			tjs_uint8 *dstend = dst + Pitch * Height;
-			for (const tjs_uint8* src : _scanline) {
-				memcpy(dst, src, w);
-				dst += Pitch;
-				if (dst >= dstend) break;
-				memcpy(dst, src, w);
-				dst += Pitch;
-			}
+	virtual size_t GetBitmapSize() override { return Pitch * _scanlineData.size() * (Format == TVPTextureFormat::RGBA ? 4 : 1); }
+};
+
+class tTVPSoftwareTexture2D_lz4 : public tTVPSoftwareTexture2D_compress {
+protected:
+	struct Block {
+		char * Data;
+		tjs_uint Length, Height;
+	};
+
+	std::vector<Block> CompressedBlock;
+	tjs_uint ShiftH = 0, DataSize = 0;
+
+public:
+	tTVPSoftwareTexture2D_lz4(int pitch, unsigned int w, unsigned int h, TVPTextureFormat::e format)
+		: tTVPSoftwareTexture2D_compress(pitch, w, h, format) { }
+
+	~tTVPSoftwareTexture2D_lz4() {
+		for (Block& blk : CompressedBlock) {
+			delete []blk.Data;
 		}
-		if (PixelFrameLife == 0) TVPAddContinuousEventHook(this);
-		PixelFrameLife = 3; // free pixel if not used in next 3 frames
-		return PixelData;
+		_totalVMemSize -= DataSize;
 	}
 
-	virtual size_t GetBitmapSize() override { return Pitch * _scanlineData.size() * (Format == TVPTextureFormat::RGBA ? 4 : 1); }
-
-	virtual void OnContinuousCallback(tjs_uint64 tick) override {
-		if (--PixelFrameLife) return;
-		if (PixelData) {
-			delete[] PixelData;
-			PixelData = nullptr;
+	void Init(tTVPBitmap *bmp, const void *pixel, unsigned int w, unsigned int h) {
+		tjs_uint BlockH = 16384 / Pitch;
+		if (BlockH > h) {
+			BlockH = h;
+		} else if (BlockH == 0) {
+			BlockH = 1;
+		} else {
+			ShiftH = 31;
+			tjs_uint test = 1 << 31;
+			for (; ShiftH > 1; ShiftH--, test >>= 1) {
+				if (test & BlockH)
+					break;
+			}
+			BlockH = test;
 		}
-		PixelFrameLife = 0;
-		TVPRemoveContinuousEventHook(this);
+		const char *src = (const char *)pixel;
+		tjs_uint blkSize = BlockH * Pitch;
+		std::vector<char> tmp; tmp.resize(blkSize + w);
+		tjs_uint y = 0;
+		for (; y < h - BlockH + 1; y += BlockH, src += blkSize) {
+			tjs_uint dstSize = LZ4_compress_default(src, &tmp.front(), blkSize, blkSize + w);
+			Block blk = {
+				new char[dstSize],
+				dstSize, BlockH
+			};
+			memcpy(blk.Data, &tmp.front(), dstSize);
+			CompressedBlock.emplace_back(blk);
+			DataSize += dstSize;
+		}
+		if (h > y) {
+			h -= y;
+			blkSize = h * Pitch;
+			tjs_uint dstSize = LZ4_compress_default(src, &tmp.front(), blkSize, blkSize + w);
+			Block blk = {
+				new char[dstSize],
+				dstSize, h
+			};
+			memcpy(blk.Data, &tmp.front(), dstSize);
+			CompressedBlock.emplace_back(blk);
+			DataSize += dstSize;
+		}
+		_totalVMemSize += DataSize;
+	}
+
+	virtual tjs_uint DecompressLineData(tjs_uint line, tjs_uint8 *buf) override {
+		size_t n = line >> ShiftH;
+		if (n >= CompressedBlock.size())
+			n = CompressedBlock.size() - 1;
+		Block &blk = CompressedBlock[n];
+		n = LZ4_decompress_fast(blk.Data, (char*)buf, blk.Height * Pitch);
+		assert(n == blk.Length);
+		return blk.Height;
+	}
+
+	static iTVPTexture2D* Create(tTVPBitmap *bmp, const void *pixel, int pitch, unsigned int w, unsigned int h, TVPTextureFormat::e format) {
+		tTVPSoftwareTexture2D_lz4 *tex = new tTVPSoftwareTexture2D_lz4(pitch, w, h, format);
+		tex->Init(bmp, pixel, w, h);
+		return tex;
+	}
+
+	virtual size_t GetBitmapSize() override { return DataSize; }
+};
+
+class tTVPSoftwareTexture2D_lz4_tlg5 : public tTVPSoftwareTexture2D_lz4 {
+	static const tjs_uint BlockSize = 4;
+
+public:
+	tTVPSoftwareTexture2D_lz4_tlg5(int pitch, unsigned int w, unsigned int h, TVPTextureFormat::e format)
+		: tTVPSoftwareTexture2D_lz4(pitch, w, h, format) { }
+
+	void CompressBlock(const char *src, tjs_uint w, tjs_uint h, char* tmp, char *tranbuf) {
+		tjs_uint blkSize = BlockSize * Pitch;
+		int clrBlkSize = blkSize / 4;
+		char *tran[4]/*, *prev[4] = { 0 }*/, *curline[4];
+		const char * prev = nullptr;
+		tran[0] = tranbuf; // R
+		tran[1] = tran[0] + clrBlkSize;  // G
+		tran[2] = tran[1] + clrBlkSize;  // B
+		tran[3] = tran[2] + clrBlkSize;  // A
+		curline[0] = tran[0];
+		curline[1] = tran[1];
+		curline[2] = tran[2];
+		curline[3] = tran[3];
+		for (tjs_uint line = 0; line < h; ++line) {
+			char prevcl[4] = { 0 }, val[4] = { 0 };
+			const char *cursrc = src;
+			for (tjs_uint x = 0; x < w; ++x) {
+				char cl[4];
+				cl[0] = *src++;
+				cl[1] = *src++;
+				cl[2] = *src++;
+				cl[3] = *src++;
+				if (prev) {
+					cl[0] -= *prev++;
+					cl[1] -= *prev++;
+					cl[2] -= *prev++;
+					cl[3] -= *prev++;
+				}
+				val[0] = cl[0] - prevcl[0];
+				val[1] = cl[1] - prevcl[1];
+				val[2] = cl[2] - prevcl[2];
+				val[3] = cl[3] - prevcl[3];
+				prevcl[0] = cl[0];
+				prevcl[1] = cl[1];
+				prevcl[2] = cl[2];
+				prevcl[3] = cl[3];
+				*curline[0]++ = val[0] - val[1];
+				*curline[1]++ = val[1];
+				*curline[2]++ = val[2] - val[1];
+				*curline[3]++ = val[3];
+			}
+			prev = cursrc;
+			tran[0] = curline[0];
+			tran[1] = curline[1];
+			tran[2] = curline[2];
+			tran[3] = curline[3];
+		}
+		tjs_uint dstSize = LZ4_compress_default(tranbuf, tmp, blkSize, blkSize);
+		Block blk = {
+			new char[dstSize],
+			dstSize, h
+		};
+		memcpy(blk.Data, tmp, dstSize);
+		CompressedBlock.emplace_back(blk);
+		DataSize += dstSize;
+	}
+
+	void Init(tTVPBitmap *bmp, const void *pixel, unsigned int w, unsigned int h) {
+		ShiftH = 2; // block size is always 4
+		bool isOpaque = bmp->IsOpaque;
+		tjs_uint blkSize = BlockSize * Pitch;
+		w = Pitch / 4;
+		std::vector<char> tmp; tmp.resize(blkSize + w);
+		char *tranbuf = (char *)TVPAllocBitmapBits(blkSize, w, BlockSize);
+		const char *src = (const char *)pixel;
+		tjs_uint y = 0;
+		for (; y < h - BlockSize + 1; y += BlockSize, src += blkSize) {
+			CompressBlock(src, w, BlockSize, &tmp.front(), tranbuf);
+		}
+		if (h > y) {
+			memset(tranbuf, 0, blkSize);
+			CompressBlock(src, w, h - y, &tmp.front(), tranbuf);
+		}
+		TVPFreeBitmapBits(tranbuf);
+		_totalVMemSize += DataSize;
+	}
+
+	static iTVPTexture2D* Create(tTVPBitmap *bmp, const void *pixel, int pitch, unsigned int w, unsigned int h, TVPTextureFormat::e format) {
+		if (format == TVPTextureFormat::RGBA) {
+			tTVPSoftwareTexture2D_lz4_tlg5 *tex = new tTVPSoftwareTexture2D_lz4_tlg5(pitch, w, h, format);
+			tex->Init(bmp, pixel, w, h);
+			return tex;
+		}
+		return tTVPSoftwareTexture2D_lz4::Create(bmp, pixel, pitch, w, h, format);
+	}
+
+	virtual tjs_uint DecompressLineData(tjs_uint line, tjs_uint8 *buf) override {
+		size_t n = line >> ShiftH;
+		if (n >= CompressedBlock.size())
+			n = CompressedBlock.size() - 1;
+		Block &blk = CompressedBlock[n];
+		tjs_uint w = Pitch / 4;
+		tjs_uint blkSize = BlockSize * Pitch;
+		tjs_uint clrBlkSize = blkSize / 4;
+		tjs_uint8 *tranbuf = (tjs_uint8 *)TVPAllocBitmapBits(blkSize, w, BlockSize);
+		n = LZ4_decompress_fast(blk.Data, (char*)tranbuf, blkSize);
+		assert(n == blk.Length);
+		tjs_uint8 *current = buf, *prevline = buf, *outbufp[4];
+		outbufp[2] = tranbuf;
+		outbufp[1] = outbufp[2] + clrBlkSize;
+		outbufp[0] = outbufp[1] + clrBlkSize;
+		outbufp[3] = outbufp[0] + clrBlkSize;
+		// first line
+		tjs_uint8 pr = 0, pg = 0, pb = 0, pa = 0;
+		for (tjs_uint x = 0; x < w; x++) {
+			tjs_uint8 r = *outbufp[0]++;
+			tjs_uint8 g = *outbufp[1]++;
+			tjs_uint8 b = *outbufp[2]++;
+			tjs_uint8 a = *outbufp[3]++;
+			b += g; r += g;
+			*current++ = pr += b;
+			*current++ = pg += g;
+			*current++ = pb += r;
+			*current++ = pa += a;
+		}
+		// remain lines
+		for (tjs_uint y = 1; y < blk.Height; ++y) {
+			TVPTLG5ComposeColors4To4(current, prevline, outbufp, w);
+			outbufp[0] += w;
+			outbufp[1] += w;
+			outbufp[2] += w;
+			outbufp[3] += w;
+			prevline = current;
+			current += Pitch;
+		}
+		TVPFreeBitmapBits(tranbuf);
+		return blk.Height;
 	}
 };
 
@@ -2373,6 +2636,8 @@ public:
 		_createStaticTexture2D = tTVPSoftwareTexture2D::Create;
 		std::string compTexMethod = IndividualConfigManager::GetInstance()->GetValue<std::string>("software_compress_tex", "none");
 		if (compTexMethod == "halfline") _createStaticTexture2D = tTVPSoftwareTexture2D_half::Create;
+		else if (compTexMethod == "lz4") _createStaticTexture2D = tTVPSoftwareTexture2D_lz4::Create;
+		else if (compTexMethod == "lz4+tlg5") _createStaticTexture2D = tTVPSoftwareTexture2D_lz4_tlg5::Create;
 
 		Register_1();
 		Register_2();
@@ -2427,6 +2692,10 @@ public:
 
 	virtual iTVPTexture2D* CreateTexture2D(unsigned int neww, unsigned int newh, iTVPTexture2D* tex) override {
 		return new tTVPSoftwareTexture2D(tex, neww, newh);
+	}
+
+	virtual iTVPTexture2D* CreateTexture2D(tTJSBinaryStream* s) {
+		return nullptr;
 	}
 
 	virtual const char *GetName() { return "Software"; }
@@ -2547,6 +2816,25 @@ public:
 	virtual void OperateRect(iTVPRenderMethod* method,
 		iTVPTexture2D *tar, iTVPTexture2D *reftar, const tTVPRect& rctar,
 		const tRenderTexRectArray &textures) {
+#ifdef _DEBUG
+		static bool check = false;
+		cv::Mat _src[3], _tar;
+		if (check) {
+			for (int i = 0; i < textures.size(); ++i) {
+				iTVPTexture2D* tex = textures[i].first;
+				unsigned int fmt = tex->GetFormat() == TVPTextureFormat::RGBA ? CV_8UC4 : CV_8UC1;
+				_src[i] = cv::Mat(tex->GetHeight(), tex->GetWidth(), fmt, (void*)tex->GetPixelData(), tex->GetPitch());
+			}
+			unsigned int fmt = tar->GetFormat() == TVPTextureFormat::RGBA ? CV_8UC4 : CV_8UC1;
+			_tar = cv::Mat(tar->GetHeight(), tar->GetWidth(), fmt, (void*)tar->GetPixelData(), tar->GetPitch());
+			_tar.type();
+		}
+#endif
+
+		for (int i = 0; i < textures.size(); ++i) {
+			textures[i].first->GetScanLineForRead(0); // prepare pixel data for compressed texture
+		}
+
 		++_drawCount;
 		switch (textures.size()) {
 		case 0: // fill tar
@@ -2836,6 +3124,9 @@ public:
 		const tRenderTexQuadArray &textures) override {
 		++_drawCount;
 		assert(textures.size() == 1);
+		for (int i = 0; i < textures.size(); ++i) {
+			textures[i].first->GetScanLineForRead(0); // prepare pixel data for compressed texture
+		}
 		iTVPTexture2D *dst = target;
 		const tTVPPointD *dstpt = pttar;
 		iTVPTexture2D *src = textures[0].first;
@@ -3950,6 +4241,9 @@ public:
 		iTVPTexture2D *target, iTVPTexture2D *reftar, const tTVPRect& rcclip, const tTVPPointD* pttar/*quad*/,
 		const tRenderTexQuadArray &textures) {
 		assert(textures.size() == 1);
+		for (int i = 0; i < textures.size(); ++i) {
+			textures[i].first->GetScanLineForRead(0); // prepare pixel data for compressed texture
+		}
 		iTVPTexture2D *dst = target;
 		const tTVPPointD *dstpt = pttar;
 		iTVPTexture2D *src = textures[0].first;

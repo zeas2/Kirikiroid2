@@ -67,7 +67,7 @@
     <Item id="menu_about" text="バージョン情報"/>
     <Item id="menu_help" text="ヘルプ"/>
     <Item id="menu_exit" text="終了"/>
-    <Item id="about_content" text="質問がある場合は、掲示板をご覧ください：&#10;https://groups.google.com/forum/#!forum/kirikiroid2（英語）"/>
+    <Item id="about_content" text="Find patch here:&#10https://zeas2.github.io/Kirikiroid2_patch/patch&#10Report bugs to here:&#10;https://github.com/zeas2/Kirikiroid2/issues"/>
     <Item id="about_content_i" text=""/>
     <Item id="sure_to_exit" text="終了しますか？"/>
     <Item id="msgbox_yes" text="はい"/>
@@ -84,7 +84,22 @@
 	<Item id="delete" text="削除"/>
 	<Item id="file_operate_menu_title" text="ファイル管理"/>
 	<Item id="file_operate_menu_text" text="操作を選択してください"/>
-	<Item id="ensure_to_delete_file" text="このファイルを削除しますか："/>
+	<Item id="ensure_to_delete_file" text="削除しますか："/>
+	<Item id="ensure_item_count" text="%d アイテム"/>
 	<Item id="device_info" text="デバイス情報"/>
 	<Item id="supported_opengl_extension" text="OpenGL拡張（利用可能なもの）："/>
+	<Item id="preference_opengl_extension_opt" text="OpenGL拡張"/>
+	<Item id="startup_patch_fail" text="パッチ失敗しました。patch.tjsを更新してください。"/>
+	<Item id="browse_patch_lib" text="パッチ庫"/>
+	<Item id="preference_opengl_extension_desc" text="レンダリング効率を改善するために利用することができるOpenGL拡張のリストです。&#10;いくつかの機能がオンになったら、デバイスに応じて、レンダリングエラーが発生することがあります。"/>
+	<Item id="preference_android_fetch_sdcard_permission" text="外部記憶の書き込みの権限を取得する"/>
+	
+	<Item id="filemgr_unselect" text="キャンセル"/>
+	<Item id="filemgr_browse" text="ビュー"/>
+	<Item id="filemgr_delete" text="削除"/>
+	<Item id="filemgr_copy" text="コピー"/>
+	<Item id="filemgr_cut" text="カット"/>
+	<Item id="filemgr_paste" text="ここに貼り付ける"/>
+	<Item id="filemgr_sendto" text="Send to..."/>
+	<Item id="file_operate_failed" text="ファイル操作が失敗しました："/>
 </Locale>

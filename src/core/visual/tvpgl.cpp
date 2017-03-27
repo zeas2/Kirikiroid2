@@ -16,6 +16,7 @@
 #include <math.h>
 #include "tjsTypes.h"
 #include "tvpgl.h"
+#include "Protect.h"
 #include <float.h>
 
 #define __cdecl

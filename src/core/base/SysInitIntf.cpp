@@ -18,6 +18,7 @@
 #include "SysInitIntf.h"
 #include "ScriptMgnIntf.h"
 #include "tvpgl.h"
+#include "Protect.h"
 
 
 //---------------------------------------------------------------------------
@@ -35,6 +36,18 @@ extern void TVPGL_C_Init();
 //---------------------------------------------------------------------------
 void TVPSystemInit(void)
 {
+#if CC_TARGET_PLATFORM != CC_PLATFORM_WIN32
+#ifndef CC_TARGET_OS_IPHONE
+	if (!TVPProtectInit()) return;
+#endif
+//#else
+#ifdef USING_PROTECT
+	while (!TVPProtectInit()) {
+		TVPUpdateLicense();
+	}
+#endif
+#endif
+
 	TVPBeforeSystemInit();
 
 	TVPInitScriptEngine();

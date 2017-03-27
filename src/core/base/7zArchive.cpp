@@ -3,9 +3,9 @@
 #include "UtilStreams.h"
 #include <algorithm>
 extern "C" {
-#include "7zip/7z.h"
-#include "7zip/7zFile.h"
-#include "7zip/7zCrc.h"
+#include "7zip/C/7z.h"
+#include "7zip/C/7zFile.h"
+#include "7zip/C/7zCrc.h"
 }
 
 static ISzAlloc allocImp = {

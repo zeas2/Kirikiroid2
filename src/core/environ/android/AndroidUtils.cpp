@@ -26,6 +26,11 @@
 #include <fcntl.h>
 #include <android/log.h>
 #include "TickCount.h"
+#include "StorageImpl.h"
+#include "ConfigManager/IndividualConfigManager.h"
+#include "EventIntf.h"
+#include "RenderManager.h"
+#include <sys/stat.h>
 
 USING_NS_CC;
 
@@ -595,6 +600,34 @@ void TVPForceSwapBuffer() {
 	eglSwapBuffers(eglGetCurrentDisplay(), eglGetCurrentSurface(EGL_DRAW));
 }
 
+static bool _IsLollipop() {
+	JNIEnv *pEnv = JniHelper::getEnv();
+	jclass classID = pEnv->FindClass("android/os/Build$VERSION");
+	jfieldID idSDK_INT = pEnv->GetStaticFieldID(classID, "SDK_INT", "I");
+	jint sdkid = pEnv->GetStaticIntField(classID, idSDK_INT);
+	return sdkid >= 21;
+}
+
+static bool IsLollipop() {
+	static bool result = _IsLollipop();
+	return result;
+}
+
+void TVPFetchSDCardPermission() {
+	if (!IsLollipop())
+		return;
+	std::vector<std::string> paths;
+	GetExternalStoragePath(paths);
+	JniMethodInfo methodInfo;
+	if (JniHelper::getStaticMethodInfo(methodInfo, "org/tvp/kirikiri2/KR2Activity", "requireLEXA", "(Ljava/lang/String;)V")) {
+		jstring jstrPath = methodInfo.env->NewStringUTF(paths.back().c_str());
+		methodInfo.env->CallStaticVoidMethod(methodInfo.classID, methodInfo.methodID, jstrPath);
+		methodInfo.env->DeleteLocalRef(jstrPath);
+		return;
+	}
+	return;
+}
+
 bool TVPCheckStartupPath(const std::string &path) {
 	// check writing permission first
 	int pos = path.find_last_of('/');
@@ -630,22 +663,14 @@ bool TVPCheckStartupPath(const std::string &path) {
 		}
 		std::vector<ttstr> btns;
 		btns.push_back(LocaleConfigManager::GetInstance()->GetText("continue_run"));
-		JNIEnv *pEnv = JniHelper::getEnv();
-		jclass classID = pEnv->FindClass("android/os/Build$VERSION");
-		jfieldID idSDK_INT = methodInfo.env->GetStaticFieldID(classID, "SDK_INT", "I");
-		jint sdkid = pEnv->GetStaticIntField(classID, idSDK_INT);
-		bool isLOLLIPOP = sdkid >= 21;
+		bool isLOLLIPOP = IsLollipop();
 		if (isLOLLIPOP)
 			btns.push_back(LocaleConfigManager::GetInstance()->GetText("get_sdcard_permission"));
 		else
 			btns.push_back(LocaleConfigManager::GetInstance()->GetText("cancel"));
 		int result = TVPShowSimpleMessageBox(msg, LocaleConfigManager::GetInstance()->GetText("readonly_storage"), btns);
 		if (isLOLLIPOP && result == 1) {
-			if (JniHelper::getStaticMethodInfo(methodInfo, "org/tvp/kirikiri2/KR2Activity", "requireLEXA", "(Ljava/lang/String;)V")) {
-				jstring jstrPath = methodInfo.env->NewStringUTF(paths.back().c_str());
-				methodInfo.env->CallStaticVoidMethod(methodInfo.classID, methodInfo.methodID, jstrPath);
-				methodInfo.env->DeleteLocalRef(jstrPath);
-			}
+			TVPFetchSDCardPermission();
 		}
 		if (result != 0)
 			return false;
@@ -708,6 +733,9 @@ std::string TVPGetCurrentLanguage() {
 }
 
 void TVPExitApplication(int code) {
+	TVPDeliverCompactEvent(TVP_COMPACT_LEVEL_MAX);
+	if (!TVPIsSoftwareRenderManager())
+		iTVPTexture2D::RecycleProcess();
 	JniMethodInfo t;
 	if (JniHelper::getStaticMethodInfo(t, "org/tvp/kirikiri2/KR2Activity", "exit", "()V")) {
 		t.env->CallStaticVoidMethod(t.classID, t.methodID);
@@ -732,10 +760,10 @@ void TVPShowIME(int x, int y, int w, int h) {
 
 void TVPProcessInputEvents() {}
 
-bool TVPDeleteFile(const ttstr &filename) {
+bool TVPDeleteFile(const std::string &filename) {
 	JniMethodInfo methodInfo;
 	if (JniHelper::getStaticMethodInfo(methodInfo, "org/tvp/kirikiri2/KR2Activity", "DeleteFile", "(Ljava/lang/String;)Z")) {
-		jstring jstr = methodInfo.env->NewStringUTF(filename.AsStdString().c_str());
+		jstring jstr = methodInfo.env->NewStringUTF(filename.c_str());
 		bool ret = methodInfo.env->CallStaticBooleanMethod(methodInfo.classID, methodInfo.methodID, jstr);
 		methodInfo.env->DeleteLocalRef(jstr);
 		methodInfo.env->DeleteLocalRef(methodInfo.classID);
@@ -744,11 +772,11 @@ bool TVPDeleteFile(const ttstr &filename) {
 	return false;
 }
 
-bool TVPRenameFile(const ttstr &from, const ttstr &to) {
+bool TVPRenameFile(const std::string &from, const std::string &to) {
 	JniMethodInfo methodInfo;
 	if (JniHelper::getStaticMethodInfo(methodInfo, "org/tvp/kirikiri2/KR2Activity", "RenameFile", "(Ljava/lang/String;Ljava/lang/String;)Z")) {
-		jstring jstr = methodInfo.env->NewStringUTF(from.AsStdString().c_str());
-		jstring jstr2 = methodInfo.env->NewStringUTF(to.AsStdString().c_str());
+		jstring jstr = methodInfo.env->NewStringUTF(from.c_str());
+		jstring jstr2 = methodInfo.env->NewStringUTF(to.c_str());
 		bool ret = methodInfo.env->CallStaticBooleanMethod(methodInfo.classID, methodInfo.methodID, jstr, jstr2);
 		methodInfo.env->DeleteLocalRef(jstr);
 		methodInfo.env->DeleteLocalRef(jstr2);
@@ -765,4 +793,20 @@ tjs_uint32 TVPGetRoughTickCount32()
 	if (clock_gettime(CLOCK_MONOTONIC, &on) == 0)
 		uptime = on.tv_sec * 1000 + on.tv_nsec / 1000000;
 	return uptime;
+}
+
+bool TVP_stat(const tjs_char *name, tTVP_stat &s) {
+	tTJSNarrowStringHolder holder(name);
+	return TVP_stat(holder, s);
+}
+
+bool TVP_stat(const char *name, tTVP_stat &s) {
+	struct stat64 t;
+	bool ret = !stat64(name, &t);
+	s.st_mode = t.st_mode;
+	s.st_size = t.st_size;
+	s.st_atime = t.st_atime;
+	s.st_mtime = t.st_mtime;
+	s.st_ctime = t.st_ctime;
+	return ret;
 }

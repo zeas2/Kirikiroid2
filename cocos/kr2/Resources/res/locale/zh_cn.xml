@@ -58,6 +58,8 @@
     <Item id="readonly_storage" text="发现只读的外部存储器"/>
     <Item id="cannot_create_preference" text="无法创建配置"/>
     <Item id="use_internal_path" text="为避免弹出这个提示以及可能出现的存档丢失，请移动您的游戏路径到这里：&#10;%1&#10;&#10;仍然使用当前路径运行？"/>
+    <Item id="continue_run" text="仍然继续"/>
+    <Item id="get_sdcard_permission" text="获取写入权限"/>
     <Item id="crash_report" text="崩溃报告"/>
     <Item id="crash_report_msg" text="发现崩溃数据，发送数据（%d个文件）到服务器以助我们改进这个应用？"/>
     <Item id="menu_rotate" text="旋转屏幕"/>
@@ -67,12 +69,13 @@
     <Item id="menu_about" text="关于"/>
     <Item id="menu_exit" text="退出"/>
     <Item id="menu_help" text="查看帮助"/>
-    <Item id="about_content" text="如遇到问题，请访问我们的论坛：&#10;https://groups.google.com/forum/#!forum/kirikiroid2 （英文）&#10;或者到百度贴吧寻找解决方案：&#10;百度Kirikiroid2吧"/>
+    <Item id="about_content" text="可以在github补丁页面寻找补丁：&#10;https://zeas2.github.io/Kirikiroid2_patch/patch&#10;如遇到问题，请反馈到到项目页面：&#10;https://github.com/zeas2/Kirikiroid2/issues&#10;或者到百度贴吧寻找解决方案：&#10;百度Kirikiroid2吧"/>
     <Item id="about_content_i" text=""/>
     <Item id="sure_to_exit" text="确定退出吗？"/>
     <Item id="msgbox_yes" text="是"/>
     <Item id="msgbox_no" text="否"/>
     <Item id="msgbox_ok" text="确定"/>
+    <Item id="msgbox_nerver_notice" text="不再提示"/>
     <Item id="use_last_path" text="使用最近启动的路径："/>
 	
     <Item id="err_narrow_to_wide" text="无法转换字节字符为宽字符，可能数据被加密或损坏，也可能是使用了错误的文本编码。&#10;如果数据被加密，您可能需要xp3filter.tjs&#10;如果文本不是以SHIFT_JIS编码，需要用patch.tjs指定正确的编码格式。"/>
@@ -84,7 +87,22 @@
 	<Item id="delete" text="删除"/>
 	<Item id="file_operate_menu_title" text="文件管理"/>
 	<Item id="file_operate_menu_text" text="请选择操作"/>
-	<Item id="ensure_to_delete_file" text="确定要删除该文件吗："/>
+	<Item id="ensure_to_delete_file" text="确定要删除吗："/>
+	<Item id="ensure_item_count" text="%d 个项目"/>
 	<Item id="device_info" text="设备信息"/>
 	<Item id="supported_opengl_extension" text="OpenGL扩展特性（仅列出当前可用的扩展）："/>
+	<Item id="preference_opengl_extension_opt" text="OpenGL扩展"/>
+	<Item id="startup_patch_fail" text="补丁失败，请更新patch.tjs"/>
+	<Item id="browse_patch_lib" text="浏览补丁库"/>
+	<Item id="preference_opengl_extension_desc" text="这里是可能利用的OpenGL扩展列表，用于提高渲染的效率。&#10;视设备的不同，部分特性开启后可能会出现渲染错误。"/>
+	<Item id="preference_android_fetch_sdcard_permission" text="获取外部存储卡写入权限"/>
+	
+	<Item id="filemgr_unselect" text="取消"/>
+	<Item id="filemgr_browse" text="浏览"/>
+	<Item id="filemgr_delete" text="删除"/>
+	<Item id="filemgr_copy" text="复制"/>
+	<Item id="filemgr_cut" text="剪切"/>
+	<Item id="filemgr_paste" text="粘贴到这里"/>
+	<Item id="filemgr_sendto" text="发送到"/>
+	<Item id="file_operate_failed" text="文件操作失败："/>
 </Locale>

@@ -6,11 +6,9 @@
 #include "Platform.h"
 #include "SysInitIntf.h"
 #include "ConfigManager/LocaleConfigManager.h"
-#include <sys/stat.h>
 #include "StorageImpl.h"
 #include "minizip/ioapi.h"
 #include "minizip/zip.h"
-#include "win32io.h"
 #include <sstream>
 #include <iomanip>
 #include <condition_variable>
@@ -120,8 +118,8 @@ static void SendDumps(std::string dumpdir, std::vector<std::string> allDumps, st
 	for (const std::string &filename : allDumps) {
 		std::string fullpath = dumpdir + "/" + filename;
 		do {
-			struct stat stat_buf;
-			if (stat(fullpath.c_str(), &stat_buf) == -1) {
+			struct tTVP_stat stat_buf;
+			if (!TVP_stat(fullpath.c_str(), stat_buf)) {
 				break;
 			}
 

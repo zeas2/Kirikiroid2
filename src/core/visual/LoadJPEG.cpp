@@ -631,7 +631,9 @@ void TVPLoadHeaderJPG(void* formatdata, tTJSBinaryStream *src, iTJSDispatch2** d
 	tTJSVariant val((tjs_int64)cinfo.image_width);
 	(*dic)->PropSet(TJS_MEMBERENSURE, TJS_W("width"), 0, &val, (*dic) );
 	val = tTJSVariant((tjs_int64)cinfo.image_height);
-	(*dic)->PropSet(TJS_MEMBERENSURE, TJS_W("height"), 0, &val, (*dic) );
+	(*dic)->PropSet(TJS_MEMBERENSURE, TJS_W("height"), 0, &val, (*dic));
+	val = tTJSVariant((tjs_int64)24);
+	(*dic)->PropSet(TJS_MEMBERENSURE, TJS_W("bpp"), 0, &val, (*dic));
 
 	jpeg_destroy_decompress(&cinfo);
 }

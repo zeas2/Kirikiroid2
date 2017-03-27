@@ -19,7 +19,6 @@
 #include "tinyxml2/tinyxml2.h"
 #include "StorageImpl.h"
 #include "TipsHelpForm.h"
-#include <sys/stat.h>
 
 using namespace cocos2d;
 using namespace cocos2d::ui;
@@ -226,6 +225,8 @@ void TVPMainFileSelectorForm::initFromFile()
 		Node *root = reader.Load("ui/MainFileSelector.csb");
 		_fileList = reader.findController("fileList");
 		_historyList = static_cast<ListView*>(reader.findController("recentList"));
+		// TODO new node
+		_fileOperateMenuNode = _historyList;
 		LocaleConfigManager::GetInstance()->initText(static_cast<Text*>(reader.findController("recentTitle", false)));
 		addChild(root);
 		Size sceneSize = TVPMainScene::GetInstance()->getUINodeSize();
@@ -259,6 +260,7 @@ void TVPMainFileSelectorForm::doStartup(const std::string &path) {
 }
 
 std::string TVPGetOpenGLInfo();
+void TVPOpenPatchLibUrl();
 
 void TVPMainFileSelectorForm::showMenu(Ref*) {
 	if (!_menu) {
@@ -353,6 +355,7 @@ void TVPMainFileSelectorForm::showMenu(Ref*) {
 
 				const char * pszBtnText[] = {
 					LocaleConfigManager::GetInstance()->GetText("ok").c_str(),
+					LocaleConfigManager::GetInstance()->GetText("browse_patch_lib").c_str(),
 					LocaleConfigManager::GetInstance()->GetText("device_info").c_str(),
 				};
 
@@ -361,7 +364,10 @@ void TVPMainFileSelectorForm::showMenu(Ref*) {
 					sizeof(pszBtnText) / sizeof(pszBtnText[0]), pszBtnText);
 
 				switch (n) {
-				case 1: {
+				case 1:
+					TVPOpenPatchLibUrl();
+					break;
+				case 2: {
 							std::string text = TVPGetOpenGLInfo();
 							const char *pOK = LocaleConfigManager::GetInstance()->GetText("ok").c_str();
 							TVPShowSimpleMessageBox(text.c_str(),

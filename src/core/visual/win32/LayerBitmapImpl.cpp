@@ -331,7 +331,7 @@ static tTVPCharacterData * TVPGetCharacter(const tTVPFontAndCharacterData & font
 				data->Alloc(newpitch * data->BlackBoxY);
 
 				pfont->Retrieve(pitem, data->GetData(), newpitch);
-
+				data->Gray = 256;
 				// apply blur
 				if(font.Blured) data->Blur(); // nasty ...
 
@@ -848,7 +848,7 @@ bool tTVPNativeBaseBitmap::InternalBlendText(
 	method = _method; opa_id = _opa_id; clr_id = _clr_id;
 
 	static bool fastGPURoute = !TVPIsSoftwareRenderManager()
-		&& !IndividualConfigManager::GetInstance()->GetValueBool("ogl_accurate_render", false);
+		&& !IndividualConfigManager::GetInstance()->GetValue<bool>("ogl_accurate_render", false);
 
 	iTVPTexture2D *pTexSrc;
 	if (fastGPURoute && dtdata->bltmode == bmAlphaOnAlpha && dtdata->opa > 0) {
@@ -873,10 +873,10 @@ bool tTVPNativeBaseBitmap::InternalBlendText(
 			}
 		}
 		if (!_CharacterTextureRGBA) {
-			_CharacterTextureRGBA = GetRenderManager()->CreateTexture2D(tmp->GetBits(), dpitch, w, h, TVPTextureFormat::RGBA);
+			_CharacterTextureRGBA = GetRenderManager()->CreateTexture2D(tmp->GetBits(), dpitch, w, h, TVPTextureFormat::RGBA, RENDER_CREATE_TEXTURE_FLAG_NO_COMPRESS);
 		} else if (_CharacterTextureRGBA->GetInternalWidth() < w || _CharacterTextureRGBA->GetInternalHeight() < h) {
 			_CharacterTextureRGBA->Release();
-			_CharacterTextureRGBA = GetRenderManager()->CreateTexture2D(tmp->GetBits(), dpitch, w, h, TVPTextureFormat::RGBA);
+			_CharacterTextureRGBA = GetRenderManager()->CreateTexture2D(tmp->GetBits(), dpitch, w, h, TVPTextureFormat::RGBA, RENDER_CREATE_TEXTURE_FLAG_NO_COMPRESS);
 		} else {
 			_CharacterTextureRGBA->Update(tmp->GetBits(), TVPTextureFormat::RGBA, dpitch, tTVPRect(0, 0, w, h));
 		}
@@ -902,13 +902,12 @@ bool tTVPNativeBaseBitmap::InternalBlendText(
 
 		// blend to the texture
 		if (!_CharacterTexture) {
-			_CharacterTexture = GetRenderManager()->CreateTexture2D(bp, pitch, w, h, TVPTextureFormat::Gray);
+			_CharacterTexture = GetRenderManager()->CreateTexture2D(nullptr, pitch, w, h, TVPTextureFormat::Gray);
 		} else if (_CharacterTexture->GetInternalWidth() < w || _CharacterTexture->GetInternalHeight() < h) {
 			_CharacterTexture->Release();
-			_CharacterTexture = GetRenderManager()->CreateTexture2D(bp, pitch, w, h, TVPTextureFormat::Gray);
-		} else {
-			_CharacterTexture->Update(bp, TVPTextureFormat::Gray, pitch, tTVPRect(0, 0, w, h));
+			_CharacterTexture = GetRenderManager()->CreateTexture2D(nullptr, pitch, w, h, TVPTextureFormat::Gray);
 		}
+		_CharacterTexture->Update(bp, TVPTextureFormat::Gray, pitch, tTVPRect(0, 0, w, h));
 
 		method->SetParameterOpa(opa_id, dtdata->opa);
 		method->SetParameterColor4B(clr_id, color);

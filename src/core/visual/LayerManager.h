@@ -305,6 +305,7 @@ public: // methods from tTVPDrawable
 		tTVPBaseTexture *bmp, const tTVPRect &cliprect,
 		tTVPLayerType type, tjs_int opacity) override;
 	virtual tTVPBaseTexture *GetDrawBuffer() { return DrawBuffer; }
+	tTVPBaseTexture* GetOrCreateDrawBuffer();
 
 public:
 	void AttachPrimary(tTJSNI_BaseLayer *pri); // attach primary layer to the manager

@@ -5,6 +5,7 @@
 #include "ui/UIListView.h"
 #include "platform/CCFileUtils.h"
 #include "ConfigManager/IndividualConfigManager.h"
+#include "Platform.h"
 
 using namespace cocos2d;
 using namespace cocos2d::ui;
@@ -14,9 +15,9 @@ const char * const FileName_NaviBar = "ui/NaviBar.csb";
 const char * const FileName_Body = "ui/ListView.csb";
 #define GlobalConfigManager IndividualConfigManager
 #define TVPGlobalPreferenceForm IndividualPreferenceForm
-namespace {
+
 #include "PreferenceConfig.h"
-};
+
 #undef TVPGlobalPreferenceForm
 #undef GlobalConfigManager
 

@@ -1,6 +1,7 @@
 #pragma once
 #include "BaseForm.h"
 #include "GUI/CCScrollView/CCTableView.h"
+#include "base/CCRefPtr.h"
 
 class TVPListForm : public cocos2d::Node {
 public:
@@ -19,6 +20,7 @@ private:
 	cocos2d::Node *_root;
 };
 
+class TVPFileOperateMenu;
 class TVPBaseFileSelectorForm : public iTVPBaseForm, public cocos2d::extension::TableViewDataSource {
 public:
 	TVPBaseFileSelectorForm();
@@ -42,15 +44,47 @@ protected:
 	void onCellItemClicked(cocos2d::Ref *owner);
 	void onTitleClicked(cocos2d::Ref *owner);
 	void onBackClicked(cocos2d::Ref *owner);
+	void _onCellClicked(int idx);
 
 	cocos2d::extension::TableView *FileList;
 	cocos2d::ui::Button *_title;
+
+	cocos2d::Node *_fileOperateMenuNode = nullptr;
+	cocos2d::Node *_fileOperateMenu = nullptr;
+	cocos2d::ui::ListView *_fileOperateMenulist;
+	cocos2d::RefPtr<cocos2d::ui::Widget>
+		_fileOperateCell_unselect,
+		_fileOperateCell_view,
+		_fileOperateCell_copy,
+		_fileOperateCell_cut,
+		_fileOperateCell_paste,
+		_fileOperateCell_unpack,
+		_fileOperateCell_repack, // TODO
+		_fileOperateCell_delete,
+		_fileOperateCell_sendto;
+	
+	std::vector<std::string> _clipboardForFileManager;
+	std::string _clipboardPath;
+	bool _clipboardForMoving = false;
+	std::set<int> _selectedFileIndex;
+	void onUnselectClicked(cocos2d::Ref *owner);
+	void onViewClicked(cocos2d::Ref *owner);
+	void onCopyClicked(cocos2d::Ref *owner);
+	void onCutClicked(cocos2d::Ref *owner);
+	void onPasteClicked(cocos2d::Ref *owner);
+	void onUnpackClicked(cocos2d::Ref *owner);
+	void onRepackClicked(cocos2d::Ref *owner);
+	void onDeleteClicked(cocos2d::Ref *owner);
+	void onSendToClicked(cocos2d::Ref *owner);
+	void updateFileMenu();
+	void clearFileMenu();
 
 	struct FileInfo {
 		std::string FullPath;
 		std::string NameForDisplay;
 		std::string NameForCompare;
 		bool IsDir;
+		cocos2d::Size CellSize;
 
 		bool operator < (const FileInfo &rhs) const;
 	};
@@ -63,18 +97,17 @@ protected:
 	public:
 		FileItemCellImpl() : _set(false), _owner(nullptr) {}
 		
-		static FileItemCellImpl *create(const char * filename, float width, const FileInfo &info) {
+		static FileItemCellImpl *create(const char * filename, float width) {
 			FileItemCellImpl* ret = new FileItemCellImpl();
 			ret->autorelease();
 			ret->init();
 			ret->initFromFile(filename, width);
-			ret->setInfo(info);
 			return ret;
 		}
 
 		void initFromFile(const char * filename, float width);
 
-		void setInfo(const FileInfo &info);
+		void setInfo(const FileInfo &info, bool selected, bool showSelect);
 
 		void reset() {
 			_set = false;
@@ -95,8 +128,10 @@ protected:
 		cocos2d::Size OrigCellModelSize, CellTextAreaSize, OrigCellTextSize;
 		cocos2d::ui::Text *FileNameNode;
 		cocos2d::Node *DirIcon, *_root;
+		cocos2d::ui::CheckBox *SelectBox;
 		FileItemCell *_owner;
-	} *CellTemplateForSize = nullptr;
+	};
+	cocos2d::RefPtr<FileItemCellImpl> CellTemplateForSize;
 	FileItemCellImpl* FetchCell(FileItemCellImpl* CellModel, cocos2d::extension::TableView *table, ssize_t idx);
 
 	class FileItemCell : public cocos2d::extension::TableViewCell {
@@ -134,7 +169,7 @@ protected:
 		}
 
 		void onClicked() {
-			_owner->onCellClicked(getIdx());
+			_owner->_onCellClicked(getIdx());
 		}
 
 		void onLongPress() {

@@ -5,6 +5,7 @@
 #include "ui/UIListView.h"
 #include "ConfigManager/GlobalConfigManager.h"
 #include "platform/CCFileUtils.h"
+#include "Platform.h"
 
 using namespace cocos2d;
 using namespace cocos2d::ui;
@@ -13,9 +14,7 @@ using namespace cocos2d::ui;
 const char * const FileName_NaviBar = "ui/NaviBar.csb";
 const char * const FileName_Body = "ui/ListView.csb";
 
-namespace {
 #include "PreferenceConfig.h"
-};
 
 TVPGlobalPreferenceForm * TVPGlobalPreferenceForm::create(const tPreferenceScreen *config) {
 	Initialize();

@@ -85,6 +85,9 @@ struct TVPTextureFormat {
 		Gray = 1,
 		RGB = 3,
 		RGBA = 4,
+		// for opengl compressed texture, the argument pitch = block_width | (block_height << 16) or block_size
+		Compressed = 0x10000,
+		CompressedEnd = 0x20000,
 	};
 };
 
@@ -180,6 +183,9 @@ typedef tRenderTextureArray<tTVPRect> tRenderTexRectArray;
 typedef tRenderTextureArray<const tTVPPointD*> tRenderTexQuadArray;
 
 class tTVPBitmap;
+namespace TJS {
+	class tTJSBinaryStream;
+}
 class iTVPRenderManager
 {
 protected:
@@ -194,9 +200,11 @@ public:
 public:
 #define RENDER_CREATE_TEXTURE_FLAG_ANY 0
 #define RENDER_CREATE_TEXTURE_FLAG_STATIC 1
+#define RENDER_CREATE_TEXTURE_FLAG_NO_COMPRESS 2
 	virtual iTVPTexture2D* CreateTexture2D(const void *pixel, int pitch, unsigned int w, unsigned int h,
 		TVPTextureFormat::e format, int flags = RENDER_CREATE_TEXTURE_FLAG_ANY) = 0;
 	virtual iTVPTexture2D* CreateTexture2D(tTVPBitmap* bmp) = 0; // for province image
+	virtual iTVPTexture2D* CreateTexture2D(TJS::tTJSBinaryStream* s) = 0; // for compressed or special image format
 	virtual iTVPTexture2D* CreateTexture2D( // create and copy content from exist texture
 		unsigned int neww, unsigned int newh, iTVPTexture2D* tex) = 0;
 

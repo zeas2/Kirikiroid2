@@ -9,8 +9,10 @@
 class FreeTypeFontRasterizer : public FontRasterizer {
 	tjs_int RefCount;
 	class tFreeTypeFace* Face; //!< Faceオブジェクト
+	class tFreeTypeFace* FaceFallback = nullptr;
 	class tTVPNativeBaseBitmap * LastBitmap;
 	tTVPFont CurrentFont;
+	void ApplyFallbackFace();
 
 public:
 	FreeTypeFontRasterizer();

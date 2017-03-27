@@ -2,7 +2,6 @@
 #include "tjs.h"
 #include "tjsHashSearch.h"
 
-bool TVPFontExists(const ttstr &name);
 void TVPInitFontNames();
 int TVPEnumFontsProc(const ttstr &FontPath);
 tTJSBinaryStream* TVPCreateFontStream(const ttstr &fontname);
@@ -10,6 +9,7 @@ struct TVPFontNamePathInfo {
     ttstr Path;
     int Index;
 };
+TVPFontNamePathInfo* TVPFindFont(const ttstr &name);
 
 //---------------------------------------------------------------------------
 // font enumeration and existence check

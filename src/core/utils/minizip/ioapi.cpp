@@ -11,16 +11,15 @@
 */
 
 #include "ioapi.h"
+#include <unistd.h>
 
 #ifdef WIN32
 #define _POSIX_
 #include <direct.h>
-#include "win32io.h"
-#else
-#include <unistd.h>
 #endif
 #include <fcntl.h>
 #include <stdint.h>
+#include "win32io.h"
 
 //namespace cocos2d {
 
@@ -119,9 +118,7 @@ static uLong ZCALLBACK fwrite_file_func (voidpf opaque, voidpf stream, const voi
 {
     return (uLong)write((int64_t)stream, buf, size);
 }
-#ifdef __APPLE__
-#define lseek64 lseek
-#endif
+
 static ZPOS64_T ZCALLBACK ftell64_file_func (voidpf opaque, voidpf stream)
 {
     return (ZPOS64_T)lseek64((int64_t)stream, 0, SEEK_CUR);

@@ -4,7 +4,6 @@
 #define GLEW_STATIC
 #endif
 #include "GL/glew.h"
-#define GL_ETC1_RGB8_OES                                        0x8D64
 #else
 #ifndef GL_UNPACK_ROW_LENGTH
 #define GL_UNPACK_ROW_LENGTH 0x0CF2

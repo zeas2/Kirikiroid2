@@ -58,6 +58,8 @@
     <Item id="readonly_storage" text="Read-only external storage detected"/>
     <Item id="cannot_create_preference" text="Can not create individual preference file."/>
     <Item id="use_internal_path" text="Please copy your game folder into package path to avoid this warning or you may lost your savedata:&#10;%1&#10;&#10;Continue anyway?"/>
+    <Item id="continue_run" text="Continue"/>
+    <Item id="get_sdcard_permission" text="Fetch Permission"/>
     <Item id="crash_report" text="Crash Report"/>
     <Item id="crash_report_msg" text="Crash detected, send data (%d files) to help improving this app?"/>
     <Item id="menu_rotate" text="Rotate Screen"/>
@@ -67,12 +69,13 @@
     <Item id="menu_about" text="About"/>
     <Item id="menu_help" text="View Help"/>
     <Item id="menu_exit" text="Exit"/>
-    <Item id="about_content" text="Visit our forum for help if you have problems:&#10;https://groups.google.com/forum/#!forum/kirikiroid2"/>
+    <Item id="about_content" text="可以在github补丁页面寻找补丁：&#10;https://zeas2.github.io/Kirikiroid2_patch/patch&#10;如遇到问题，请反馈到到项目页面：&#10;https://github.com/zeas2/Kirikiroid2/issues&#10;或者到百度贴吧寻找解决方案：&#10;百度Kirikiroid2吧"/>
     <Item id="about_content_i" text=""/>
     <Item id="sure_to_exit" text="Sure to exit?"/>
     <Item id="msgbox_yes" text="Yes"/>
     <Item id="msgbox_no" text="No"/>
     <Item id="msgbox_ok" text="OK"/>
+    <Item id="msgbox_nerver_notice" text="Don't Notice Again"/>
     <Item id="use_last_path" text="Use last path:"/>
 	
     <Item id="err_narrow_to_wide" text="Cannot convert given narrow string to wide string,&#10;Data could be corrupted or encrypted or wrong text encoding.&#10;Maybe you need xp3filter.tjs if data is encrypted,&#10;or use patch.tjs to specify correct encoding if text is not encoded in SHIFT-JIS"/>
@@ -85,6 +88,21 @@
 	<Item id="file_operate_menu_title" text="File Operation"/>
 	<Item id="file_operate_menu_text" text="Please select opreation:"/>
 	<Item id="ensure_to_delete_file" text="Please ensure to delete:"/>
+	<Item id="ensure_item_count" text="%d items"/>
 	<Item id="device_info" text="Device Info"/>
 	<Item id="supported_opengl_extension" text="OpenGL Extensions(Only usable list):"/>
+	<Item id="preference_opengl_extension_opt" text="OpenGL Extensions"/>
+	<Item id="startup_patch_fail" text="Patch fail, please update patch.tjs"/>
+	<Item id="browse_patch_lib" text="Patch Lib"/>
+	<Item id="preference_opengl_extension_desc" text="May be usable OpenGL extension list here.&#10;Some features may cause wrong rendering result on some devices."/>
+	<Item id="preference_android_fetch_sdcard_permission" text="Fetch external sd-card write permission"/>
+	
+	<Item id="filemgr_unselect" text="Cancel"/>
+	<Item id="filemgr_browse" text="View"/>
+	<Item id="filemgr_delete" text="Delete"/>
+	<Item id="filemgr_copy" text="Copy"/>
+	<Item id="filemgr_cut" text="Cut"/>
+	<Item id="filemgr_paste" text="Paste to here"/>
+	<Item id="filemgr_sendto" text="Send to..."/>
+	<Item id="file_operate_failed" text="File operation fail:"/>
 </Locale>

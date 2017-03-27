@@ -1,3 +1,7 @@
+extern void TVPInitTextureFormatList();
+extern bool TVPIsSupportTextureFormat(GLenum fmt);
+
+namespace {
 static tPreferenceScreen RootPreference;
 static tPreferenceScreen OpenglOptPreference, SoftRendererOptPreference;
 static Size PrefListSize;
@@ -42,13 +46,39 @@ public:
 			item->_setter = [this](std::string v){ onSetValue(v); };
 		});
 	}
-	virtual const std::vector<std::pair<std::string, std::string> >& getListInfo() const override {
+	virtual const std::vector<std::pair<std::string, std::string> >& getListInfo() override {
 		return ListInfo;
 	}
 	virtual void onSetValue(const std::string &v) {
 		GlobalConfigManager::GetInstance()->SetValue(Key, v);
 	}
 	std::vector<std::pair<std::string, std::string> > ListInfo;
+};
+
+class tTVPPreferenceInfoTextureCompressionSelectList : public tTVPPreferenceInfoSelectList {
+public:
+	tTVPPreferenceInfoTextureCompressionSelectList(const std::string &cap, const std::string &key, const std::string &defval,
+		const std::initializer_list<std::tuple<std::string, std::string, unsigned int> > &listinfo)
+	: tTVPPreferenceInfoSelectList(cap, key, defval, std::initializer_list<std::pair<std::string, std::string> >())
+	, TextFmtList(listinfo)
+	{}
+
+	virtual const std::vector<std::pair<std::string, std::string> >& getListInfo() override {
+		if (!ListInited) {
+			ListInited = true;
+			TVPInitTextureFormatList();
+			for (const auto &it : TextFmtList) {
+				unsigned int fmt = std::get<2>(it);
+				if (!fmt || TVPIsSupportTextureFormat(fmt)) {
+					ListInfo.emplace_back(std::get<0>(it), std::get<1>(it));
+				}
+			}
+		}
+		return ListInfo;
+	}
+
+	bool ListInited = false;
+	std::vector<std::tuple<std::string, std::string, unsigned int> > TextFmtList;
 };
 
 // class tTVPPreferenceInfoSelectRenderer : public tTVPPreferenceInfoSelectList {
@@ -95,7 +125,7 @@ public:
 	virtual iPreferenceItem *createItem() override {
 		LocaleConfigManager *locmgr = LocaleConfigManager::GetInstance();
 		iPreferenceItem *ret = CreatePreferenceItem<tPreferenceItemSubDir>(PrefListSize, locmgr->GetText(Caption));
-		ret->addClickEventListener([](Ref*){
+		ret->addClickEventListener([](Ref*) {
 			TVPMainScene::GetInstance()->pushUIForm(TVPGlobalPreferenceForm::create(GetSubPreferenceInfo()));
 		});
 		return ret;
@@ -163,6 +193,20 @@ public:
 	}
 };
 
+class tTVPPreferenceInfoFetchSDCardPermission : public iTVPPreferenceInfo {
+public:
+	tTVPPreferenceInfoFetchSDCardPermission(const std::string &cap) : iTVPPreferenceInfo(cap, "") {}
+	virtual iPreferenceItem *createItem() override {
+		LocaleConfigManager *locmgr = LocaleConfigManager::GetInstance();
+		tPreferenceItemConstant* ret = CreatePreferenceItem<tPreferenceItemConstant>(PrefListSize, locmgr->GetText(Caption));
+		ret->setTouchEnabled(true);
+		ret->addClickEventListener([](Ref*) {
+			TVPFetchSDCardPermission();
+		});
+		return ret;
+	}
+};
+
 static void initAllConfig() {
 	if (!RootPreference.Preferences.empty()) return;
 	RootPreference.Title = "preference_title";
@@ -192,6 +236,7 @@ static void initAllConfig() {
 			new tTVPPreferenceInfoCheckBox("preference_remember_last_path", "remember_last_path", true),
 #if CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID
 			new tTVPPreferenceInfoCheckBox("preference_hide_android_sys_btn", "hide_android_sys_btn", false),
+			new tTVPPreferenceInfoFetchSDCardPermission("preference_android_fetch_sdcard_permission"),
 #endif
 #endif
 #if 0
@@ -216,8 +261,8 @@ static void initAllConfig() {
 		new tTVPPreferenceInfoSelectList("preference_software_compress_tex", "software_compress_tex", "none", {
 			{ "preference_soft_compress_tex_none", "none" },
 			{ "preference_soft_compress_tex_halfline", "halfline" },
-// 			{ "preference_soft_compress_tex_quarter", "quarter" },
-// 			{ "preference_soft_compress_tex_lz4", "lz4" }
+ 			{ "lz4", "lz4" },
+ 			{ "lz4+TLG5", "lz4+tlg5" }
 		}),
 	};
 
@@ -250,9 +295,11 @@ static void initAllConfig() {
 			{ "preference_ogl_texsize_8192", "8192" },
 			{ "preference_ogl_texsize_16384", "16384" }
 		}),
-		new tTVPPreferenceInfoSelectList("preference_ogl_compress_tex", "ogl_compress_tex", "none", {
-			{ "preference_ogl_compress_tex_none", "none" },
-			{ "preference_ogl_compress_tex_half", "half" },
+		new tTVPPreferenceInfoTextureCompressionSelectList("preference_ogl_compress_tex", "ogl_compress_tex", "none", {
+			std::make_tuple("preference_ogl_compress_tex_none", "none", 0),
+			std::make_tuple("preference_ogl_compress_tex_half", "half", 0),
+			std::make_tuple("ETC2", "etc2", 0x9278), // GL_COMPRESSED_RGBA8_ETC2_EAC
+			std::make_tuple("PVRTC", "pvrtc", 0x8C02), // GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG
 		}),
 // 		new tTVPPreferenceInfoSelectList("preference_ogl_render_tex_quality", "ogl_render_tex_quality", "1", {
 // 			{ "preference_ogl_render_tex_quality_100", "1" },
@@ -261,3 +308,4 @@ static void initAllConfig() {
 // 		}),
 	};
 }
+};

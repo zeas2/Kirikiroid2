@@ -13,6 +13,8 @@
 #include "EventIntf.h"
 #include "cocos/base/CCDirector.h"
 #include <shellapi.h>
+#include "XP3ArchiveRepack.h"
+#include "RenderManager.h"
 
 #pragma comment(lib,"psapi.lib")
 
@@ -86,17 +88,11 @@ std::string TVPGetDefaultFileDir() {
 int TVPCheckArchive(const ttstr &localname);
 void TVPCheckAndSendDumps(const std::string &dumpdir, const std::string &packageName, const std::string &versionStr);
 bool TVPCheckStartupArg() {
-	wchar_t **argv = __wargv, **env;
-	int argc = __argc;
-	struct
-	{
-		int newmode;
-	} info = { 0 };
-	argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+	int argc;
+	wchar_t **argv = CommandLineToArgvW(GetCommandLineW(), &argc);
 //	__wgetmainargs(&argc, &argv, &env, 0, &info);
 	TVPCheckAndSendDumps(TVPGetDefaultFileDir() + "/dumps", "win32-test", "test");
 	if (argc > 1) {
-		std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
 		if (TVPCheckExistentLocalFile(argv[1])) {
 			if (TVPCheckArchive(argv[1]) == 1) {
 				TVPMainScene::GetInstance()->startupFrom(converter.to_bytes(argv[1]));
@@ -287,10 +283,13 @@ void TVPReleaseFontLibrary();
 void TVPExitApplication(int code) {
 	// clear some static data for memory leak detect
 	TVPDeliverCompactEvent(TVP_COMPACT_LEVEL_MAX);
-	if (TVPScriptEngine) TVPScriptEngine->Cleanup();
-	TVPReleaseFontLibrary();
-	delete ::Application;
-	TVPMainScene::GetInstance()->removeFromParent();
+	if (!TVPIsSoftwareRenderManager())
+		iTVPTexture2D::RecycleProcess();
+
+// 	if (TVPScriptEngine) TVPScriptEngine->Cleanup();
+// 	TVPReleaseFontLibrary();
+// 	delete ::Application;
+// 	TVPMainScene::GetInstance()->removeFromParent();
 	exit(code);
 }
 
@@ -299,22 +298,17 @@ void TVPExitApplication(int code) {
 // 	return ret;
 // }
 
-bool TVPDeleteFile(const ttstr &filename)
+bool TVPDeleteFile(const std::string &filename)
 {
-	return _wunlink(filename.c_str()) == 0;
-#ifdef WIN32
-	tjs_int ret = _wunlink(filename.c_str());
-#else
-	tjs_int ret = unlink(tTJSNarrowStringHolder(filename.c_str()));
-#endif
+	return _wunlink(ttstr(filename).c_str()) == 0;
 }
 
-bool TVPRenameFile(const ttstr &from, const ttstr &to)
+bool TVPRenameFile(const std::string &from, const std::string &to)
 {
 #ifdef WIN32
-	tjs_int ret = _wrename(from.c_str(), to.c_str());
+	tjs_int ret = _wrename(ttstr(from).c_str(), ttstr(to).c_str());
 #else
-	tjs_int ret = rename(tTJSNarrowStringHolder(fromFile.c_str()), tTJSNarrowStringHolder(toFile.c_str()));
+	tjs_int ret = rename(from.c_str(), to.c_str());
 #endif
 	return !ret;
 }
@@ -332,4 +326,20 @@ tjs_uint32 TVPGetRoughTickCount32()
 
 void TVPPrintLog(const char *str) {
 	printf("%s", str);
+}
+
+bool TVP_stat(const tjs_char *name, tTVP_stat &s) {
+	struct _stat64 t;
+	bool ret = !_wstat64(name, &t);
+	s.st_mode = t.st_mode;
+	s.st_size = t.st_size;
+	s.st_atime = t.st_atime;
+	s.st_mtime = t.st_mtime;
+	s.st_ctime = t.st_ctime;
+	return ret;
+}
+
+bool TVP_stat(const char *name, tTVP_stat &s) {
+	ttstr filename(name);
+	return TVP_stat(filename.c_str(), s);
 }

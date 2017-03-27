@@ -15,6 +15,7 @@ USING_NS_CC;
 static Size designResolutionSize(960, 640);
 bool TVPCheckStartupArg();
 std::string TVPGetCurrentLanguage();
+cocos2d::FileUtils *TVPCreateCustomFileUtils();
 
 void TVPAppDelegate::applicationWillEnterForeground() {
 	::Application->OnActivate();
@@ -29,6 +30,7 @@ void TVPAppDelegate::applicationDidEnterBackground() {
 bool TVPAppDelegate::applicationDidFinishLaunching() {
 	cocos2d::log("applicationDidFinishLaunching");
 	// initialize director
+	FileUtils::setDelegate(TVPCreateCustomFileUtils());
 	auto director = Director::getInstance();
 	auto glview = director->getOpenGLView();
 	if (!glview) {
@@ -134,3 +136,6 @@ void TVPAppDelegate::applicationScreenSizeChanged(int newWidth, int newHeight)
 // 	director->getOpenGLView()->setFrameSize(newWidth, newHeight);
 }
 
+void TVPOpenPatchLibUrl() {
+	cocos2d::Application::getInstance()->openURL("https://zeas2.github.io/Kirikiroid2_patch/patch");
+}

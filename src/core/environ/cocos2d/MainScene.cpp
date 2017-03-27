@@ -356,7 +356,7 @@ class TVPWindowLayer : public cocos2d::extension::ScrollView, public iWindowLaye
 	float _drawSpriteScaleX = 1.0f, _drawSpriteScaleY = 1.0f;
 	float _drawTextureScaleX = 1.f, _drawTextureScaleY = 1.f;
 	bool UseMouseKey = false, MouseLeftButtonEmulatedPushed = false, MouseRightButtonEmulatedPushed = false;
-	bool LastMouseMoved = false;
+	bool LastMouseMoved = false, Visible = false;
 	tjs_uint32 LastMouseKeyTick = 0;
 	tjs_int MouseKeyXAccel = 0;
 	tjs_int MouseKeyYAccel = 0;
@@ -764,6 +764,7 @@ public:
 	}
 
 	virtual void SetVisible(bool bVisible) {
+		Visible = bVisible;
 		setVisible(bVisible);
 		if (bVisible) {
 			BringToFront();
@@ -798,6 +799,7 @@ public:
 			size = size / scale;
 			//DrawSprite->setTextureRect(Rect(0, 0, size.width, size.height));
 			DrawSprite->setScale(_drawTextureScaleX, _drawTextureScaleY);
+			DrawSprite->setTextureRect(Rect(0, 0, LayerWidth, LayerHeight));
 			DrawSprite->setPosition(Vec2(0, size.height));
 			PrimaryLayerArea->setContentSize(size);
 			PrimaryLayerArea->setScale(scale);
@@ -1498,17 +1500,17 @@ public:
 		if (!_currentWindowLayer) return;
 		if (_left) {
 			TVPWindowLayer *pLay = _currentWindowLayer->_prevWindow;
-			while (pLay && !pLay->isVisible()) {
+			while (pLay && !pLay->Visible) {
 				pLay = pLay->_prevWindow;
 			}
-			_left->setVisible(pLay && pLay->isVisible());
+			_left->setVisible(pLay && pLay->Visible);
 		}
 		if (_right) {
 			TVPWindowLayer *pLay = _currentWindowLayer->_nextWindow;
-			while (pLay && !pLay->isVisible()) {
+			while (pLay && !pLay->Visible) {
 				pLay = pLay->_nextWindow;
 			}
-			_right->setVisible(pLay && pLay->isVisible());
+			_right->setVisible(pLay && pLay->Visible);
 		}
 	}
 	

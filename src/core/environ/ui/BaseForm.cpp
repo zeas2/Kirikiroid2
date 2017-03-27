@@ -10,6 +10,7 @@
 #include "ui/UIListView.h"
 #include "Platform.h"
 #include "cocostudio/ActionTimeline/CCActionTimeline.h"
+#include "extensions/GUI/CCScrollView/CCTableView.h"
 
 using namespace cocos2d;
 using namespace cocos2d::ui;
@@ -19,7 +20,8 @@ NodeMap::NodeMap(const char *filename, cocos2d::Node* node) : FileName(filename)
 	initFromNode(node);
 }
 
-cocos2d::Node * NodeMap::findController(const std::string &name, bool notice) const {
+template <>
+cocos2d::Node * NodeMap::findController<cocos2d::Node>(const std::string &name, bool notice) const {
 	auto it = this->find(name);
 	if (it != this->end())
 		return it->second;
@@ -41,10 +43,6 @@ void NodeMap::initFromNode(cocos2d::Node* node) {
 		if (!name.empty()) (*this)[name] = child;
 		initFromNode(child);
 	}
-}
-
-cocos2d::ui::Widget * NodeMap::findWidget(const std::string &name) const {
-	return static_cast<Widget*>(findController(name));
 }
 
 Node* CSBReader::Load(const char *filename) {
@@ -223,4 +221,36 @@ int TVPShowSimpleInputBox(ttstr &text, const ttstr &caption, const ttstr &prompt
 
 	return 0;
 }
+
 #endif
+
+void iTVPFloatForm::rearrangeLayout()
+{
+	float scale = TVPMainScene::GetInstance()->getUIScale();
+	Size sceneSize = TVPMainScene::GetInstance()->getUINodeSize();
+	setContentSize(sceneSize);
+	Vec2 center = sceneSize / 2;
+	sceneSize.height *= 0.75f;
+	sceneSize.width *= 0.75f;
+	if (RootNode) {
+		sceneSize.width /= scale;
+		sceneSize.height /= scale;
+		RootNode->setContentSize(sceneSize);
+		ui::Helper::doLayout(RootNode);
+		RootNode->setScale(scale);
+		RootNode->setAnchorPoint(sceneSize / 2);
+		RootNode->setPosition(center);
+	}
+}
+
+void ReloadTableViewAndKeepPos(cocos2d::extension::TableView *pTableView)
+{
+	Vec2 off = pTableView->getContentOffset();
+	float origHeight = pTableView->getContentSize().height;
+	pTableView->reloadData();
+	off.y += origHeight - pTableView->getContentSize().height;
+	bool bounceable = pTableView->isBounceable();
+	pTableView->setBounceable(false);
+	pTableView->setContentOffset(off);
+	pTableView->setBounceable(bounceable);
+}

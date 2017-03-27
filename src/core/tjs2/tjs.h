@@ -184,7 +184,6 @@ class tTJSString;
 class iTJSTextReadStream
 {
 public:
-	virtual ~iTJSTextReadStream() {} // add by ZeaS
 	virtual tjs_uint TJS_INTF_METHOD Read(tTJSString & targ, tjs_uint size) = 0;
 	virtual void TJS_INTF_METHOD Destruct() = 0; // must delete itself
 };

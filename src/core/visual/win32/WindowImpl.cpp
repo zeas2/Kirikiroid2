@@ -31,8 +31,8 @@
 #include "Application.h"
 #include "TVPScreen.h"
 #include "tjsDictionary.h"
-#include "VSyncTimingThread.h"
-#include "MouseCursor.h"
+//#include "VSyncTimingThread.h"
+//#include "MouseCursor.h"
 
 iWindowLayer *TVPCreateAndAddWindow(tTJSNI_Window *w);
 #define MK_SHIFT 4
@@ -2032,8 +2032,7 @@ void TJS_INTF_METHOD tTJSNI_Window::NotifyBitmapCompleted(class iTVPLayerManager
 //---------------------------------------------------------------------------
 void TJS_INTF_METHOD tTJSNI_Window::EndBitmapCompletion(iTVPLayerManager * manager)
 {
-	if (Form) Form->UpdateDrawBuffer(manager->GetDrawBuffer());
-//	if( DrawDevice ) DrawDevice->EndBitmapCompletion(manager);
+	if( DrawDevice ) DrawDevice->EndBitmapCompletion(manager);
 }
 //---------------------------------------------------------------------------
 void TJS_INTF_METHOD tTJSNI_Window::SetMouseCursor(class iTVPLayerManager* manager, tjs_int cursor)
@@ -2154,8 +2153,8 @@ TJS_BEGIN_NATIVE_METHOD_DECL(registerMessageReceiver)
 	if(numparams < 3) return TJS_E_BADPARAMCOUNT;
 
 	_this->RegisterWindowMessageReceiver((tTVPWMRRegMode)((tjs_int)*param[0]),
-		reinterpret_cast<void *>((tjs_intptr_t)(*param[1])),
-		reinterpret_cast<const void *>((tjs_intptr_t)(*param[2])));
+		reinterpret_cast<void *>(param[1]->AsInteger()),
+		reinterpret_cast<const void *>(param[2]->AsInteger()));
 
 	return TJS_S_OK;
 }

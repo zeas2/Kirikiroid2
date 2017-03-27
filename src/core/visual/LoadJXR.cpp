@@ -776,7 +776,9 @@ void TVPLoadHeaderJXR(void* formatdata, tTJSBinaryStream *src, iTJSDispatch2** d
 		tTJSVariant val(width);
 		(*dic)->PropSet(TJS_MEMBERENSURE, TJS_W("width"), 0, &val, (*dic) );
 		val = tTJSVariant(height);
-		(*dic)->PropSet(TJS_MEMBERENSURE, TJS_W("height"), 0, &val, (*dic) );
+		(*dic)->PropSet(TJS_MEMBERENSURE, TJS_W("height"), 0, &val, (*dic));
+		val = tTJSVariant((tjs_int64)(pDecoder->WMP.wmiSCP.uAlphaMode ? 32 : 24));
+		(*dic)->PropSet(TJS_MEMBERENSURE, TJS_W("bpp"), 0, &val, (*dic));
 
 		if( pDecoder ) pDecoder->Release(&pDecoder);
 		if( pStream ) free( pStream );

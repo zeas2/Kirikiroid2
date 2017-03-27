@@ -577,8 +577,6 @@ static bool _TVPDeliverAllEvents()
 	return ret_value;
 }
 //---------------------------------------------------------------------------
-void start_profile();
-void stop_profile();
 void TVPDeliverAllEvents()
 {
 	bool r;
@@ -590,7 +588,6 @@ void TVPDeliverAllEvents()
 	}
 
 	TVPEventInterrupting = false;
-	start_profile();
 	try
 	{
 	   try
@@ -633,7 +630,6 @@ void TVPDeliverAllEvents()
 
 			TVPDeliverContinuousEvent();
 		}
-		stop_profile();
 		try
 		{
 		   try
@@ -645,7 +641,6 @@ void TVPDeliverAllEvents()
 		}
 		TVP_CATCH_AND_SHOW_SCRIPT_EXCEPTION(TJS_W("window update"));
 	} else {
-		stop_profile();
 	}
 
 	if(TVPEventQueue.size() == 0)

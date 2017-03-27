@@ -186,7 +186,7 @@ tjs_error CBinaryAccessor::FuncXor(tjs_int numparams, tTJSVariant **param)
 
 	unsigned char *buf = m_buff + m_curPos + bufoff;
 	unsigned char *pend = buf + len;
-	if (len>16)
+	if (len>32)
 	{
 		int PreFragLen = (unsigned char*)((((intptr_t)buf) + 7)&~7) - buf;
 		for (int i = 0; i < PreFragLen; i++) *(buf++) ^= xorval;
@@ -319,10 +319,10 @@ static XP3FilterDecoder* AddXP3Decoder() {
 	return decoder;
 }
 
-#if (defined(_MSC_VER) && _MSC_VER <= 1800) || defined(CC_TARGET_OS_IPHONE)
+static std::map<std::thread::id, XP3FilterDecoder*> _thread_decoders;
+#if 1 || (defined(_MSC_VER) /*&& _MSC_VER <= 1800*/) || defined(CC_TARGET_OS_IPHONE)
 static std::mutex _decoders_mtx;
 static std::vector<XP3FilterDecoder*> _cached_decoders;
-static std::map<std::thread::id, XP3FilterDecoder*> _thread_decoders;
 static XP3FilterDecoder *FetchXP3Decoder() {
 	std::lock_guard<std::mutex> lk(_decoders_mtx);
 	auto it = _thread_decoders.find(std::this_thread::get_id());
@@ -354,12 +354,12 @@ static XP3FilterDecoder *FetchXP3Decoder() {
 }
 #else
 static XP3FilterDecoder *FetchXP3Decoder() {
-	thread_local std::auto_ptr<XP3FilterDecoder> ret(AddXP3Decoder());
+	thread_local std::auto_ptr<XP3FilterDecoder> ret;
+	if(!ret) ret = AddXP3Decoder();
 	return ret.get();
 }
 #endif
-static void ReleaseXP3Decoder(XP3FilterDecoder *decoder, bool hold = false) { }
-tjs_int TVPXP3ArchiveContentFilterWrapper(const ttstr &filepath, const ttstr &archivename, tjs_uint64 filesize) {
+tjs_int TVPXP3ArchiveContentFilterWrapper(const ttstr &filepath, const ttstr &archivename, tjs_uint64 filesize, tTJSVariant *ctx) {
 	if (!_ManagedFilterInited) return 0;
 
 	XP3FilterDecoder* decoder = FetchXP3Decoder();
@@ -372,13 +372,18 @@ tjs_int TVPXP3ArchiveContentFilterWrapper(const ttstr &filepath, const ttstr &ar
 	};
 	tTJSVariant result;
 	decoder->ManagedFilter.FuncCall(0, NULL, NULL, &result, sizeof(vars) / sizeof(vars[0]), vars, NULL);
-	tjs_int ret = result.operator tjs_int();
-	ReleaseXP3Decoder(decoder, ret);
+	tjs_int ret = 0;
+	if (result.Type() == tvtObject) {
+		iTJSDispatch2* arr = result.AsObjectNoAddRef();
+		ncbPropAccessor a(arr);
+		ret = a.GetValue(0, ncbTypedefs::Tag<tjs_int>());
+		*ctx = a.GetValue(1, ncbTypedefs::Tag<tTJSVariant>());
+	}
 	return ret;
 }
 
 void TVP_tTVPXP3ArchiveExtractionFilter_CONVENTION
-    TVPXP3ArchiveExtractionFilterWrapper(tTVPXP3ExtractionFilterInfo *info)
+    TVPXP3ArchiveExtractionFilterWrapper(tTVPXP3ExtractionFilterInfo *info, tTJSVariant *ctx)
 {
     if (info->SizeOfSelf != sizeof(tTVPXP3ExtractionFilterInfo))
         TVPThrowExceptionMessage(TJS_W("Incompatible tTVPXP3ExtractionFilterInfo size"));
@@ -391,14 +396,14 @@ void TVP_tTVPXP3ArchiveExtractionFilter_CONVENTION
 		buf->Release();
 		tTJSVariant BufferSize((tjs_int64)info->BufferSize);
 		tTJSVariant FileName(info->FileName);
-        tTJSVariant *vars[5] = {
-            &FileHash, &Offset, &Buffer, &BufferSize, &FileName
+        tTJSVariant *vars[] = {
+            &FileHash, &Offset, &Buffer, &BufferSize, &FileName, ctx
         };
 #if defined(WIN32) && defined(CHECK_CXDEC)
         unsigned char *pBackup = new unsigned char[info->BufferSize], *pBuffer = (unsigned char*)info->Buffer;
         memcpy(pBackup, info->Buffer, info->BufferSize);
 #endif
-		decoder->ManagedDecoder.FuncCall(0, NULL, NULL, NULL, 5, vars, NULL);
+		decoder->ManagedDecoder.FuncCall(0, NULL, NULL, NULL, sizeof(vars) / sizeof(vars[0]), vars, NULL);
 #if defined(WIN32) && defined(CHECK_CXDEC)
 		cxdec_decode(&dec_callback, info->FileHash, info->Offset, pBackup, info->BufferSize);
         for (int i = 0; i < info->BufferSize; ++i)
@@ -411,7 +416,23 @@ void TVP_tTVPXP3ArchiveExtractionFilter_CONVENTION
         delete []pBackup;
 #endif
     }
-	ReleaseXP3Decoder(decoder);
+}
+
+void TVPSetXP3FilterScript(ttstr content) {
+	if (sXP3FilterScript != content) {
+		for (auto it : _thread_decoders) {
+			delete it.second;
+		}
+		_thread_decoders.clear();
+	}
+	if (content.IsEmpty()) {
+		TVPSetXP3ArchiveExtractionFilter(nullptr);
+		TVPSetXP3ArchiveContentFilter(nullptr);
+	} else {
+		TVPSetXP3ArchiveExtractionFilter(TVPXP3ArchiveExtractionFilterWrapper);
+		TVPSetXP3ArchiveContentFilter(TVPXP3ArchiveContentFilterWrapper);
+	}
+	sXP3FilterScript = content;
 }
 
 static void PostRegistCallback()
@@ -429,7 +450,7 @@ static void PostRegistCallback()
             throw;
         }
         stream->Destruct();
-        AddXP3Decoder();
+    //    AddXP3Decoder();
 		TVPSetXP3ArchiveExtractionFilter(TVPXP3ArchiveExtractionFilterWrapper);
 		TVPSetXP3ArchiveContentFilter(TVPXP3ArchiveContentFilterWrapper);
     }

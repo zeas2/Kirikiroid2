@@ -1,5 +1,7 @@
 #include "FontImpl.h"
 #include <ft2build.h>
+#include FT_TRUETYPE_IDS_H
+#include FT_SFNT_NAMES_H
 #include FT_FREETYPE_H
 #include "StorageIntf.h"
 #include "DebugIntf.h"
@@ -17,7 +19,6 @@
 #pragma comment(lib,"freetype.lib")
 #endif
 #include "platform/CCFileUtils.h"
-#include <sys/stat.h>
 #include "StorageImpl.h"
 #include "BinaryStream.h"
 
@@ -93,13 +94,59 @@ int TVPEnumFontsProc(const ttstr &FontPath)
             }
         }
         if(FT_IS_SCALABLE(fontface)) {
-            ttstr fontname((tjs_nchar*)fontface->family_name);
-            TVPFontNamePathInfo info;
-            info.Path = FontPath;
-            info.Index = i;
-            TVPFontNames.Add(fontname, info);
-            ++faceCount;
-        }
+			FT_UInt namecount = FT_Get_Sfnt_Name_Count(fontface);
+			int addCount = 0;
+			for (FT_UInt i = 0; i < namecount; ++i) {
+				FT_SfntName name;
+				if (FT_Get_Sfnt_Name(fontface, i, &name)) {
+					continue;
+				}
+				if (name.name_id != TT_NAME_ID_FONT_FAMILY) {
+					continue;
+				}
+				if (name.platform_id != TT_PLATFORM_MICROSOFT) {
+					continue;
+				}
+				switch (name.language_id) { // for CJK names
+				case TT_MS_LANGID_JAPANESE_JAPAN:
+				case TT_MS_LANGID_CHINESE_GENERAL:
+				case TT_MS_LANGID_CHINESE_TAIWAN:
+				case TT_MS_LANGID_CHINESE_PRC:
+				case TT_MS_LANGID_CHINESE_HONG_KONG:
+				case TT_MS_LANGID_CHINESE_SINGAPORE:
+				case TT_MS_LANGID_KOREAN_EXTENDED_WANSUNG_KOREA:
+				case TT_MS_LANGID_KOREAN_JOHAB_KOREA:
+					break;
+				default:
+					continue;
+				}
+				ttstr fontname;
+				if (name.encoding_id == TT_MS_ID_UNICODE_CS) {
+					std::vector<tjs_char> tmp;
+					int namelen = name.string_len / 2;
+					tmp.resize(namelen + 1);
+					for (int j = 0; j < namelen; ++j) {
+						tmp[j] = (name.string[j * 2] << 8) | (name.string[j * 2 + 1]);
+					}
+					fontname = &tmp.front();
+				} else {
+					continue;
+				}
+				TVPFontNamePathInfo info;
+				info.Path = FontPath;
+				info.Index = i;
+				TVPFontNames.Add(fontname, info);
+				addCount = 1;
+			}
+			/*if (!addCount)*/ {
+				ttstr fontname((tjs_nchar*)fontface->family_name);
+				TVPFontNamePathInfo info;
+				info.Path = FontPath;
+				info.Index = i;
+				TVPFontNames.Add(fontname, info);
+			}
+			++faceCount;
+		}
 
         FT_Done_Face(fontface);
     }
@@ -109,7 +156,7 @@ int TVPEnumFontsProc(const ttstr &FontPath)
 
 tTJSBinaryStream* TVPCreateFontStream(const ttstr &fontname)
 {
-	TVPFontNamePathInfo *info = TVPFontNames.Find(fontname);
+	TVPFontNamePathInfo *info = TVPFindFont(fontname);
 	if (!info) {
 		info = TVPFontNames.Find(TVPDefaultFontName);
 		if (!info) return nullptr;
@@ -118,7 +165,6 @@ tTJSBinaryStream* TVPCreateFontStream(const ttstr &fontname)
 }
 
 //---------------------------------------------------------------------------
-void TVPGetListAt(const ttstr &name, iTVPStorageLister * lister);
 #ifdef __ANDROID__
 extern std::vector<ttstr> Android_GetExternalStoragePath();
 extern ttstr Android_GetInternalStoragePath();
@@ -195,14 +241,19 @@ void TVPInitFontNames()
     TVPFontNamesInit = true;
 }
 //---------------------------------------------------------------------------
-bool TVPFontExists(const ttstr &name)
+TVPFontNamePathInfo* TVPFindFont(const ttstr &fontname)
 {
     // check existence of font
     TVPInitFontNames();
 
-    TVPFontNamePathInfo * t = TVPFontNames.Find(name);
-
-    return t != NULL;
+	TVPFontNamePathInfo *info = nullptr;
+	if (!fontname.IsEmpty() && fontname[0] == TJS_W('@')) { // vertical version
+		info = TVPFontNames.Find(fontname.c_str() + 1);
+	}
+	if (!info) {
+		info = TVPFontNames.Find(fontname);
+	}
+    return info;
 }
 
 tjs_uint32 tTVPttstrHash::Make( const ttstr &val )

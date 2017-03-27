@@ -7,6 +7,7 @@
           <Image Name="about_icon.png" />
           <Image Name="back_btn_off.png" />
           <Image Name="back_btn_on.png" />
+          <Image Name="back_icon.png" />
           <Image Name="Cancel_Normal.png" />
           <Image Name="Cancel_Press.png" />
           <Image Name="CheckBox_Disable.png" />
@@ -29,6 +30,7 @@
           <Image Name="mouse_icon.png" />
           <Image Name="mouse_left_btn.png" />
           <Image Name="mouse_right_btn.png" />
+          <Image Name="right_triangle.png" />
           <Image Name="syssetting_btn_ff.png" />
           <Image Name="syssetting_btn_on.png" />
           <Image Name="touch_icon.png" />
@@ -56,6 +58,7 @@
           <Project Name="BottomBar.csd" Type="Layer" />
           <Project Name="BottomBarTextInput.csd" Type="Layer" />
           <Project Name="FileItem.csd" Type="Layer" />
+          <Project Name="FileManageMenu.csd" Type="Layer" />
           <Project Name="GameMenu.csd" Type="Layer" />
           <Project Name="ListItem.csd" Type="Layer" />
           <Project Name="ListView.csd" Type="Layer" />

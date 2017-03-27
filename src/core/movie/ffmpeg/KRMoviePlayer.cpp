@@ -365,6 +365,14 @@ const tTVPRect & MoviePlayerOverlay::GetBounds()
 	return m_pCallbackWin->GetBounds();
 }
 
+void KRMovie::MoviePlayerOverlay::SetVisible(bool b)
+{
+	VideoPresentOverlay::SetVisible(b);
+	if (m_pRootNode) {
+		m_pRootNode->setVisible(b);
+	}
+}
+
 void MoviePlayerOverlay::OnPlayEvent(KRMovieEvent msg, void *p)
 {
 	if (msg == KRMovieEvent::Ended) {

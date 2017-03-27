@@ -875,7 +875,7 @@ void TVPDumpScriptEngine()
 
 
 bool TVPStartupSuccess = false;
-
+void TVPOpenPatchLibUrl();
 //---------------------------------------------------------------------------
 // TVPExecuteStartupScript
 //---------------------------------------------------------------------------
@@ -914,7 +914,12 @@ void TVPExecuteStartupScript()
 		ttstr msg = LocaleConfigManager::GetInstance()->GetText("startup_patch_fail");
 		msg += "\n";
 		msg += strPatchError;
-		TVPShowSimpleMessageBox(msg, TVPGetPackageVersionString());
+		std::vector<ttstr> btns;
+		btns.emplace_back(LocaleConfigManager::GetInstance()->GetText("msgbox_ok"));
+		btns.emplace_back(LocaleConfigManager::GetInstance()->GetText("browse_patch_lib"));
+		if (TVPShowSimpleMessageBox(msg, TVPGetPackageVersionString()) == 1) {
+			TVPOpenPatchLibUrl();
+		}
 	}
 
 	// execute "startup.tjs"

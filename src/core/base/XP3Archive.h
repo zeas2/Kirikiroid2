@@ -50,9 +50,9 @@ struct tTVPXP3ExtractionFilterInfo
 	// for backward application compatibility.
 
 typedef void (TVP_tTVPXP3ArchiveExtractionFilter_CONVENTION *
-	tTVPXP3ArchiveExtractionFilter)(tTVPXP3ExtractionFilterInfo *info);
+	tTVPXP3ArchiveExtractionFilter)(tTVPXP3ExtractionFilterInfo *info, tTJSVariant *ctx);
 typedef tjs_int (TVP_tTVPXP3ArchiveExtractionFilter_CONVENTION *
-	tTVPXP3ArchiveContentFilter)(const ttstr &filepath, const ttstr &archivename, tjs_uint64 filesize);
+	tTVPXP3ArchiveContentFilter)(const ttstr &filepath, const ttstr &archivename, tjs_uint64 filesize, tTJSVariant *ctx);
 
 /*]*/
 //---------------------------------------------------------------------------
@@ -94,8 +94,7 @@ struct tTVPXP3ArchiveSegment
 //---------------------------------------------------------------------------
 class tTVPXP3Archive : public tTVPArchive
 {
-	ttstr Name;
-
+public:
 	struct tArchiveItem
 	{
 		ttstr Name;
@@ -109,10 +108,13 @@ class tTVPXP3Archive : public tTVPArchive
 		}
 	};
 
-	tjs_int Count;
+	tjs_int Count = 0;
 
 	std::vector<tArchiveItem> ItemVector;
+	void Init(tTJSBinaryStream *st, tjs_int64 offset, bool normalizeName = true);
+
 public:
+	tTVPXP3Archive(const ttstr & name, int) : tTVPArchive(name) {}
 	tTVPXP3Archive(const ttstr & name, tTJSBinaryStream *st = nullptr, tjs_int64 offset = -1);
 	~tTVPXP3Archive();
 
@@ -123,7 +125,7 @@ public:
 	tjs_uint32 GetFileHash(tjs_uint idx) const { return ItemVector[idx].FileHash; }
 	ttstr GetName(tjs_uint idx) { return ItemVector[idx].Name; }
 
-	const ttstr & GetName() const { return Name; }
+	const ttstr & GetName() const { return ArchiveName; }
 
 	tTJSBinaryStream * CreateStreamByIndex(tjs_uint idx);
 
@@ -168,12 +170,14 @@ class tTVPXP3ArchiveStream : public tTJSBinaryStream
 	tTVPSegmentData *SegmentData; // uncompressed segment data
 
 	bool SegmentOpened;
+	tTJSVariant FilterContext;
 
 public:
 	tTVPXP3ArchiveStream(tTVPXP3Archive *owner, tjs_int storageindex,
 		std::vector<tTVPXP3ArchiveSegment> *segments, tTJSBinaryStream *stream,
 			tjs_uint64 orgsize);
 	~tTVPXP3ArchiveStream();
+	tTJSVariant &GetFilterContext() { return FilterContext; }
 
 private:
 	void EnsureSegment(); // ensure accessing to current segment

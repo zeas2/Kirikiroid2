@@ -32,11 +32,26 @@ std::string TVPGetPackageVersionString();
 void TVPExitApplication(int code);
 void TVPCheckMemory();
 const std::string &TVPGetInternalPreferencePath();
-bool TVPDeleteFile(const ttstr &filename);
-bool TVPRenameFile(const ttstr &from, const ttstr &to);
+bool TVPDeleteFile(const std::string &filename);
+bool TVPRenameFile(const std::string &from, const std::string &to);
+bool TVPCopyFile(const std::string &from, const std::string &to);
 
 void TVPShowIME(int x, int y, int w, int h);
 void TVPHideIME();
 
 void TVPRelinquishCPU();
 void TVPPrintLog(const char *str);
+
+void TVPFetchSDCardPermission(); // for android only
+
+struct tTVP_stat {
+	uint16_t st_mode;
+	uint64_t st_size;
+	uint64_t st_atime;
+	uint64_t st_mtime;
+	uint64_t st_ctime;
+};
+
+bool TVP_stat(const tjs_char *name, tTVP_stat &s);
+bool TVP_stat(const char *name, tTVP_stat &s);
+

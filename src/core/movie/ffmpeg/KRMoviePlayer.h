@@ -184,6 +184,7 @@ public:
 		const tjs_char * streamname, const tjs_char *type, uint64_t size);
 
 	virtual const tTVPRect &GetBounds() override;
+	virtual void SetVisible(bool b) override;
 };
 
 class VideoPresentOverlay2 : public VideoPresentOverlay {

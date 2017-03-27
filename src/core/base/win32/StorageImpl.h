@@ -26,6 +26,11 @@ void TVPUnloadArchiveSPI(HINSTANCE inst);
 //---------------------------------------------------------------------------
 #endif
 
+#ifndef S_IFMT
+#define S_IFDIR  0x4000 // Directory
+#define S_IFREG  0x8000 // Regular
+#endif
+
 struct tTVPLocalFileInfo {
 	const char * NativeName;
 	unsigned short Mode; // S_IFMT

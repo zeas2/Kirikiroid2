@@ -3202,7 +3202,7 @@ void tTJSNI_WaveSoundBuffer::SetVolumeToSoundBuffer()
 			tTVPSoundGlobalFocusMode mode =
 				GlobalFocusMode > TVPSoundGlobalFocusModeByOption ?
 				GlobalFocusMode : TVPSoundGlobalFocusModeByOption;
-
+#if 0 // useless on mobile device
 			switch(mode)
 			{
 			case sgfmNeverMute:
@@ -3217,6 +3217,7 @@ void tTJSNI_WaveSoundBuffer::SetVolumeToSoundBuffer()
 					mutevol = TVPSoundGlobalFocusMuteVolume;
 				break;
 			}
+#endif
 		}
 
 		// compute volume for each buffer

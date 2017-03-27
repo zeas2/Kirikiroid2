@@ -353,12 +353,16 @@ bool TVPSelectFile(iTJSDispatch2 *params)
 			if (lname.IndexOf('/') >= 0) {
 				lname = TVPNormalizeStorageName(lname);
 				TVPGetLocalName(lname);
-				initialdir.clear();
+				ttstr path = TVPExtractStoragePath(lname);
+				ttstr name = TVPExtractStorageName(lname);
+				lname = name;
+				initialdir = path.AsStdString();
 			} else {
 			}
 
 			if (!defaultext.empty() && TVPExtractStorageExt(lname).IsEmpty()) {
-				lname += TJS_W(".");
+				if (defaultext[0] != '.')
+					lname += TJS_W(".");
 				lname += defaultext.c_str();
 			}
 			filename = tTJSNarrowStringHolder(lname.c_str());

@@ -23,8 +23,29 @@
 #include <algorithm>
 #include <unordered_set>
 #include "ConfigManager/LocaleConfigManager.h"
+#include "etcpak.h"
+#include "pvrtc.h"
+#include "pvr.h"
 
 //#define TEST_SHADER_ENABLED
+#ifndef GL_ETC1_RGB8_OES
+#define GL_ETC1_RGB8_OES    0x8D64
+#endif
+#ifndef GL_COMPRESSED_RGBA8_ETC2_EAC
+#define GL_COMPRESSED_RGB8_ETC2 0x9274
+#define GL_COMPRESSED_RGBA8_ETC2_EAC 0x9278
+#define GL_COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2         0x9276 
+#endif
+#ifndef GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG
+#define GL_COMPRESSED_RGB_PVRTC_4BPPV1_IMG  0x8C00
+#define GL_COMPRESSED_RGB_PVRTC_2BPPV1_IMG  0x8C01
+#define GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG 0x8C02
+#define GL_COMPRESSED_RGBA_PVRTC_2BPPV1_IMG 0x8C03
+#endif
+#ifndef GL_COMPRESSED_RGBA_PVRTC_2BPPV2_IMG
+#define GL_COMPRESSED_RGBA_PVRTC_2BPPV2_IMG                  0x9137
+#define GL_COMPRESSED_RGBA_PVRTC_4BPPV2_IMG                  0x9138
+#endif
 
 namespace TJS {
 	void TVPConsoleLog(const tjs_char *l);
@@ -150,6 +171,21 @@ typedef void (GLAPIENTRY fAlphaFunc)(GLenum func, GLclampf ref);
 static fAlphaFunc *glAlphaFunc;
 }
 
+static std::set<GLenum> TVPTextureFormats;
+void TVPInitTextureFormatList() {
+	if (TVPTextureFormats.empty()) {
+		GLint nTexFormats; glGetIntegerv(GL_NUM_COMPRESSED_TEXTURE_FORMATS, &nTexFormats);
+		std::vector<GLint> texFormats; texFormats.resize(nTexFormats);
+		glGetIntegerv(GL_COMPRESSED_TEXTURE_FORMATS, &texFormats.front());
+		for (GLint f : texFormats) {
+			TVPTextureFormats.insert(f);
+		}
+	}
+}
+bool TVPIsSupportTextureFormat(GLenum fmt) {
+	return TVPTextureFormats.end() != TVPTextureFormats.find(fmt);
+}
+
 static void TVPInitGLExtensionFunc() {
 #ifdef _MSC_VER
 	GL::glGetProcAddress = wglGetProcAddress;
@@ -222,6 +258,122 @@ std::string TVPGetOpenGLInfo() {
 			ret << *name;
 		}
 	}
+
+	TVPInitTextureFormatList();
+	if (!TVPTextureFormats.empty()) {
+		ret << "\n\n";
+		ret << "Support texture formats:\n";
+		std::map<GLenum, const char *> mapFormatName({
+			{ 0x87EE, "ATC_RGBA_INTERPOLATED_ALPHA_AMD" },
+
+			{ 0x87F9, "3DC_X_AMD" },
+			{ 0x87FA, "3DC_XY_AMD" },
+
+			{ 0x83F0, "S3TC_DXT1_RGB" },
+			{ 0x83F1, "S3TC_DXT1_RGBA" },
+			{ 0x83F2, "S3TC_DXT3_RGBA" },
+			{ 0x83F3, "S3TC_DXT5_RGBA" },
+
+			{ 0x8B90, "PALETTE4_RGB8_OES" },
+			{ 0x8B91, "PALETTE4_RGBA8_OES" },
+			{ 0x8B92, "PALETTE4_R5_G6_B5_OES" },
+			{ 0x8B93, "PALETTE4_RGBA4_OES" },
+			{ 0x8B94, "PALETTE4_RGB5_A1_OES" },
+			{ 0x8B95, "PALETTE8_RGB8_OES" },
+			{ 0x8B96, "PALETTE8_RGBA8_OES" },
+			{ 0x8B97, "PALETTE8_R5_G6_B5_OES" },
+			{ 0x8B98, "PALETTE8_RGBA4_OES" },
+			{ 0x8B99, "PALETTE8_RGB5_A1_OES" },
+
+			{ 0x8C00, "PVRTC_RGB_4BPPV1" },
+			{ 0x8C01, "PVRTC_RGB_2BPPV1" },
+			{ 0x8C02, "PVRTC_RGBA_4BPPV1" },
+			{ 0x8C03, "PVRTC_RGBA_2BPPV1" },
+			
+			{ 0x8C92, "ATC_RGB_AMD" },
+			{ 0x8C93, "ATC_RGBA_EXPLICIT_ALPHA_AMD" },
+
+			{ 0x8D64, "ETC1_RGB8" },
+
+			{ 0x9137, "PVRTC_2BPPV2" },
+			{ 0x9138, "PVRTC_4BPPV2" },
+
+			{ 0x9270, "EAC_R11" },
+			{ 0x9271, "EAC_SIGNED_R11" },
+			{ 0x9272, "EAC_RG11" },
+			{ 0x9273, "EAC_SIGNED_RG11" },
+			{ 0x9274, "ETC2_RGB8" },
+			{ 0x9275, "ETC2_SRGB8" },
+			{ 0x9276, "ETC2_RGB8_PUNCHTHROUGH_ALPHA1" },
+			{ 0x9277, "ETC2_SRGB8_PUNCHTHROUGH_ALPHA1" },
+			{ 0x9278, "ETC2_RGBA8_EAC" },
+			{ 0x9279, "ETC2_SRGB8_ALPHA8_EAC" },
+
+			{ 0x93B0, "ASTC_RGBA_4x4" },
+			{ 0x93B1, "ASTC_RGBA_5x4" },
+			{ 0x93B2, "ASTC_RGBA_5x5" },
+			{ 0x93B3, "ASTC_RGBA_6x5" },
+			{ 0x93B4, "ASTC_RGBA_6x6" },
+			{ 0x93B5, "ASTC_RGBA_8x5" },
+			{ 0x93B6, "ASTC_RGBA_8x6" },
+			{ 0x93B7, "ASTC_RGBA_8x8" },
+			{ 0x93B8, "ASTC_RGBA_10x5" },
+			{ 0x93B9, "ASTC_RGBA_10x6" },
+			{ 0x93BA, "ASTC_RGBA_10x8" },
+			{ 0x93BB, "ASTC_RGBA_10x10" },
+			{ 0x93BC, "ASTC_RGBA_12x10" },
+			{ 0x93BD, "ASTC_RGBA_12x12" },
+
+			{ 0x93C0, "ASTC_RGBA_3x3x3" },
+			{ 0x93C1, "ASTC_RGBA_4x3x3" },
+			{ 0x93C2, "ASTC_RGBA_4x4x3" },
+			{ 0x93C3, "ASTC_RGBA_4x4x4" },
+			{ 0x93C4, "ASTC_RGBA_5x4x4" },
+			{ 0x93C5, "ASTC_RGBA_5x5x4" },
+			{ 0x93C6, "ASTC_RGBA_5x5x5" },
+			{ 0x93C7, "ASTC_RGBA_6x5x5" },
+			{ 0x93C8, "ASTC_RGBA_6x6x5" },
+			{ 0x93C9, "ASTC_RGBA_6x6x6" },
+			
+			{ 0x93D0, "ASTC_SRGB8_ALPHA8_4x4" },
+			{ 0x93D1, "ASTC_SRGB8_ALPHA8_5x4" },
+			{ 0x93D2, "ASTC_SRGB8_ALPHA8_5x5" },
+			{ 0x93D3, "ASTC_SRGB8_ALPHA8_6x5" },
+			{ 0x93D4, "ASTC_SRGB8_ALPHA8_6x6" },
+			{ 0x93D5, "ASTC_SRGB8_ALPHA8_8x5" },
+			{ 0x93D6, "ASTC_SRGB8_ALPHA8_8x6" },
+			{ 0x93D7, "ASTC_SRGB8_ALPHA8_8x8" },
+			{ 0x93D8, "ASTC_SRGB8_ALPHA8_10x5" },
+			{ 0x93D9, "ASTC_SRGB8_ALPHA8_10x6" },
+			{ 0x93DA, "ASTC_SRGB8_ALPHA8_10x8" },
+			{ 0x93DB, "ASTC_SRGB8_ALPHA8_10x10" },
+			{ 0x93DC, "ASTC_SRGB8_ALPHA8_12x10" },
+			{ 0x93DD, "ASTC_SRGB8_ALPHA8_12x12" },
+
+			{ 0x93E0, "ASTC_SRGB8_ALPHA8_3x3x3" },
+			{ 0x93E1, "ASTC_SRGB8_ALPHA8_4x3x3" },
+			{ 0x93E2, "ASTC_SRGB8_ALPHA8_4x4x3" },
+			{ 0x93E3, "ASTC_SRGB8_ALPHA8_4x4x4" },
+			{ 0x93E4, "ASTC_SRGB8_ALPHA8_5x4x4" },
+			{ 0x93E5, "ASTC_SRGB8_ALPHA8_5x5x4" },
+			{ 0x93E6, "ASTC_SRGB8_ALPHA8_5x5x5" },
+			{ 0x93E7, "ASTC_SRGB8_ALPHA8_6x5x5" },
+			{ 0x93E8, "ASTC_SRGB8_ALPHA8_6x6x5" },
+			{ 0x93E9, "ASTC_SRGB8_ALPHA8_6x6x6" },
+		});
+		for (GLenum f : TVPTextureFormats) {
+			auto it = mapFormatName.find(f);
+			if (mapFormatName.end() != it) {
+				ret << it->second;
+				ret << "\n";
+			} else {
+				ret << "TexFormat[";
+				ret << (int)f;
+				ret << "]\n";
+			}
+		}
+	}
+
 	return ret.str();
 }
 
@@ -271,7 +423,7 @@ static unsigned int GetMaxTextureHeight()
 {
 	return TVPMaxTextureSize;
 }
-static int power_of_two(int input, int value = 32)
+static unsigned int power_of_two(unsigned int input, unsigned int value = 32)
 {
 	while (value < input) {
 		value <<= 1;
@@ -563,10 +715,46 @@ static tjs_uint8 *TVPShrink_8(tjs_uint *dpitch, const tjs_uint8 *src, tjs_int sp
 	return tmp;
 }
 
+static tjs_uint8 *TVPShrinkImage(TVPTextureFormat::e fmt, tjs_uint &dpitch, const tjs_uint8 *src, tjs_int spitch, tjs_uint srcw, tjs_uint srch, tjs_uint dstw, tjs_uint dsth) {
+	if (srch == dsth && srcw == dstw) return nullptr;
+	return (fmt == TVPTextureFormat::RGBA ? TVPShrink : TVPShrink_8)(&dpitch, src, spitch, srcw, srch, dstw, dsth);
+}
+
+static bool TVPCheckOpaqueRGBA(const tjs_uint8 *pixel, tjs_int pitch, tjs_int w, tjs_int h) {
+	const tjs_uint8* p = pixel;
+	for (int y = 0; y < h; ++y) {
+		const tjs_uint8* line = p;
+		for (int x = 0; x < w; ++x) {
+			if (line[3] != 0xFF) {
+				return false;
+			}
+			line += 4;
+		}
+		p += pitch;
+	}
+	return true;
+}
+
+static bool TVPCheckSolidPixel(const tjs_uint8 *pixel, tjs_int pitch, tjs_int w, tjs_int h) {
+	const tjs_uint8* p = pixel;
+	tjs_uint32 clr = *(const tjs_uint32*)p;
+	for (int y = 0; y < h; ++y) {
+		const tjs_uint32* line = (const tjs_uint32*)p;
+		for (int x = 0; x < w; ++x) {
+			if (line[x] != clr) {
+				return false;
+			}
+		}
+		p += pitch;
+	}
+	return true;
+}
+
 class tTVPOGLTexture2D : public iTVPTexture2D {
 	friend class TVPRenderManager_OpenGL;
 public:
 	GLuint texture = 0;
+	bool IsCompressed = false;
 protected:
 	TVPTextureFormat::e Format;
 	unsigned int internalW;
@@ -641,6 +829,7 @@ protected:
 		TVPCheckMemory();
 		_glBindTexture2D(texture);
 		glTexImage2D(GL_TEXTURE_2D, 0, internalfmt, intw, inth, 0, pixfmt, GL_UNSIGNED_BYTE, pixel);
+
 		internalW = intw; internalH = inth;
 		_totalVMemSize += internalW * internalH * getPixelSize();
 		CHECK_GL_ERROR_DEBUG();
@@ -1173,6 +1362,12 @@ public:
 
 class tTVPOGLTexture2D_static : public tTVPOGLTexture2D {
 public:
+	// for manual init
+	tTVPOGLTexture2D_static(TVPTextureFormat::e format, unsigned int tw, unsigned int th, float sw, float sh, GLint mode = GL_LINEAR)
+		: tTVPOGLTexture2D(tw, th, format, mode) {
+		_scaleW = sw; _scaleH = sh;
+	}
+
 	tTVPOGLTexture2D_static(const void *pixel, int pitch, unsigned int iw, unsigned int ih, TVPTextureFormat::e format,
 		unsigned int tw, unsigned int th, float sw, float sh, GLint mode = GL_LINEAR)
 		: tTVPOGLTexture2D(tw, th, format, mode)
@@ -1201,6 +1396,42 @@ public:
 			PixelData = nullptr;
 		}
 		//_totalVMemSize += internalW * internalH * pixsize;
+	}
+
+	// for compressed texture format
+	tTVPOGLTexture2D_static(const void *data, int len, GLenum format, unsigned int tw, unsigned int th, unsigned int iw, unsigned int ih, float sw, float sh)
+		: tTVPOGLTexture2D(tw, th, TVPTextureFormat::RGBA, GL_LINEAR)
+	{
+		_scaleW = sw; _scaleH = sh;
+		InitCompressedPixel(data, len, format, iw, ih);
+	}
+
+	void InitCompressedPixel(const void *data, unsigned int len, GLenum format, unsigned int width, unsigned int height) {
+		TVPCheckMemory();
+		_glBindTexture2D(texture);
+		glCompressedTexImage2D(GL_TEXTURE_2D, 0, format/*GL_ETC1_RGB8_OES*/, width, height, 0, len, data);
+		IsCompressed = true;
+		internalW = width; internalH = height;
+		_totalVMemSize += internalW * internalH * getPixelSize()/*len*/;
+		CHECK_GL_ERROR_DEBUG();
+	}
+
+	void InitPixel(const void* pixel, unsigned int pitch, GLenum format, GLenum pixfmt, unsigned int intw, unsigned int inth) {
+		TVPCheckMemory();
+		_glBindTexture2D(texture);
+		glTexImage2D(GL_TEXTURE_2D, 0, format, intw, inth, 0, pixfmt, GL_UNSIGNED_BYTE, pixel);
+
+		switch (pitch & 7) {
+		case 0: glPixelStorei(GL_UNPACK_ALIGNMENT, 8); break;
+		case 2: glPixelStorei(GL_UNPACK_ALIGNMENT, 2); break;
+		case 4: glPixelStorei(GL_UNPACK_ALIGNMENT, 4); break;
+		case 6: glPixelStorei(GL_UNPACK_ALIGNMENT, 2); break;
+		default: glPixelStorei(GL_UNPACK_ALIGNMENT, 1); break;
+		}
+
+		internalW = intw; internalH = inth;
+		_totalVMemSize += internalW * internalH * getPixelSize();
+		CHECK_GL_ERROR_DEBUG();
 	}
 
 	virtual void Update(const void *pixel, TVPTextureFormat::e format, int pitch, const tTVPRect& rc) {
@@ -1665,11 +1896,16 @@ public:
 
 	virtual void SetParameterOpa(int id, int Value) {
 		if (id == 0xA19A1E21) {
-			glEnable(GL_ALPHA_TEST);
+		//	glEnable(GL_ALPHA_TEST);
 			GL::glAlphaFunc(GL_GREATER, Value / 255.f);
 		} else {
 			return inherit::SetParameterOpa(id, Value);
 		}
+	}
+
+	virtual void Apply() override {
+		inherit::Apply();
+		glEnable(GL_ALPHA_TEST);
 	}
 
 	virtual void onFinish() {
@@ -1910,7 +2146,8 @@ const void * tTVPOGLTexture2D::GetScanLineForRead(tjs_uint l)
 #endif
 
 void TVPSetPostUpdateEvent(void(*f)());
-static iTVPTexture2D * (*_CreateStaticTexture2D)(tTVPBitmap* bmp);
+static iTVPTexture2D * (*_CreateStaticTexture2D)(const void *dib, tjs_uint tw, tjs_uint th, tjs_int pitch,
+	TVPTextureFormat::e fmt, bool isOpaque);
 static iTVPTexture2D * (*_CreateMutableTexture2D)(const void *pixel, int pitch, unsigned int w, unsigned int h, TVPTextureFormat::e format);
 static const char *_glExtensions = nullptr;
 //static bool _duplicateTargetTexture = true;
@@ -2041,19 +2278,7 @@ protected:
 			sw = (float)(dstw - (tw & 1)) / tw;
 			sh = (float)(dsth - (th & 1)) / th;
 			if (!isOpaque) {
-				isOpaque = true;
-				const tjs_uint8* p = pixel;
-				for (int y = 0; y < h; ++y) {
-					const tjs_uint8* line = p;
-					for (int x = 0; x < w; ++x) {
-						if (line[3] != 0xFF) {
-							isOpaque = false;
-							x = w; y = h;
-		}
-						line += 4;
-					}
-					p += dpitch;
-				}
+				isOpaque = TVPCheckOpaqueRGBA(pixel, dpitch, w, h);
 			}
 		}
 		if (fmt == TVPTextureFormat::RGBA && isOpaque) {
@@ -2077,47 +2302,149 @@ protected:
 		return ret;
 	}
 
-	static iTVPTexture2D *CreateStaticTexture2D_normal(tTVPBitmap* bmp) {
-		tjs_uint w = bmp->GetWidth(), h = bmp->GetHeight();
-		if (w > GetMaxTextureWidth()) {
-			if (w > GetMaxTextureWidth() * 2 && GL_CHECK_unpack_subimage) {
-				return new tTVPOGLTexture2D_split(bmp);
-			}
-		} else if (h > GetMaxTextureHeight() * 2) {
-			return new tTVPOGLTexture2D_split(bmp);
-		}
+	static iTVPTexture2D *CreateStaticTexture2D_normal(const void *dib, tjs_uint w, tjs_uint h, tjs_int pitch,
+		TVPTextureFormat::e fmt, bool isOpaque) {
 		int n = (w + GetMaxTextureWidth() - 1) / GetMaxTextureWidth();
-		w = (w + n - 1) / n;
+		int tw = (w + n - 1) / n;
 		n = (h + GetMaxTextureHeight() - 1) / GetMaxTextureHeight();
-		h = (h + n - 1) / n;
-
-		return CreateStaticTexture2D(bmp->GetBits(), bmp->GetWidth(), bmp->GetHeight(), bmp->GetPitch(),
-			bmp->Is32bit() ? TVPTextureFormat::RGBA : TVPTextureFormat::Gray, w, h, bmp->IsOpaque);
+		int th = (h + n - 1) / n;
+		return CreateStaticTexture2D(dib, w, h, pitch, fmt, tw, th, isOpaque);
 	}
 
-	static iTVPTexture2D *CreateStaticTexture2D_half(tTVPBitmap* bmp) {
-		tjs_uint w = bmp->GetWidth(), h = bmp->GetHeight();
-		if (w > GetMaxTextureWidth()) {
-			if (w > GetMaxTextureWidth() * 2 && GL_CHECK_unpack_subimage) {
-				return new tTVPOGLTexture2D_split(bmp);
-			}
-		} else if (h > GetMaxTextureHeight() * 2) {
-			return new tTVPOGLTexture2D_split(bmp);
+	static iTVPTexture2D *CreateStaticTexture2D_solid(const void *dib, tjs_uint w, tjs_uint h, tjs_int pitch,
+		TVPTextureFormat::e fmt) {
+		if (TVPCheckSolidPixel((const tjs_uint8*)dib, pitch, w, h)) {
+			tTVPOGLTexture2D_static *ret = new tTVPOGLTexture2D_static(dib, 4, 1, 1, fmt, w, h, 1.0f / w, 1.0f / h, GL_NEAREST);
+			return ret;
 		}
+		return nullptr;
+	}
+
+	static iTVPTexture2D *CreateStaticTexture2D_half(const void *dib, tjs_uint w, tjs_uint h, tjs_int pitch,
+		TVPTextureFormat::e fmt, bool isOpaque) {
+		iTVPTexture2D *ret = CreateStaticTexture2D_solid(dib, w, h, pitch, fmt);
+		if (ret) return ret;
+		int tw = w, th = h;
 		if (w > GetMaxTextureWidth()) {
 			int n = (w + GetMaxTextureWidth() - 1) / GetMaxTextureWidth();
-			w = (w + n - 1) / n;
+			tw = (w + n - 1) / n;
 		} else if (w > 64) {
-			w = (w + 1) / 2;
+			tw = (w + 1) / 2;
 		}
 		if (h > GetMaxTextureHeight()) {
 			int n = (h + GetMaxTextureHeight() - 1) / GetMaxTextureHeight();
-			h = (h + n - 1) / n;
+			th = (h + n - 1) / n;
 		} else if (h > 64) {
-			h = (h + 1) / 2;
+			th = (h + 1) / 2;
 		}
-		return CreateStaticTexture2D(bmp->GetBits(), bmp->GetWidth(), bmp->GetHeight(), bmp->GetPitch(),
-			bmp->Is32bit() ? TVPTextureFormat::RGBA : TVPTextureFormat::Gray, w, h, bmp->IsOpaque);
+		return CreateStaticTexture2D(dib, w, h, pitch, fmt, tw, th, isOpaque);
+	}
+	
+	static iTVPTexture2D *CreateStaticTexture2D_ETC2(const void *dib, tjs_uint w, tjs_uint h, tjs_int pitch,
+		TVPTextureFormat::e fmt, bool isOpaque) {
+		iTVPTexture2D *ret = CreateStaticTexture2D_solid(dib, w, h, pitch, fmt);
+		if (ret) return ret;
+		if (w > GetMaxTextureWidth() || h > GetMaxTextureHeight()) {
+			int n = (w + GetMaxTextureWidth() - 1) / GetMaxTextureWidth();
+			int tw = (w + n - 1) / n;
+			n = (h + GetMaxTextureHeight() - 1) / GetMaxTextureHeight();
+			int th = (h + n - 1) / n;
+			return CreateStaticTexture2D(dib, w, h, pitch, fmt, tw, th, isOpaque);
+		}
+		if (w * h < 16 * 16) {
+			return CreateStaticTexture2D(dib, w, h, pitch, fmt, w, h, isOpaque);
+		}
+		if (!isOpaque) {
+			isOpaque = TVPCheckOpaqueRGBA((const tjs_uint8*)dib, pitch, w, h);
+		}
+		uint8_t *pixel = nullptr; int tw, th;
+		size_t pvrsize;
+		GLenum texfmt;
+		tw = w;
+		th = h;
+		if (isOpaque) {
+			pixel = (uint8_t *)ETCPacker::convert(dib, w, h, pitch, true, pvrsize);
+			texfmt = GL_COMPRESSED_RGB8_ETC2;
+		} else {
+			pixel = (uint8_t*)ETCPacker::convertWithAlpha(dib, w, h, pitch, pvrsize);
+			texfmt = GL_COMPRESSED_RGBA8_ETC2_EAC;
+		}
+
+		ret = new tTVPOGLTexture2D_static(pixel, pvrsize, texfmt, w, h, tw, th, 1, 1);
+		if (pixel) delete[] pixel;
+		return ret;
+	}
+
+	static iTVPTexture2D *CreateStaticTexture2D_PVRTC(const void *dib, tjs_uint w, tjs_uint h, tjs_int pitch,
+		TVPTextureFormat::e fmt, bool isOpaque) {
+		iTVPTexture2D *ret = CreateStaticTexture2D_solid(dib, w, h, pitch, fmt);
+		if (ret) return ret;
+		if (w > GetMaxTextureWidth() || h > GetMaxTextureHeight()) {
+			int n = (w + GetMaxTextureWidth() - 1) / GetMaxTextureWidth();
+			int tw = (w + n - 1) / n;
+			n = (h + GetMaxTextureHeight() - 1) / GetMaxTextureHeight();
+			int th = (h + n - 1) / n;
+			return CreateStaticTexture2D(dib, w, h, pitch, fmt, tw, th, isOpaque);
+		}
+		if (w * h < 16 * 16) {
+			return CreateStaticTexture2D(dib, w, h, pitch, fmt, w, h, isOpaque);
+		}
+
+		// 4bpp / 4x4 -> 64bit, ratio = 1/8
+		// square only
+		tjs_uint totalPixel = w * h;
+		tjs_uint pw = power_of_two(w, 16), ph = power_of_two(h, 16);
+		tjs_uint texsize = std::max(pw, ph);
+		tjs_uint pvrPixels = texsize * texsize;
+		if (totalPixel / 8 >= pvrPixels) {
+			return CreateStaticTexture2D(dib, w, h, pitch, fmt, w, h, isOpaque);
+		}
+		tjs_uint pvrSize = pvrPixels / 2;
+		tjs_uint32 *inBuf = (tjs_uint32*)TJSAlignedAlloc(pvrPixels * sizeof(tjs_uint32), 4);
+		tjs_uint8 *outBuf = (tjs_uint8*)TJSAlignedAlloc(pvrSize, 4);
+
+		const tjs_uint8 *src = (const tjs_uint8 *)dib;
+		tjs_uint8* dst = (tjs_uint8*)inBuf;
+		tjs_uint dpitch = pw * 4;
+		for (tjs_uint y = 0; y < h; ++y) {
+			memcpy(dst, src, w * 4);
+			src += pitch;
+			dst += dpitch;
+		}
+		if (w < pw) {
+			dst = (tjs_uint8*)inBuf;
+			dst += w * 4;
+			tjs_uint remain = (pw - w) * 4;
+			for (tjs_uint y = 0; y < h; ++y) {
+				memset(dst, 0xFF, remain);
+				dst += dpitch;
+			}
+		}
+		if (h < ph) {
+			dst = (tjs_uint8*)inBuf;
+			memset(dst + dpitch * h, 0xFF, dpitch * (ph - h));
+		}
+
+		PvrTcEncoder::EncodeRgba4Bpp(inBuf, outBuf, texsize, texsize, isOpaque);
+		TJSAlignedDealloc(inBuf);
+		ret = new tTVPOGLTexture2D_static(outBuf, pvrSize,
+			isOpaque ? GL_COMPRESSED_RGB_PVRTC_4BPPV1_IMG : GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG,
+			w, h, texsize, texsize, 1, 1);
+		TJSAlignedDealloc(outBuf);
+		return ret;
+	}
+
+	static iTVPTexture2D *CreateStaticTexture2D(tTVPBitmap* bmp) {
+		tjs_uint w = bmp->GetWidth(), h = bmp->GetHeight();
+		if (w > GetMaxTextureWidth()) {
+			if (w > GetMaxTextureWidth() * 2 && GL_CHECK_unpack_subimage) {
+				return new tTVPOGLTexture2D_split(bmp);
+			}
+		} else if (h > GetMaxTextureHeight() * 2) {
+			return new tTVPOGLTexture2D_split(bmp);
+		}
+		return _CreateStaticTexture2D(bmp->GetBits(), bmp->GetWidth(), bmp->GetHeight(), bmp->GetPitch(),
+			bmp->Is32bit() ? TVPTextureFormat::RGBA : TVPTextureFormat::Gray, bmp->IsOpaque);
 	}
 
 	static iTVPTexture2D *CreateMutableTexture2D(const void *pixel, int pitch, unsigned int w, unsigned int h, float sw, float sh, TVPTextureFormat::e fmt) {
@@ -2163,16 +2490,22 @@ protected:
 
 	void InitGL() {
 		glGetIntegerv(GL_FRAMEBUFFER_BINDING, &_screenFrameBuffer);
+		TVPInitTextureFormatList();
 
 		_CreateStaticTexture2D = CreateStaticTexture2D_normal;
 		_CreateMutableTexture2D = CreateMutableTexture2D_normal;
-		// test
-		//_CreateStaticTexture2D = CreateStaticTexture2D_half;
-		//_CreateMutableTexture2D = CreateMutableTexture2D_half;
 		std::string compTexMethod = IndividualConfigManager::GetInstance()->GetValue<std::string>("ogl_compress_tex", "none");
 		if (compTexMethod == "half") {
 			_CreateStaticTexture2D = CreateStaticTexture2D_half;
 		//	_CreateMutableTexture2D = CreateMutableTexture2D_half;
+		} else if (compTexMethod == "etc2") {
+			if (TVPIsSupportTextureFormat(GL_COMPRESSED_RGB8_ETC2)) {
+				_CreateStaticTexture2D = CreateStaticTexture2D_ETC2;
+			}
+		} else if (compTexMethod == "pvrtc") {
+			if (TVPIsSupportTextureFormat(GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG)) {
+				_CreateStaticTexture2D = CreateStaticTexture2D_PVRTC;
+			}
 		}
 		GLint maxTextSize;
 		glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxTextSize);
@@ -2427,7 +2760,7 @@ public:
 			"uniform vec3 u_amp;\n" // rgb
 			"void main() {\n";
 		std::string shader_AdjustGamma_a_2 =
-			"    vec3 t = (s.rgb / (s.a + 0.00001) - 1.0) * step(s.rgb, s.aaa + 0.001) + 1.0;\n"
+			"    vec3 t = (s.rgb / (s.a + 0.001) - 1.0) * step(s.rgb, s.aaa + 0.001) + 1.0;\n"
 			"    t = clamp(pow(t, u_gamma) * u_amp + u_floor, 0.0, 1.0);\n"
 			"    s.rgb = t * s.a + clamp(s.rgb - s.a, 0.0, 1.0);\n"
 			"    gl_FragColor = s;\n"
@@ -2814,7 +3147,7 @@ public:
 		TEST_SHADER_BLTO(PsHardLightBlend);
 
 		CompileAndRegRegularBlendMethod("PsSoftLightBlend", opacityPrefix,
-			"    vec3 t = 0.5 / (s.rgb + 0.00001);\n" // avoid n / 0
+			"    vec3 t = 0.5 / (s.rgb + 0.001);\n" // avoid n / 0
 			"    s.rgb = pow(d.rgb, (1.0 - step(0.5, s.rgb)) * ((1.0 - s.rgb) * 2.0 - t) + t);\n"
 			"    d.rgb = mix(d.rgb, s.rgb, s.a * opacity);\n"
 			"    gl_FragColor = d;\n"
@@ -2822,7 +3155,7 @@ public:
 		TEST_SHADER_BLTO(PsSoftLightBlend);
 
 		CompileAndRegRegularBlendMethod("PsColorDodgeBlend", opacityPrefix,
-			"    s.rgb -= 0.00001;\n" // avoid n / 0
+			"    s.rgb -= 0.001;\n" // avoid n / 0
 			"    s.rgb = d.rgb / max(1.0 - s.rgb, d.rgb);\n"
 			"    d.rgb = mix(d.rgb, s.rgb, s.a * opacity);\n"
 			"    gl_FragColor = d;\n"
@@ -2831,14 +3164,14 @@ public:
 		//pass
 
 		CompileAndRegRegularBlendMethod("PsColorDodge5Blend", opacityPrefix,
-			"    s.rgb = s.rgb * s.a * opacity - 0.00001;\n"
+			"    s.rgb = s.rgb * s.a * opacity - 0.001;\n"
 			"    d.rgb = d.rgb / max(1.0 - s.rgb, d.rgb);\n"
 			"    gl_FragColor = d;\n"
 			"}");
 		TEST_SHADER_BLTO(PsColorDodge5Blend);
 
 		CompileAndRegRegularBlendMethod("PsColorBurnBlend", opacityPrefix,
-			"    s.rgb += 0.00001;\n"
+			"    s.rgb += 0.001;\n"
 			"    s.rgb = 1.0 - min(1.0 - d.rgb, s.rgb) / s.rgb;\n"
 			"    d.rgb = mix(d.rgb, s.rgb, s.a * opacity);\n"
 			"    gl_FragColor = d;\n"
@@ -3035,13 +3368,66 @@ public:
 
 	virtual iTVPTexture2D* CreateTexture2D(const void *pixel, int pitch, unsigned int w, unsigned int h,
 		TVPTextureFormat::e format, int flags) override {
-		if (pixel || (flags & RENDER_CREATE_TEXTURE_FLAG_STATIC))
-			return CreateStaticTexture2D(pixel, w, h, pitch, format, w, h, false);
+		if (format > TVPTextureFormat::Compressed) {
+			int block_width = pitch;
+			int block_height = ((unsigned int)pitch) >> 16;
+			if (!block_height) block_height = block_width;
+			int blkw = (w + block_width - 1) / block_width;
+			int blkh = (h + block_height - 1) / block_height;
+			int blksize = 0;
+			switch (format) {
+			case TVPTextureFormat::Compressed + GL_COMPRESSED_RGB8_ETC2:
+				blksize = 8; break;
+			case TVPTextureFormat::Compressed + GL_COMPRESSED_RGBA8_ETC2_EAC:
+				blksize = 16; break;
+			default:
+				TVPThrowExceptionMessage(TJS_W("Unsupported compressed texture format [%1]"), (tjs_int)(format - TVPTextureFormat::Compressed));
+				break;
+			}
+			if (w <= GetMaxTextureWidth() && h <= GetMaxTextureHeight()) {
+				return new tTVPOGLTexture2D_static(pixel, blkw * blkh * blksize, format - TVPTextureFormat::Compressed, w, h, w, h, 1, 1);
+			}
+			// too large texture, decompress and resize through default route
+			pitch = blkw * block_width * 4;
+			tjs_uint32* pixeldata = (tjs_uint32*)TJSAlignedAlloc(pitch * blkh * block_height, 4);
+			bool opaque = false;
+			switch (format) {
+			case TVPTextureFormat::Compressed + GL_COMPRESSED_RGB8_ETC2:
+				ETCPacker::decode(pixel, pixeldata, pitch, h, blkw, blkh);
+				opaque = true;
+				break;
+			case TVPTextureFormat::Compressed + GL_COMPRESSED_RGBA8_ETC2_EAC:
+				ETCPacker::decodeWithAlpha(pixel, pixeldata, pitch, h, blkw, blkh);
+				break;
+			default:
+				TVPThrowExceptionMessage(TJS_W("Unsupported compressed texture format [%1]"), (tjs_int)(format - TVPTextureFormat::Compressed));
+				break;
+			}
+
+			iTVPTexture2D *ret = _CreateStaticTexture2D(pixeldata, w, h, pitch, TVPTextureFormat::RGBA, opaque);
+			TJSAlignedDealloc(pixeldata);
+			return ret;
+		}
+		if (pixel || (flags & RENDER_CREATE_TEXTURE_FLAG_STATIC)) {
+			if (!pixel || (flags & RENDER_CREATE_TEXTURE_FLAG_NO_COMPRESS)) {
+				return CreateStaticTexture2D(pixel, w, h, pitch, format, w, h, false);
+			}
+			return _CreateStaticTexture2D(pixel, w, h, pitch, format, false);
+		}
 		return _CreateMutableTexture2D(pixel, pitch, w, h, format);
 	}
 
 	virtual iTVPTexture2D* CreateTexture2D(tTVPBitmap* bmp) override {
-		return _CreateStaticTexture2D(bmp);
+		tjs_uint w = bmp->GetWidth(), h = bmp->GetHeight();
+		if (w > GetMaxTextureWidth()) {
+			if (w > GetMaxTextureWidth() * 2 && GL_CHECK_unpack_subimage) {
+				return new tTVPOGLTexture2D_split(bmp);
+			}
+		} else if (h > GetMaxTextureHeight() * 2) {
+			return new tTVPOGLTexture2D_split(bmp);
+		}
+		return _CreateStaticTexture2D(bmp->GetBits(), bmp->GetWidth(), bmp->GetHeight(), bmp->GetPitch(),
+			bmp->Is32bit() ? TVPTextureFormat::RGBA : TVPTextureFormat::Gray, bmp->IsOpaque);
 	}
 
 	virtual iTVPTexture2D* CreateTexture2D(unsigned int neww, unsigned int newh, iTVPTexture2D* tex) override {
@@ -3050,8 +3436,90 @@ public:
 		return newtex;
 	}
 
+	virtual iTVPTexture2D* CreateTexture2D(tTJSBinaryStream* src) {
+		// support PVRv3 only so far
+		PVRv3Header header;
+		if (src->Read(&header, sizeof(header)) != sizeof(header)) {
+			return nullptr;
+		}
+
+		if (memcmp(&header, "PVR\3", 4)) {
+			return nullptr;
+		}
+
+		if (header.width > GetMaxTextureWidth() || header.height > GetMaxTextureHeight()) {
+			return nullptr;
+		}
+
+		// skip metainfo
+		src->SetPosition(src->GetPosition() + header.metadataLength);
+
+		// normal texture
+		TVPTextureFormat::e texfmt;
+		GLenum fmt = 0, pixtype = 0;
+		tjs_uint pixsize = 0;
+		switch ((PVR3TexturePixelFormat)header.pixelFormat) {
+		case PVR3TexturePixelFormat::BGRA8888: texfmt = TVPTextureFormat::RGBA; fmt = GL_BGRA_EXT; pixsize = 4; pixtype = GL_UNSIGNED_BYTE; break;
+		case PVR3TexturePixelFormat::RGBA8888: texfmt = TVPTextureFormat::RGBA; fmt = GL_RGBA; pixsize = 4; pixtype = GL_UNSIGNED_BYTE; break;
+		case PVR3TexturePixelFormat::RGBA4444: texfmt = TVPTextureFormat::RGBA; fmt = GL_RGBA; pixsize = 2; pixtype = GL_UNSIGNED_SHORT_4_4_4_4; break;
+		case PVR3TexturePixelFormat::RGBA5551: texfmt = TVPTextureFormat::RGBA; fmt = GL_RGBA; pixsize = 2; pixtype = GL_UNSIGNED_SHORT_5_5_5_1; break;
+		case PVR3TexturePixelFormat::RGB565: texfmt = TVPTextureFormat::RGB; fmt = GL_RGB; pixsize = 2; pixtype = GL_UNSIGNED_SHORT_5_6_5; break;
+		case PVR3TexturePixelFormat::RGB888: texfmt = TVPTextureFormat::RGB; fmt = GL_RGB; pixsize = 3; pixtype = GL_UNSIGNED_BYTE; break;
+		case PVR3TexturePixelFormat::A8: texfmt = TVPTextureFormat::Gray; fmt = GL_ALPHA; pixsize = 1; pixtype = GL_UNSIGNED_BYTE; break;
+		case PVR3TexturePixelFormat::L8: texfmt = TVPTextureFormat::Gray; fmt = GL_LUMINANCE; pixsize = 1; pixtype = GL_UNSIGNED_BYTE; break;
+		case PVR3TexturePixelFormat::LA88: texfmt = TVPTextureFormat::RGBA; fmt = GL_LUMINANCE_ALPHA; pixsize = 2; pixtype = GL_UNSIGNED_BYTE; break;
+		default: break;
+		}
+		
+		if (fmt) {
+			tjs_uint pitch = header.width * pixsize;
+			pixsize = pitch * header.height;
+			std::vector<unsigned char> buf; buf.resize(pixsize);
+			if (src->Read(&buf.front(), pixsize) != pixsize) return nullptr;
+			if (fmt == GL_BGRA_EXT &&
+				!TVPCheckGLExtension("GL_EXT_texture_format_BGRA8888") &&
+				!TVPCheckGLExtension("GL_EXT_bgra")) {
+				TVPReverseRGB((tjs_uint32*)&buf.front(), (tjs_uint32*)&buf.front(), pixsize / 4);
+			}
+			tTVPOGLTexture2D_static *ret = new tTVPOGLTexture2D_static(texfmt, header.width, header.height,1, 1);
+			ret->InitPixel(&buf.front(), pitch, fmt, pixtype, header.width, header.height);
+			return ret;
+		}
+
+		// compressed texture
+		fmt = 0;
+		unsigned int eachblkw, eachblkh, blksize;
+		switch ((PVR3TexturePixelFormat)header.pixelFormat) {
+		case PVR3TexturePixelFormat::PVRTC2BPP_RGB: fmt = GL_COMPRESSED_RGB_PVRTC_2BPPV1_IMG; eachblkw = 8; eachblkh = 4; blksize = 8; break;
+		case PVR3TexturePixelFormat::PVRTC2BPP_RGBA: fmt = GL_COMPRESSED_RGBA_PVRTC_2BPPV1_IMG; eachblkw = 8; eachblkh = 4; blksize = 8; break;
+		case PVR3TexturePixelFormat::PVRTC4BPP_RGB: fmt = GL_COMPRESSED_RGB_PVRTC_4BPPV1_IMG; eachblkw = 4; eachblkh = 4; blksize = 8; break;
+		case PVR3TexturePixelFormat::PVRTC4BPP_RGBA: fmt = GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG; eachblkw = 4; eachblkh = 4; blksize = 8; break;
+		case PVR3TexturePixelFormat::PVRTC2_2BPP_RGBA: fmt = GL_COMPRESSED_RGBA_PVRTC_2BPPV2_IMG; eachblkw = 8; eachblkh = 4; blksize = 8; break;
+		case PVR3TexturePixelFormat::PVRTC2_4BPP_RGBA: fmt = GL_COMPRESSED_RGBA_PVRTC_4BPPV2_IMG; eachblkw = 8; eachblkh = 4; blksize = 8; break;
+		case PVR3TexturePixelFormat::ETC1: fmt = GL_ETC1_RGB8_OES; eachblkw = 4; eachblkh = 4; blksize = 8; break;
+		case PVR3TexturePixelFormat::ETC2_RGB: fmt = GL_COMPRESSED_RGB8_ETC2; eachblkw = 4; eachblkh = 4; blksize = 8; break;
+		case PVR3TexturePixelFormat::ETC2_RGBA: fmt = GL_COMPRESSED_RGBA8_ETC2_EAC; eachblkw = 4; eachblkh = 4; blksize = 16; break;
+		case PVR3TexturePixelFormat::ETC2_RGBA1: fmt = GL_COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2; eachblkw = 4; eachblkh = 4; blksize = 8; break;
+		// TODO ASTC
+		default: return nullptr;
+		}
+
+		if (TVPIsSupportTextureFormat(fmt)) {
+			unsigned int blkw = (header.width + eachblkw - 1) / eachblkw;
+			unsigned int blkh = (header.height + eachblkh - 1) / eachblkh;
+			unsigned int size = blkw * blkh * blksize;
+			std::vector<unsigned char> buf; buf.resize(size);
+			if (src->Read(&buf.front(), pixsize) != pixsize) return nullptr;
+			tTVPOGLTexture2D_static *ret = new tTVPOGLTexture2D_static(texfmt, header.width, header.height, 1, 1);
+			ret->InitCompressedPixel(&buf.front(), size, fmt, blkw * eachblkw, blkh * eachblkh);
+			return ret;
+		}
+
+		return nullptr;
+	}
+
 	void CopyTexture(tTVPOGLTexture2D *dst, tTVPOGLTexture2D *src, const tTVPRect &rcsrc) {
-		if (GL::glCopyImageSubData &&
+		if (GL::glCopyImageSubData && !src->IsCompressed &&
 			src->_scaleW == dst->_scaleW && src->_scaleH == dst->_scaleH &&
 			src->Format == dst->Format) {
 			tTVPRect rc;
@@ -3059,17 +3527,18 @@ public:
 			rc.right = rcsrc.right * src->_scaleW;
 			rc.top = rcsrc.top * src->_scaleH + 0.5f;
 			rc.bottom = rcsrc.bottom * src->_scaleH;
-			tTVPRect rcdst, rcsrc;
+			tTVPRect rcsrc;
 			rcsrc.left = 0;
 			rcsrc.top = 0;
 			rcsrc.right = src->GetInternalWidth();
 			rcsrc.bottom = src->GetInternalHeight();
-			rcdst.left = 0;
-			rcdst.top = 0;
-			rcdst.right = dst->GetInternalWidth();
-			rcdst.bottom = dst->GetInternalHeight();
 			TVPIntersectRect(&rc, rc, rcsrc);
-			TVPIntersectRect(&rc, rc, rcdst);
+			if (dst->GetInternalWidth() < rc.get_width()) {
+				rc.set_width(dst->GetInternalWidth());
+			}
+			if (dst->GetInternalHeight() < rc.get_height()) {
+				rc.set_height(dst->GetInternalHeight());
+			}
 			if (rc.get_width() == 0 || rc.get_height() == 0)
 				return;
 			GL::glCopyImageSubData(
@@ -3258,7 +3727,11 @@ public:
 				GL::glGetTextureImage(texlist[i].tex->texture, 0, GL_BGRA, GL_UNSIGNED_BYTE, texlist[i].tex->internalH * texlist[i].tex->internalW * 4, _src[i]->ptr(0, 0));
 			}
 			cv::Mat _tar(tar->internalH, tar->internalW, CV_8UC4);
+			cv::Mat _stencil(tar->internalH, tar->internalW, CV_8U);
 			GL::glGetTextureImage(tar->texture, 0, GL_BGRA, GL_UNSIGNED_BYTE, tar->internalH * tar->internalW * 4, _tar.ptr(0, 0));
+			if (glIsEnabled(GL_STENCIL_TEST)) {
+				glReadPixels(0, 0, tar->internalW, tar->internalH, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, _stencil.ptr(0, 0));
+			}
 			tar = tar;
 			for (unsigned int i = 0; i < texlist.size(); ++i) {
 				delete _src[i];
@@ -3297,18 +3770,31 @@ public:
 		if (method->tar_as_src) {
 			tTVPOGLTexture2D *tex = tar;
 			GLVertexInfo &texitem = texlist.back();
-		//	if (_duplicateTargetTexture) 
 			{
-				tTVPOGLTexture2D *newtex;
-				tTVPRect rc = rcclip;
-				if (reftar) newtex = (tTVPOGLTexture2D *)reftar;
-				else {
-					newtex = GetTempTexture2D(tex, rc);
-					rc.set_offsets(0, 0);
+				if (reftar) {
+					static_cast<tTVPOGLTexture2D *>(reftar)->ApplyVertex(texitem, _pttar, ptcount);
+				} else {
+					double l = rcclip.right, t = rcclip.bottom, r = rcclip.left, b = rcclip.top;
+					for (int i = 0; i < ptcount; ++i) {
+						const tTVPPointD& pt = _pttar[i];
+						if (pt.x < l) l = pt.x;
+						if (pt.x > r) r = pt.x;
+						if (pt.y < t) t = pt.y;
+						if (pt.y > b) b = pt.y;
+					}
+					tTVPRect rc(l, t, std::ceil(r), std::ceil(b));
+					if (!TVPIntersectRect(&rc, rcclip, rc)) {
+						// nothing to draw
+						return;
+					}
+					l = rc.left; t = rc.top;
+					tTVPOGLTexture2D *newtex = GetTempTexture2D(tex, rc);
+					std::vector<tTVPPointD> pttar; pttar.reserve(ptcount);
+					for (int i = 0; i < ptcount; ++i) {
+						pttar.emplace_back(tTVPPointD{ _pttar[i].x - l, _pttar[i].y - t });
+					}
+					newtex->ApplyVertex(texitem, &pttar.front(), ptcount);
 				}
-				newtex->ApplyVertex(texitem, _pttar, ptcount);
-// 			} else {
-// 				tex->ApplyVertex(texitem, _pttar, ptcount);
 			}
 		}
 		std::vector<GLfloat> pttar;

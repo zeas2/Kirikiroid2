@@ -90,7 +90,7 @@ public:
 };
 
 template<typename T> // factory function
-iPreferenceItem* CreatePreferenceItem(const cocos2d::Size &size, const std::string &title, const std::function<void(T*)> &initer) {
+T* CreatePreferenceItem(const cocos2d::Size &size, const std::string &title, const std::function<void(T*)> &initer) {
 	T *ret = new T;
 	ret->autorelease();
 	initer(ret);
@@ -99,7 +99,7 @@ iPreferenceItem* CreatePreferenceItem(const cocos2d::Size &size, const std::stri
 }
 
 template<typename T>
-iPreferenceItem* CreatePreferenceItem(const cocos2d::Size &size, const std::string &title) {
+T* CreatePreferenceItem(const cocos2d::Size &size, const std::string &title) {
 	T *ret = new T;
 	ret->autorelease();
 	ret->initFromInfo(size, title);
@@ -140,14 +140,14 @@ protected:
 
 class tPreferenceItemSelectListInfo {
 public:
-	virtual const std::vector<std::pair<std::string, std::string> >& getListInfo() const = 0;
+	virtual const std::vector<std::pair<std::string, std::string> >& getListInfo() = 0;
 };
 
 class tPreferenceItemSelectList : public tPreferenceItem<std::string> {
 public:
 	tPreferenceItemSelectList();
 
-	void initInfo(const tPreferenceItemSelectListInfo* info) { CurInfo = info; }
+	void initInfo(tPreferenceItemSelectListInfo* info) { CurInfo = info; }
 
 protected:
 	virtual void initController(const NodeMap &allNodes) override;
@@ -161,7 +161,7 @@ protected:
 
 	cocos2d::Node *highlight = nullptr;
 	cocos2d::ui::Text *selected = nullptr;
-	const tPreferenceItemSelectListInfo* CurInfo;
+	tPreferenceItemSelectListInfo* CurInfo;
 	std::string highlightTid;
 };
 

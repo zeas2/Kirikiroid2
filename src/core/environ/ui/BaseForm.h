@@ -17,6 +17,7 @@ namespace cocos2d {
 		class TextField;
 		class Slider;
 		class ScrollView;
+		class LoadingBar;
 	}
 	namespace extension {
 		class TableView;
@@ -35,10 +36,16 @@ protected:
 public:
 	NodeMap();
 	NodeMap(const char *filename, cocos2d::Node* node);
-	cocos2d::Node *findController(const std::string &name, bool notice = true) const;
-	cocos2d::ui::Widget *findWidget(const std::string &name) const;
+	template<typename T = cocos2d::Node>
+	T *findController(const std::string &name, bool notice = true) const {
+		return dynamic_cast<T*>(findController<cocos2d::Node>(name, notice));
+	}
+	cocos2d::ui::Widget *findWidget(const std::string &name, bool notice = true) const {
+		return findController<cocos2d::ui::Widget>(name, notice);
+	}
 	void initFromNode(cocos2d::Node* node);
 };
+template<> cocos2d::Node *NodeMap::findController<cocos2d::Node>(const std::string &name, bool notice) const;
 
 class CSBReader : public NodeMap {
 public:
@@ -58,7 +65,9 @@ public:
 
 protected:
 	bool initFromFile(const char *navibar, const char *body, const char *bottombar, cocos2d::Node *parent = nullptr);
-	//void initBottomBar(std::vector<std::pair<std::string, std::function<void()> > > args);
+	bool initFromFile(const char *body) {
+		return initFromFile(nullptr, body, nullptr);
+	}
 
 	virtual void bindBodyController(const NodeMap &allNodes) {}
 	virtual void bindFooterController(const NodeMap &allNodes) {}
@@ -129,3 +138,10 @@ public:
 protected:
 	TTouchEventRouter *_router;
 };
+
+class iTVPFloatForm : public iTVPBaseForm {
+public:
+	virtual void rearrangeLayout() override;
+};
+
+void ReloadTableViewAndKeepPos(cocos2d::extension::TableView *pTableView);

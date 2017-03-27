@@ -158,16 +158,16 @@ void tTVPAsyncImageLoader::HandleLoadedImage() {
 				iTJSDispatch2* metainfo = TVPMetaInfoPairsToDictionary(cmd->dest_->MetaInfo);
 
 				cmd->bmp_->SetSizeAndImageBuffer(cmd->dest_->bmp);
-				cmd->dest_->bmp->Release();
-				cmd->dest_->bmp = NULL;
 				// 読込み完了時にもキャッシュチェック(非同期なので完了前に読み込まれている可能性あり)
 				if( TVPHasImageCache( cmd->path_, glmNormal, 0, 0, TVP_clNone ) == false ) {
-					TVPPushGraphicCache( cmd->path_, cmd->bmp_->GetBitmap(), cmd->dest_->MetaInfo );
+					TVPPushGraphicCache( cmd->path_, cmd->dest_->bmp, cmd->dest_->MetaInfo );
 					cmd->dest_->MetaInfo = NULL;
 				} else {
 					delete cmd->dest_->MetaInfo;
 					cmd->dest_->MetaInfo = NULL;
 				}
+				cmd->dest_->bmp->Release();
+				cmd->dest_->bmp = NULL;
 
 				tTJSVariant param[4];
 				param[0] = tTJSVariant(metainfo,metainfo);

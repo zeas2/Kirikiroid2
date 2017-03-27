@@ -37,35 +37,8 @@
 #include "TickCount.h"
 #include <fcntl.h>
 #include <unistd.h>
-#include "win32io.h"
 #include "combase.h"
-#include <sys/stat.h>
-#ifdef CC_TARGET_OS_IPHONE
-#define lseek64 lseek
-#endif
-
-#ifdef WIN32
-typedef struct _stat64 tTVP_stat;
-#else
-typedef struct ::stat64 tTVP_stat;
-#endif
-
-static bool TVP_stat(const tjs_char *name, tTVP_stat &s) {
-#ifdef WIN32
-	return !_wstat64(name, &s);
-#else
-	tTJSNarrowStringHolder holder(name);
-	return !::stat64(holder, &s);
-#endif
-}
-static bool TVP_stat(const char *name, tTVP_stat &s) {
-#ifdef WIN32
-	ttstr filename(name);
-	return !_wstat64(filename.c_str(), &s);
-#else
-	return !::stat64(name, &s);
-#endif
-}
+#include "win32io.h"
 
 //---------------------------------------------------------------------------
 // tTVPFileMedia
@@ -355,7 +328,6 @@ void TJS_INTF_METHOD tTVPFileMedia::GetLocallyAccessibleName(ttstr &name)
 
         DIR *dirp;
         struct dirent *direntp;
-        struct stat stat_buf;
 		newname += "/";
         if ((dirp = opendir( tTJSNarrowStringHolder(newname.c_str()) ))) {
         	bool found = false;

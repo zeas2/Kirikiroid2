@@ -12,6 +12,34 @@
 
 extern void TVPUninitializeFreeFont();
 extern FontSystem* TVPFontSystem;
+extern const ttstr &TVPGetDefaultFontName();
+void FreeTypeFontRasterizer::ApplyFallbackFace()
+{
+	if (!FaceFallback && Face && Face->GetFontName() != TVPGetDefaultFontName()) {
+		FaceFallback = new tFreeTypeFace(TVPGetDefaultFontName(), 0);
+	}
+	FaceFallback->SetHeight(CurrentFont.Height < 0 ? -CurrentFont.Height : CurrentFont.Height);
+	if (CurrentFont.Flags & TVP_TF_ITALIC) {
+		FaceFallback->SetOption(TVP_TF_ITALIC);
+	} else {
+		FaceFallback->ClearOption(TVP_TF_ITALIC);
+	}
+	if (CurrentFont.Flags & TVP_TF_BOLD) {
+		FaceFallback->SetOption(TVP_TF_BOLD);
+	} else {
+		FaceFallback->ClearOption(TVP_TF_BOLD);
+	}
+	if (CurrentFont.Flags & TVP_TF_UNDERLINE) {
+		FaceFallback->SetOption(TVP_TF_UNDERLINE);
+	} else {
+		FaceFallback->ClearOption(TVP_TF_UNDERLINE);
+	}
+	if (CurrentFont.Flags & TVP_TF_STRIKEOUT) {
+		FaceFallback->SetOption(TVP_TF_STRIKEOUT);
+	} else {
+		FaceFallback->ClearOption(TVP_TF_STRIKEOUT);
+	}
+}
 
 FreeTypeFontRasterizer::FreeTypeFontRasterizer() : RefCount(0), Face(NULL), LastBitmap(NULL) {
 	AddRef();
@@ -19,6 +47,10 @@ FreeTypeFontRasterizer::FreeTypeFontRasterizer() : RefCount(0), Face(NULL), Last
 FreeTypeFontRasterizer::~FreeTypeFontRasterizer() {
 	if( Face ) delete Face;
 	Face = NULL;
+	if (FaceFallback) {
+		delete FaceFallback;
+		FaceFallback = nullptr;
+	}
 	TVPUninitializeFreeFont();
 }
 void FreeTypeFontRasterizer::AddRef() {
@@ -31,7 +63,10 @@ void FreeTypeFontRasterizer::Release() {
 	if( RefCount == 0 ) {
 		if( Face ) delete Face;
 		Face = NULL;
-
+		if (FaceFallback) {
+			delete FaceFallback;
+			FaceFallback = nullptr;
+		}
 		delete this;
 	}
 }
@@ -124,6 +159,12 @@ tTVPCharacterData* FreeTypeFontRasterizer::GetBitmap( const tTVPFontAndCharacter
 		//Face->ClearOption( TVP_FACE_OPTIONS_FORCE_AUTO_HINTING );
 	}
 	tTVPCharacterData* data = Face->GetGlyphFromCharcode(font.Character);
+	if (!data) {
+		ApplyFallbackFace();
+		if (FaceFallback) {
+			data = FaceFallback->GetGlyphFromCharcode(font.Character);
+		}
+	}
 	if( data == NULL ) {
 		data = Face->GetGlyphFromCharcode( Face->GetDefaultChar() );
 	}
@@ -153,6 +194,8 @@ tTVPCharacterData* FreeTypeFontRasterizer::GetBitmap( const tTVPFontAndCharacter
 	data->Blured = font.Blured;
 	data->BlurWidth = font.BlurWidth;
 	data->BlurLevel = font.BlurLevel;
+	data->OriginX += aofsx; // for vertical text
+//	data->OriginY += aofsy;
 
 	// apply blur
 	if(font.Blured) data->Blur(); // nasty ...

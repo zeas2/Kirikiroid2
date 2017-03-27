@@ -442,7 +442,7 @@ struct tTVPGraphicMetaInfoPair
 };
 
 extern iTJSDispatch2 * TVPMetaInfoPairsToDictionary( std::vector<tTVPGraphicMetaInfoPair> *vec );
-extern void TVPPushGraphicCache( const ttstr& nname, tTVPBaseBitmap* bmp,
+extern void TVPPushGraphicCache( const ttstr& nname, class tTVPBitmap* bmp,
 	std::vector<tTVPGraphicMetaInfoPair>* meta );
 extern tTVPGraphicHandlerType* TVPGetGraphicLoadHandler( const ttstr& ext );
 extern bool TVPCheckImageCache( const ttstr& nname, tTVPBaseBitmap* dest,

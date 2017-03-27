@@ -190,7 +190,7 @@ void tTJSNI_VideoOverlay::Open(const ttstr &_name)
 				CachedOverlay->Release();
 				CachedOverlay = nullptr;
 			}
-			if(Mode == vomLayer)
+			if (Mode == vomLayer)
 				GetVideoLayerObject(EventQueue.GetOwner(), istream, name.c_str(), ext.c_str(), size, &VideoOverlay);
 			else if(Mode == vomMixer)
 				GetMixingVideoOverlayObject(EventQueue.GetOwner(), istream, name.c_str(), ext.c_str(), size, &VideoOverlay);
@@ -199,7 +199,6 @@ void tTJSNI_VideoOverlay::Open(const ttstr &_name)
 			else
 				GetVideoOverlayObject(EventQueue.GetOwner(), istream, name.c_str(), ext.c_str(), size, &VideoOverlay);
 		}
-
 		if( (Mode == vomOverlay) || (Mode == vomMixer) || (Mode == vomMFEVR) )
 		{
 			ResetOverlayParams();
@@ -253,6 +252,7 @@ void tTJSNI_VideoOverlay::Close()
 			CachedOverlay->Release();
 			CachedOverlay = nullptr;
 		}
+		VideoOverlay->SetVisible(false);
 		VideoOverlay->Pause();
 		CachedOverlay = VideoOverlay;
 		VideoOverlay = NULL;
@@ -286,6 +286,7 @@ void tTJSNI_VideoOverlay::Shutdown()
 				CachedOverlay->Release();
 				CachedOverlay = nullptr;
 			}
+			VideoOverlay->SetVisible(false);
 			VideoOverlay->Pause();
 			CachedOverlay = VideoOverlay;
 			VideoOverlay = NULL;
@@ -852,13 +853,13 @@ tjs_int tTJSNI_VideoOverlay::GetAudioBalance()
 	{
 		VideoOverlay->GetAudioBalance( &result );
 	}
-	return TVPDSAttenuateToPan( result );
+	return /*TVPDSAttenuateToPan*/( result );
 }
 void tTJSNI_VideoOverlay::SetAudioBalance(tjs_int b)
 {
 	if(VideoOverlay)
 	{
-		VideoOverlay->SetAudioBalance( TVPPanToDSAttenuate( b ) );
+		VideoOverlay->SetAudioBalance( /*TVPPanToDSAttenuate*/( b ) );
 	}
 }
 tjs_int tTJSNI_VideoOverlay::GetAudioVolume()
@@ -868,13 +869,13 @@ tjs_int tTJSNI_VideoOverlay::GetAudioVolume()
 	{
 		VideoOverlay->GetAudioVolume( &result );
 	}
-	return TVPDSAttenuateToVolume( result );
+	return /*TVPDSAttenuateToVolume*/( result );
 }
 void tTJSNI_VideoOverlay::SetAudioVolume(tjs_int b)
 {
 	if(VideoOverlay)
 	{
-		VideoOverlay->SetAudioVolume( TVPVolumeToDSAttenuate( b ) );
+		VideoOverlay->SetAudioVolume( /*TVPVolumeToDSAttenuate*/( b ) );
 	}
 }
 tjs_uint tTJSNI_VideoOverlay::GetNumberOfAudioStream()
