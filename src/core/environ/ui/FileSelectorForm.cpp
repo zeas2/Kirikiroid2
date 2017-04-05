@@ -218,7 +218,7 @@ void TVPBaseFileSelectorForm::onCellLongPress(int idx)
 			LocaleConfigManager::GetInstance()->initText(reader.findController<Text>("titleCopy"));
 			LocaleConfigManager::GetInstance()->initText(reader.findController<Text>("titleCut"));
 			LocaleConfigManager::GetInstance()->initText(reader.findController<Text>("titlePaste"));
-			LocaleConfigManager::GetInstance()->initText(reader.findController<Text>("titleUnpack", false));
+			LocaleConfigManager::GetInstance()->initText(reader.findController<Text>("titleUnpack"));
 			LocaleConfigManager::GetInstance()->initText(reader.findController<Text>("titleRepack", false));
 			LocaleConfigManager::GetInstance()->initText(reader.findController<Text>("titleDelete"));
 			LocaleConfigManager::GetInstance()->initText(reader.findController<Text>("titleSendTo"));
@@ -385,7 +385,7 @@ TVPBaseFileSelectorForm::FileItemCellImpl* TVPBaseFileSelectorForm::FetchCell(Fi
 		CellModel->retain();
 	}
 	bool selected = _selectedFileIndex.find(idx) != _selectedFileIndex.end();
-	CellModel->setInfo(CurrentDirList[idx], selected, !_selectedFileIndex.empty());
+	CellModel->setInfo(idx, CurrentDirList[idx], selected, !_selectedFileIndex.empty());
 	return CellModel;
 }
 
@@ -420,7 +420,7 @@ Size TVPBaseFileSelectorForm::tableCellSizeForIndex(TableView *table, ssize_t id
 		if (!CellTemplateForSize) {
 			CellTemplateForSize = FetchCell(nullptr, table, idx);
 		} else {
-			CellTemplateForSize->setInfo(CurrentDirList[idx], false, false);
+			CellTemplateForSize->setInfo(idx, CurrentDirList[idx], false, false);
 		}
 		info.CellSize = CellTemplateForSize->getContentSize();
 	}
@@ -783,9 +783,11 @@ void TVPBaseFileSelectorForm::FileItemCellImpl::initFromFile(const char * filena
 			}
 		});
 	}
+	BgOdd = reader.findController("bg_odd", false);
+	BgEven = reader.findController("bg_even", false);
 }
 
-void TVPBaseFileSelectorForm::FileItemCellImpl::setInfo(const FileInfo &info, bool selected, bool showSelect) {
+void TVPBaseFileSelectorForm::FileItemCellImpl::setInfo(int idx, const FileInfo &info, bool selected, bool showSelect) {
 	if (FileNameNode) {
 		FileNameNode->ignoreContentAdaptWithSize(true);
 		FileNameNode->setTextAreaSize(CellTextAreaSize);
@@ -801,6 +803,8 @@ void TVPBaseFileSelectorForm::FileItemCellImpl::setInfo(const FileInfo &info, bo
 	if (showSelect) SelectBox->setSelected(selected);
 	ui::Helper::doLayout(_root);
 	_set = true;
+	if (BgOdd) BgOdd->setVisible((idx + 1) & 1);
+	if (BgEven) BgEven->setVisible(idx & 1);
 }
 
 void TVPBaseFileSelectorForm::FileItemCellImpl::onClicked(cocos2d::Ref* p) {

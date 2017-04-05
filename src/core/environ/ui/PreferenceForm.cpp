@@ -21,9 +21,10 @@ void TVPPreferenceForm::initPref(const tPreferenceScreen *config) {
 	Config = config;
 	PrefList->removeAllItems();
 	LocaleConfigManager::GetInstance()->initText(_title, config->Title);
-	for (auto info : config->Preferences) {
+	for (int idx = 0; idx < config->Preferences.size(); ++idx) {
+		auto info = config->Preferences[idx];
 		if (info) {
-			PrefList->pushBackCustomItem(info->createItem());
+			PrefList->pushBackCustomItem(info->createItem(idx));
 		}
 	}
 	Widget *nullcell = new Widget();
@@ -51,7 +52,7 @@ void tPreferenceScreen::clear() {
 	Preferences.clear();
 }
 
-void iPreferenceItem::initFromInfo(Size size, const std::string& title) {
+void iPreferenceItem::initFromInfo(int idx, Size size, const std::string& title) {
 	init();
 	CSBReader reader;
 	Node * root = reader.Load(getUIFileName());
@@ -62,6 +63,10 @@ void iPreferenceItem::initFromInfo(Size size, const std::string& title) {
 	addChild(root);
 	_title = static_cast<Text*>(reader.findController("title"));
 	if (!title.empty()) _title->setString(title);
+	BgOdd = reader.findController("bg_odd", false);
+	BgEven = reader.findController("bg_even", false);
+	if (BgOdd) BgOdd->setVisible((idx + 1) & 1);
+	if (BgEven) BgEven->setVisible(idx & 1);
 	initController(reader);
 }
 
@@ -257,7 +262,7 @@ TVPCustomPreferenceForm * TVPCustomPreferenceForm::create(const std::string &tid
 	const std::function<std::pair<std::string, std::string>(int)> &getter,
 	const std::function<void(int, const std::pair<std::string, std::string>&)> &setter) {
 	TVPCustomPreferenceForm *ret = new TVPCustomPreferenceForm;
-	ret->initFromFile("ui/NaviBar.csb", "ui/ListView.csb", "ui/BottomBar.csb");
+	ret->initFromFile("ui/NaviBar.csb", "ui/ListView.csb", nullptr);
 	ret->initFromInfo(tid_title, count, getter, setter);
 	ret->autorelease();
 	return ret;
@@ -296,7 +301,7 @@ void TVPCustomPreferenceForm::initFromInfo(const std::string &tid_title, int cou
 			_setter(i, val);
 		};
 		item->autorelease();
-		item->initFromInfo(size, nullptr);
+		item->initFromInfo(i, size, nullptr);
 		_listview->pushBackCustomItem(item);
 	}
 	Widget *nullcell = new Widget();

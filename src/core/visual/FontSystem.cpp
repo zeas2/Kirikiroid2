@@ -6,6 +6,7 @@
 #include "StringUtil.h"
 #include "MsgIntf.h"
 #include <vector>
+#include "ConfigManager/IndividualConfigManager.h"
 
 extern void TVPGetAllFontList(std::vector<ttstr>& list);
 extern const ttstr &TVPGetDefaultFontName();
@@ -63,6 +64,7 @@ ttstr FontSystem::GetBeingFont(ttstr fonts) {
 		vfont = false;
 	}
 
+	bool force_default_font = IndividualConfigManager::GetInstance()->GetValue<bool>("force_default_font", false);
 	bool prev_empty_name = false;
 	while(fonts!=TJS_W("")) {
 		ttstr fontname;

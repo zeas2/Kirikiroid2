@@ -61,7 +61,8 @@ void TVPSelectListForm::initWithInfo(const std::vector<std::string> &info, const
 	Size size = pageView->getViewSize();
 	bool size_set = false;
 	int selectedIdx = 0;
-	for (const std::string &str : info) {
+	for (int idx = 0; idx < info.size(); ++idx) {
+		const std::string &str = info[idx];
 		CSBReader reader;
 		Widget *cell = static_cast<Widget*>(reader.Load(FileName_Cell));
 		if (!size_set) {
@@ -70,6 +71,12 @@ void TVPSelectListForm::initWithInfo(const std::vector<std::string> &info, const
 			size_set = true;
 		}
 		Text *text = static_cast<Text*>(reader.findController("text"));
+
+		Node *BgOdd = reader.findController("bg_odd", false);
+		Node *BgEven = reader.findController("bg_even", false);
+		if (BgOdd) BgOdd->setVisible((idx + 1) & 1);
+		if (BgEven) BgEven->setVisible(idx & 1);
+
 		cell->setContentSize(size);
 		ui::Helper::doLayout(cell);
 		LocaleConfigManager::GetInstance()->initText(text, str);

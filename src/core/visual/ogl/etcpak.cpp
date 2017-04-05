@@ -2177,7 +2177,7 @@ void* convert(const void *_pixel, int w, int h, int pitch, bool etc2, size_t &da
 				line += pitch;
 			}
 			*(uint64*)(dline) = _f_rgb_etc2((uint8*)buf);
-			sline += 16;
+			sline += pitch * 4;
 			dline += dpitch;
 		}
 	}
@@ -2278,7 +2278,7 @@ void* convertWithAlpha(const void *_pixel, int w, int h, int pitch, size_t &data
 			compressBlockAlphaFast(abuf, dline);
 			*(uint64*)(dline + 8) = _f_rgb_etc2((uint8*)buf);
 			dline += dpitch;
-			sline += 16;
+			sline += pitch * 4;
 		}
 	}
 	if (edgeh) {

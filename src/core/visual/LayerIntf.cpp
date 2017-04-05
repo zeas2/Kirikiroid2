@@ -299,11 +299,7 @@ void TVPTempBitmapHolderRelease()
 //---------------------------------------------------------------------------
 // global options
 //---------------------------------------------------------------------------
-#ifdef _DEBUG
 tTVPGraphicSplitOperationType TVPGraphicSplitOperationType = gsotNone;
-#else
-tTVPGraphicSplitOperationType TVPGraphicSplitOperationType = gsotSimple;
-#endif
 bool TVPDefaultHoldAlpha = false;
 //---------------------------------------------------------------------------
 
@@ -469,7 +465,8 @@ tTJSNI_BaseLayer::Construct(tjs_int numparams, tTJSVariant **param,
 	if(lay)
 	{
 		Manager = lay->GetManager();
-		Manager->AddRef(); // lock manager
+		if (Manager)
+			Manager->AddRef(); // lock manager
 	}
 
 	// register to parent layer

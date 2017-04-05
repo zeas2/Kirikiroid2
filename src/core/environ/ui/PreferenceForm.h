@@ -25,7 +25,7 @@ class iPreferenceItem;
 
 class iTVPPreferenceInfo {
 public:
-	virtual iPreferenceItem *createItem() = 0;
+	virtual iPreferenceItem *createItem(int idx) = 0;
 	virtual void InitDefaultConfig() {}
 	virtual tPreferenceScreen* GetSubScreenInfo() { return nullptr; }
 
@@ -73,12 +73,13 @@ protected:
 
 class iPreferenceItem : public cocos2d::ui::Widget {
 public:
-	void initFromInfo(cocos2d::Size size, const std::string& title); // not tid
+	void initFromInfo(int idx, cocos2d::Size size, const std::string& title); // not tid
 
 protected:
 	virtual void initController(const NodeMap &allNodes) = 0;
 	virtual const char *getUIFileName() const = 0;
 	cocos2d::ui::Text *_title;
+	cocos2d::Node *BgOdd, *BgEven;
 };
 
 template<typename TArg>
@@ -90,19 +91,19 @@ public:
 };
 
 template<typename T> // factory function
-T* CreatePreferenceItem(const cocos2d::Size &size, const std::string &title, const std::function<void(T*)> &initer) {
+T* CreatePreferenceItem(int idx, const cocos2d::Size &size, const std::string &title, const std::function<void(T*)> &initer) {
 	T *ret = new T;
 	ret->autorelease();
 	initer(ret);
-	ret->initFromInfo(size, title);
+	ret->initFromInfo(idx, size, title);
 	return ret;
 }
 
 template<typename T>
-T* CreatePreferenceItem(const cocos2d::Size &size, const std::string &title) {
+T* CreatePreferenceItem(int idx, const cocos2d::Size &size, const std::string &title) {
 	T *ret = new T;
 	ret->autorelease();
-	ret->initFromInfo(size, title);
+	ret->initFromInfo(idx, size, title);
 	return ret;
 }
 

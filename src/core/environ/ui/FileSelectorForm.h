@@ -107,7 +107,7 @@ protected:
 
 		void initFromFile(const char * filename, float width);
 
-		void setInfo(const FileInfo &info, bool selected, bool showSelect);
+		void setInfo(int idx, const FileInfo &info, bool selected, bool showSelect);
 
 		void reset() {
 			_set = false;
@@ -127,7 +127,7 @@ protected:
 		bool _set;
 		cocos2d::Size OrigCellModelSize, CellTextAreaSize, OrigCellTextSize;
 		cocos2d::ui::Text *FileNameNode;
-		cocos2d::Node *DirIcon, *_root;
+		cocos2d::Node *DirIcon, *_root, *BgOdd, *BgEven;
 		cocos2d::ui::CheckBox *SelectBox;
 		FileItemCell *_owner;
 	};

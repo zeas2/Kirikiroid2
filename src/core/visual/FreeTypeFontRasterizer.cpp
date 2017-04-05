@@ -18,6 +18,7 @@ void FreeTypeFontRasterizer::ApplyFallbackFace()
 	if (!FaceFallback && Face && Face->GetFontName() != TVPGetDefaultFontName()) {
 		FaceFallback = new tFreeTypeFace(TVPGetDefaultFontName(), 0);
 	}
+	if (!FaceFallback) return;
 	FaceFallback->SetHeight(CurrentFont.Height < 0 ? -CurrentFont.Height : CurrentFont.Height);
 	if (CurrentFont.Flags & TVP_TF_ITALIC) {
 		FaceFallback->SetOption(TVP_TF_ITALIC);
@@ -144,6 +145,12 @@ tjs_int FreeTypeFontRasterizer::GetAscentHeight() {
 	if( Face ) return Face->GetAscent();
 	return 0;
 }
+static bool isUnicodeSpace(char16_t ch)
+{
+	return  (ch >= 0x0009 && ch <= 0x000D) || ch == 0x0020 || ch == 0x0085 || ch == 0x00A0 || ch == 0x1680
+		|| (ch >= 0x2000 && ch <= 0x200A) || ch == 0x2028 || ch == 0x2029 || ch == 0x202F
+		|| ch == 0x205F || ch == 0x3000;
+}
 //---------------------------------------------------------------------------
 tTVPCharacterData* FreeTypeFontRasterizer::GetBitmap( const tTVPFontAndCharacterData & font, tjs_int aofsx, tjs_int aofsy ) {
 	if( font.Antialiased ) {
@@ -159,7 +166,7 @@ tTVPCharacterData* FreeTypeFontRasterizer::GetBitmap( const tTVPFontAndCharacter
 		//Face->ClearOption( TVP_FACE_OPTIONS_FORCE_AUTO_HINTING );
 	}
 	tTVPCharacterData* data = Face->GetGlyphFromCharcode(font.Character);
-	if (!data) {
+	if (!data && !isUnicodeSpace(font.Character)) {
 		ApplyFallbackFace();
 		if (FaceFallback) {
 			data = FaceFallback->GetGlyphFromCharcode(font.Character);

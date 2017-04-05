@@ -5,6 +5,7 @@
 #include "ui/UIText.h"
 #include "MenuItemImpl.h"
 #include "ui/UIHelper.h"
+#include "tjsGlobalStringMap.h"
 
 using namespace cocos2d;
 using namespace cocos2d::ui;
@@ -47,19 +48,23 @@ void TVPInGameMenuForm::initMenu(const std::string& title, tTJSNI_MenuItem *item
 	}
 
 	int count = item->GetChildren().size();
+	int idx = 0;
+	ttstr seperator = TJS::TJSMapGlobalStringMap(TJS_W("-"));
 	for (int i = 0; i < count; ++i) {
 		tTJSNI_MenuItem *subitem = static_cast<tTJSNI_MenuItem*>(item->GetChildren().at(i));
 		ttstr caption; subitem->GetCaption(caption);
 		if (caption.IsEmpty() || caption == TJS_W("+")) continue;
-		_list->pushBackCustomItem(createMenuItem(subitem, caption.AsStdString()));
+		_list->pushBackCustomItem(createMenuItem(idx, subitem, caption.AsStdString()));
+		if(caption != seperator)
+			++idx;
 	}
 }
 
-cocos2d::ui::Widget * TVPInGameMenuForm::createMenuItem(tTJSNI_MenuItem *item, const std::string &caption) {
+cocos2d::ui::Widget * TVPInGameMenuForm::createMenuItem(int idx, tTJSNI_MenuItem *item, const std::string &caption) {
 	iPreferenceItem *ret = nullptr;
 	const Size &size = _list->getContentSize();
 	if (!item->GetChildren().empty()) {
-		ret = CreatePreferenceItem<tPreferenceItemSubDir>(size, caption);
+		ret = CreatePreferenceItem<tPreferenceItemSubDir>(idx, size, caption);
 		ret->addClickEventListener([=](Ref*){
 			TVPMainScene::GetInstance()->pushUIForm(create(caption, item));
 		});
@@ -69,7 +74,7 @@ cocos2d::ui::Widget * TVPInGameMenuForm::createMenuItem(tTJSNI_MenuItem *item, c
 			item->OnClick();
 			TVPMainScene::GetInstance()->popAllUIForm();
 		};
-		ret = CreatePreferenceItem<tPreferenceItemCheckBox>(size, caption,
+		ret = CreatePreferenceItem<tPreferenceItemCheckBox>(idx, size, caption,
 			[=](tPreferenceItemCheckBox* item) {
 			item->_getter = getter;
 			item->_setter = setter;
@@ -77,7 +82,7 @@ cocos2d::ui::Widget * TVPInGameMenuForm::createMenuItem(tTJSNI_MenuItem *item, c
 	} else if (item->GetChecked()) {
 		auto getter = [=]()->bool{ return item->GetChecked(); };
 		auto setter = [=](bool b){ item->OnClick(); };
-		ret = CreatePreferenceItem<tPreferenceItemCheckBox>(size, caption,
+		ret = CreatePreferenceItem<tPreferenceItemCheckBox>(idx, size, caption,
 			[=](tPreferenceItemCheckBox* item) {
 			item->_getter = getter;
 			item->_setter = setter;
@@ -91,7 +96,7 @@ cocos2d::ui::Widget * TVPInGameMenuForm::createMenuItem(tTJSNI_MenuItem *item, c
 		ui::Helper::doLayout(root);
 		return root;
 	} else {
-		ret = CreatePreferenceItem<tPreferenceItemConstant>(size, caption);
+		ret = CreatePreferenceItem<tPreferenceItemConstant>(idx, size, caption);
 		ret->addClickEventListener([=](Ref*){
 			TVPMainScene::GetInstance()->scheduleOnce(
 				std::bind(&TVPMainScene::popAllUIForm, TVPMainScene::GetInstance()), 0, "close_menu");

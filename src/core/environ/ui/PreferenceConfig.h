@@ -9,9 +9,9 @@ static Size PrefListSize;
 class tTVPPreferenceInfoConstant : public iTVPPreferenceInfo {
 public:
 	tTVPPreferenceInfoConstant(const std::string &cap) : iTVPPreferenceInfo(cap, "") {}
-	virtual iPreferenceItem *createItem() override {
+	virtual iPreferenceItem *createItem(int idx) override {
 		LocaleConfigManager *locmgr = LocaleConfigManager::GetInstance();
-		return CreatePreferenceItem<tPreferenceItemConstant>(PrefListSize, locmgr->GetText(Caption));
+		return CreatePreferenceItem<tPreferenceItemConstant>(idx, PrefListSize, locmgr->GetText(Caption));
 	}
 };
 
@@ -19,15 +19,12 @@ class tTVPPreferenceInfoCheckBox : public tTVPPreferenceInfo<bool> {
 public:
 	tTVPPreferenceInfoCheckBox(const std::string &cap, const std::string &key, bool defval)
 		: tTVPPreferenceInfo<bool>(cap, key, defval) {}
-	virtual iPreferenceItem *createItem() override {
-		GlobalConfigManager *mgr = GlobalConfigManager::GetInstance();
+	virtual iPreferenceItem *createItem(int idx) override {
 		LocaleConfigManager *locmgr = LocaleConfigManager::GetInstance();
-		return CreatePreferenceItem<tPreferenceItemCheckBox>(PrefListSize, locmgr->GetText(Caption),
-			[mgr, this](tPreferenceItemCheckBox* item) {
-			item->_getter = std::bind(&GlobalConfigManager::GetValue<bool>, mgr, Key, DefaultValue);
-			item->_setter = [this](bool v){
-				GlobalConfigManager::GetInstance()->SetValueInt(Key, v);
-			};
+		return CreatePreferenceItem<tPreferenceItemCheckBox>(idx, PrefListSize, locmgr->GetText(Caption),
+			[this](tPreferenceItemCheckBox* item) {
+			item->_getter = std::bind(&PreferenceGetValueBool, Key, DefaultValue);
+			item->_setter = std::bind(&PreferenceSetValueBool, Key, std::placeholders::_1);
 		});
 	}
 };
@@ -37,12 +34,12 @@ public:
 	tTVPPreferenceInfoSelectList(const std::string &cap, const std::string &key, const std::string &defval,
 		const std::initializer_list<std::pair<std::string, std::string> > &listinfo)
 		: tTVPPreferenceInfo<std::string>(cap, key, defval), ListInfo(listinfo){}
-	virtual iPreferenceItem *createItem() override {
+	virtual iPreferenceItem *createItem(int idx) override {
 		LocaleConfigManager *locmgr = LocaleConfigManager::GetInstance();
-		return CreatePreferenceItem<tPreferenceItemSelectList>(PrefListSize, locmgr->GetText(Caption),
+		return CreatePreferenceItem<tPreferenceItemSelectList>(idx, PrefListSize, locmgr->GetText(Caption),
 			[this](tPreferenceItemSelectList* item) {
 			item->initInfo(this);
-			item->_getter = std::bind(&GlobalConfigManager::GetValue<std::string>, GlobalConfigManager::GetInstance(), Key, DefaultValue);
+			item->_getter = std::bind(&PreferenceGetValueString, Key, DefaultValue);
 			item->_setter = [this](std::string v){ onSetValue(v); };
 		});
 	}
@@ -50,7 +47,7 @@ public:
 		return ListInfo;
 	}
 	virtual void onSetValue(const std::string &v) {
-		GlobalConfigManager::GetInstance()->SetValue(Key, v);
+		PreferenceSetValueString(Key, v);
 	}
 	std::vector<std::pair<std::string, std::string> > ListInfo;
 };
@@ -99,14 +96,12 @@ public:
 	tTVPPreferenceInfoSelectFile(const std::string &cap, const std::string &key, const std::string &defval)
 		: tTVPPreferenceInfo<std::string>(cap, key, defval) {}
 
-	virtual iPreferenceItem *createItem() override {
+	virtual iPreferenceItem *createItem(int idx) override {
 		LocaleConfigManager *locmgr = LocaleConfigManager::GetInstance();
-		return CreatePreferenceItem<tPreferenceItemFileSelect>(PrefListSize, locmgr->GetText(Caption),
+		return CreatePreferenceItem<tPreferenceItemFileSelect>(idx, PrefListSize, locmgr->GetText(Caption),
 			[this](tPreferenceItemFileSelect* item) {
-			item->_getter = std::bind(&GlobalConfigManager::GetValue<std::string>, GlobalConfigManager::GetInstance(), Key, DefaultValue);
-			item->_setter = [this](std::string v) {
-				GlobalConfigManager::GetInstance()->SetValue(Key, v);
-			};
+			item->_getter = std::bind(&PreferenceGetValueString, Key, DefaultValue);
+			item->_setter = std::bind(&PreferenceSetValueString, Key, std::placeholders::_1);
 		});
 	}
 };
@@ -115,16 +110,16 @@ class tTVPPreferenceInfoRendererSubPref : public iTVPPreferenceInfo {
 public:
 	tTVPPreferenceInfoRendererSubPref(const std::string &cap) { Caption = cap; } // Key is useless
 	static tPreferenceScreen* GetSubPreferenceInfo() {
-		std::string renderer = GlobalConfigManager::GetInstance()->GetValue<std::string>("renderer", "software");
+		std::string renderer = PreferenceGetValueString("renderer", "software");
 		if (renderer == "opengl")
 			return &OpenglOptPreference;
 		else if (renderer == "software")
 			return &SoftRendererOptPreference;
 		return nullptr;
 	}
-	virtual iPreferenceItem *createItem() override {
+	virtual iPreferenceItem *createItem(int idx) override {
 		LocaleConfigManager *locmgr = LocaleConfigManager::GetInstance();
-		iPreferenceItem *ret = CreatePreferenceItem<tPreferenceItemSubDir>(PrefListSize, locmgr->GetText(Caption));
+		iPreferenceItem *ret = CreatePreferenceItem<tPreferenceItemSubDir>(idx, PrefListSize, locmgr->GetText(Caption));
 		ret->addClickEventListener([](Ref*) {
 			TVPMainScene::GetInstance()->pushUIForm(TVPGlobalPreferenceForm::create(GetSubPreferenceInfo()));
 		});
@@ -141,9 +136,9 @@ public:
 	{
 		Caption = title;
 	}
-	virtual iPreferenceItem *createItem() override {
+	virtual iPreferenceItem *createItem(int idx) override {
 		LocaleConfigManager *locmgr = LocaleConfigManager::GetInstance();
-		iPreferenceItem *ret = CreatePreferenceItem<tPreferenceItemSubDir>(PrefListSize, locmgr->GetText(Caption));
+		iPreferenceItem *ret = CreatePreferenceItem<tPreferenceItemSubDir>(idx, PrefListSize, locmgr->GetText(Caption));
 		ret->addClickEventListener([this](Ref*){
 			TVPMainScene::GetInstance()->pushUIForm(TVPGlobalPreferenceForm::create(&Preference));
 		});
@@ -156,15 +151,14 @@ class tTVPPreferenceInfoSliderIcon : public tTVPPreferenceInfo<float> {
 public:
 	tTVPPreferenceInfoSliderIcon(const std::string &cap, const std::string &key, float defval)
 		: tTVPPreferenceInfo<float>(cap, key, defval) {}
-	virtual iPreferenceItem *createItem() override {
+	virtual iPreferenceItem *createItem(int idx) override {
 		LocaleConfigManager *locmgr = LocaleConfigManager::GetInstance();
-		GlobalConfigManager *mgr = GlobalConfigManager::GetInstance();
 
 		tPreferenceItemCursorSlider * ret = new tPreferenceItemCursorSlider(DefaultValue, TVPMainScene::convertCursorScale);
 		ret->autorelease();
-		ret->_getter = std::bind(&GlobalConfigManager::GetValue<float>, mgr, Key, DefaultValue);
-		ret->_setter = std::bind(&GlobalConfigManager::SetValueFloat, mgr, Key, std::placeholders::_1);
-		ret->initFromInfo(PrefListSize, locmgr->GetText(Caption));
+		ret->_getter = std::bind(&PreferenceGetValueFloat, Key, DefaultValue);
+		ret->_setter = std::bind(&PreferenceSetValueFloat, Key, std::placeholders::_1);
+		ret->initFromInfo(idx, PrefListSize, locmgr->GetText(Caption));
 		return ret;
 	}
 };
@@ -180,15 +174,13 @@ public:
 		return buf;
 	}
 
-	virtual iPreferenceItem *createItem() override {
+	virtual iPreferenceItem *createItem(int idx) override {
 		LocaleConfigManager *locmgr = LocaleConfigManager::GetInstance();
-		GlobalConfigManager *mgr = GlobalConfigManager::GetInstance();
-
 		tPreferenceItemTextSlider * ret = new tPreferenceItemTextSlider(DefaultValue, convertPercentScale);
 		ret->autorelease();
-		ret->_getter = std::bind(&GlobalConfigManager::GetValue<float>, mgr, Key, DefaultValue);
-		ret->_setter = std::bind(&GlobalConfigManager::SetValueFloat, mgr, Key, std::placeholders::_1);
-		ret->initFromInfo(PrefListSize, locmgr->GetText(Caption));
+		ret->_getter = std::bind(&PreferenceGetValueFloat, Key, DefaultValue);
+		ret->_setter = std::bind(&PreferenceSetValueFloat, Key, std::placeholders::_1);
+		ret->initFromInfo(idx, PrefListSize, locmgr->GetText(Caption));
 		return ret;
 	}
 };
@@ -196,9 +188,9 @@ public:
 class tTVPPreferenceInfoFetchSDCardPermission : public iTVPPreferenceInfo {
 public:
 	tTVPPreferenceInfoFetchSDCardPermission(const std::string &cap) : iTVPPreferenceInfo(cap, "") {}
-	virtual iPreferenceItem *createItem() override {
+	virtual iPreferenceItem *createItem(int idx) override {
 		LocaleConfigManager *locmgr = LocaleConfigManager::GetInstance();
-		tPreferenceItemConstant* ret = CreatePreferenceItem<tPreferenceItemConstant>(PrefListSize, locmgr->GetText(Caption));
+		tPreferenceItemConstant* ret = CreatePreferenceItem<tPreferenceItemConstant>(idx, PrefListSize, locmgr->GetText(Caption));
 		ret->setTouchEnabled(true);
 		ret->addClickEventListener([](Ref*) {
 			TVPFetchSDCardPermission();
@@ -219,6 +211,7 @@ static void initAllConfig() {
 		}),
 		new tTVPPreferenceInfoRendererSubPref("preference_renderer_opt"),
 		new tTVPPreferenceInfoSelectFile("preference_default_font", "default_font", ""),
+		new tTVPPreferenceInfoCheckBox("preference_force_def_font", "force_default_font", false),
 #ifdef CC_TARGET_OS_IPHONE
 		new tTVPPreferenceInfoSelectList("preference_mem_limit", "memusage", "high", {
 #else

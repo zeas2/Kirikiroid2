@@ -2360,8 +2360,8 @@ protected:
 		uint8_t *pixel = nullptr; int tw, th;
 		size_t pvrsize;
 		GLenum texfmt;
-		tw = w;
-		th = h;
+		tw = (w + 3) & ~3;
+		th = (h + 3) & ~3;
 		if (isOpaque) {
 			pixel = (uint8_t *)ETCPacker::convert(dib, w, h, pitch, true, pvrsize);
 			texfmt = GL_COMPRESSED_RGB8_ETC2;
