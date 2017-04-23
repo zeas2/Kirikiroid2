@@ -238,7 +238,7 @@ void iTVPFloatForm::rearrangeLayout()
 		RootNode->setContentSize(sceneSize);
 		ui::Helper::doLayout(RootNode);
 		RootNode->setScale(scale);
-		RootNode->setAnchorPoint(sceneSize / 2);
+		RootNode->setAnchorPoint(Vec2(0.5f, 0.5f));
 		RootNode->setPosition(center);
 	}
 }

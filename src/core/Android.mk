@@ -4,15 +4,13 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE := krkr2
 
-ifeq ($(TARGET_ARCH_ABI),arm64-v8a)
-ThreadPool11FILE := 
-else
-ThreadPool11FILE := utils/threadpool11/pool.cpp utils/threadpool11/worker.cpp 
-endif
-
 LOCAL_SRC_FILES := \
 $(filter-out $(LOCAL_PATH)/visual/Resampler.cpp, $(wildcard $(LOCAL_PATH)/visual/*.cpp)) \
 $(wildcard $(LOCAL_PATH)/base/7zip/*.c) \
+$(wildcard $(LOCAL_PATH)/base/7zip/C/*.c) \
+$(wildcard $(LOCAL_PATH)/base/7zip/CPP/*/*.cpp) \
+$(wildcard $(LOCAL_PATH)/base/7zip/CPP/*/*/*.cpp) \
+$(wildcard $(LOCAL_PATH)/base/7zip/CPP/*/*/*/*.cpp) \
 $(wildcard $(LOCAL_PATH)/base/*.cpp) \
 $(filter-out $(LOCAL_PATH)/base/win32/FuncStubs.cpp $(LOCAL_PATH)/base/win32/SusieArchive.cpp, $(wildcard $(LOCAL_PATH)/base/win32/*.cpp)) \
 $(filter-out $(LOCAL_PATH)/environ/MainFormUnit.cpp, $(wildcard $(LOCAL_PATH)/environ/*.cpp)) \
@@ -37,7 +35,6 @@ $(wildcard $(LOCAL_PATH)/utils/encoding/*.c) \
 $(wildcard $(LOCAL_PATH)/utils/minizip/*.c) \
 $(wildcard $(LOCAL_PATH)/utils/minizip/*.cpp) \
 $(wildcard $(LOCAL_PATH)/utils/win32/*.cpp) \
-$(ThreadPool11FILE) \
 $(wildcard $(LOCAL_PATH)/visual/gl/*.cpp) \
 $(wildcard $(LOCAL_PATH)/visual/ogl/*.cpp) \
 $(filter-out $(LOCAL_PATH)/visual/win32/GDIFontRasterizer.cpp $(LOCAL_PATH)/visual/win32/NativeFreeTypeFace.cpp \
@@ -80,6 +77,7 @@ LOCAL_C_INCLUDES += $(LOCAL_PATH)/base  \
                  $(LOCAL_PATH)/../../vendor/threadpool11/ext/include \
 				 $(LOCAL_PATH)/../../libs/android/bpg/include \
 				 $(LOCAL_PATH)/../../libs/android/ffmpeg/include \
+				 $(LOCAL_PATH)/../../libs/android/libarchive/include \
                  $(LOCAL_PATH)/visual/RenderScript/rs \
     $(LOCAL_PATH)/../../vendor/cocos2d-x/current/cocos \
 	$(LOCAL_PATH)/../../vendor/cocos2d-x/current/cocos/platform \
@@ -89,10 +87,10 @@ LOCAL_C_INCLUDES += $(LOCAL_PATH)/base  \
     $(LOCAL_PATH)/../../vendor/cocos2d-x/current/external \
 
 LOCAL_CPPFLAGS += -DTJS_TEXT_OUT_CRLF -D__STDC_CONSTANT_MACROS
-LOCAL_CFLAGS += -DTJS_TEXT_OUT_CRLF
+LOCAL_CFLAGS += -DTJS_TEXT_OUT_CRLF -D_7ZIP_ST
 LOCAL_STATIC_LIBRARIES := ffmpeg libopencv_imgproc libopencv_core libopencv_hal libtbb gdiplus_static cpufeatures \
         opusfile_static opus_static onig_static libbpg_static vorbis_static cairo_static pixman_static expat_static \
-		breakpad_client openal_static jxrlib_static
+		breakpad_client openal_static jxrlib_static libarchive_static
 # libRScpp_static
 
 include $(BUILD_STATIC_LIBRARY)
@@ -113,3 +111,4 @@ $(call import-module, gdiplus)
 $(call import-module, expat)
 $(call import-module, google_breakpad)
 #$(call import-module, libRScpp)
+$(call import-module, libarchive)

@@ -12,6 +12,18 @@
 #include "Application.h"
 #include <cstdlib>
 #include <iterator>
+#include "platform/CCPlatformConfig.h"
+#include "AEStream.h"
+#include "WaveMixer.h"
+
+#ifdef HAS_OMXPLAYER
+#include "../omxplayer/OMXPlayerAudio.h"
+#include "../omxplayer/OMXPlayerVideo.h"
+#include "../omxplayer/OMXHelper.h"
+#endif
+
+void TVPInitDirectSound();
+void TVPInitLibAVCodec();
 
 NS_KRMOVIE_BEGIN
 
@@ -191,6 +203,8 @@ BasePlayer::BasePlayer(CBaseRenderer *renderer)
 	, m_processInfo(CProcessInfo::CreateInstance())
 	, m_pRenderer(renderer)
 {
+	TVPInitDirectSound(); // to avoid initialize in other thread
+	TVPInitLibAVCodec();
 	m_playSpeed = DVD_PLAYSPEED_NORMAL;
 	m_newPlaySpeed = DVD_PLAYSPEED_NORMAL;
 	m_streamPlayerSpeed = DVD_PLAYSPEED_NORMAL;
@@ -219,6 +233,9 @@ BasePlayer::~BasePlayer() {
 void BasePlayer::Play()
 {
 	m_bStopStatus = false;
+
+	if (!m_ThreadId)
+		Create();
 	
 	if (GetSpeed() == 0)
 		SetSpeed(1/*m_newPlaySpeed*/);
@@ -343,8 +360,10 @@ bool BasePlayer::OpenFromStream(IStream *stream, const tjs_char * streamname, co
 	{
 		if (!m_OmxPlayerState.av_clock.OMXInitialize(&m_clock))
 			m_bAbortRequest = true;
+#if 0
 		if (CSettings::GetInstance().GetInt(CSettings::SETTING_VIDEOPLAYER_ADJUSTREFRESHRATE) != ADJUST_REFRESHRATE_OFF)
 			m_OmxPlayerState.av_clock.HDMIClockSync();
+#endif
 		m_OmxPlayerState.av_clock.OMXStateIdle();
 		m_OmxPlayerState.av_clock.OMXStateExecute();
 		m_OmxPlayerState.av_clock.OMXStop();
@@ -356,8 +375,6 @@ bool BasePlayer::OpenFromStream(IStream *stream, const tjs_char * streamname, co
 	UpdatePlayState(0);
 
 	SetCaching(CACHESTATE_FLUSH);
-	
-	Create();
 
 	// Playback might have been stopped due to some error
 	if (m_bStop || m_bAbortRequest)
@@ -1851,6 +1868,16 @@ void BasePlayer::SeekTime(int64_t iTime)
 // return the time in milliseconds
 int64_t BasePlayer::GetTime()
 {
+	if (m_VideoPlayerAudio) {
+		CDVDAudio *audioDev = m_VideoPlayerAudio->GetOutputDevice();
+		if (audioDev && audioDev->m_pAudioStream) {
+			TVPALSoundWrap *alsound = (TVPALSoundWrap*)audioDev->m_pAudioStream->GetNativeImpl();
+			int remainSamples = alsound->GetUnprocessedSamples();
+// 			double audio_clk = is->audio_clock - (double)remainSamples / is->audio_tgt.freq;
+// 			set_clock_at(&is->audclk, audio_clk, is->audio_clock_serial, av_gettime() / 1000000.0);
+// 			sync_clock_to_slave(&is->extclk, &is->audclk);
+		}
+	}
 	CSingleLock lock(m_StateSection);
 	double offset = 0;
 	const double limit = DVD_MSEC_TO_TIME(500);
@@ -1864,6 +1891,12 @@ int64_t BasePlayer::GetTime()
 			offset = -limit;
 	}
 	return llrint(m_State.time + DVD_TIME_TO_MSEC(offset));
+}
+
+int BasePlayer::GetCurrentFrame()
+{
+	// TODO accuracy
+	return GetTime() * GetFPS() / DVD_PLAYSPEED_NORMAL;
 }
 
 int BasePlayer::GetVideoStream()

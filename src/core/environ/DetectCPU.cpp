@@ -148,6 +148,7 @@ static ttstr TVPDumpCPUInfo(tjs_int cpu_num)
 //---------------------------------------------------------------------------
 static void TVPDisableCPU(tjs_uint32 featurebit, const tjs_char *name)
 {
+#if 0
 	tTJSVariant val;
 	ttstr str;
 	if(TVPGetCommandLine(name, &val))
@@ -158,6 +159,7 @@ static void TVPDisableCPU(tjs_uint32 featurebit, const tjs_char *name)
 		else if(str == TJS_W("force"))
 			TVPCPUType |= featurebit;
 	}
+#endif
 }
 
 #if defined(WIN32) || defined(__ANDROID__)

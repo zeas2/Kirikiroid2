@@ -288,7 +288,7 @@ public class KR2Activity extends Cocos2dxActivity {
 
     static {
 		System.loadLibrary("ffmpeg");
-		System.loadLibrary("game");
+	//	System.loadLibrary("game");
     }
     
 	@Override
@@ -296,7 +296,7 @@ public class KR2Activity extends Cocos2dxActivity {
 		sInstance = this;
         Sp = PreferenceManager.getDefaultSharedPreferences(this);
 		super.onCreate(savedInstanceState);
-
+		/*
 		if (Build.VERSION.SDK_INT>=Build.VERSION_CODES.LOLLIPOP) {
 			for(String path : getExtSdCardPaths(this)) {
 		        if (!isWritableNormalOrSaf(path)) {
@@ -304,7 +304,7 @@ public class KR2Activity extends Cocos2dxActivity {
 		        }
 			}
 		}
-		
+		*/
 		initDump(this.getFilesDir().getAbsolutePath() + "/dump");
 	}
 	
@@ -312,6 +312,11 @@ public class KR2Activity extends Cocos2dxActivity {
 	public void onDestroy() {
 		super.onDestroy();
 		System.exit(0);
+	}
+	
+	@Override
+	public void onLowMemory() {
+		nativeOnLowMemory();
 	}
 	
 	static class DialogMessage
@@ -494,6 +499,7 @@ public class KR2Activity extends Cocos2dxActivity {
 	static public native void onNativeInit();
 	static public native void onBannerSizeChanged(int w, int h);
 	static private native void initDump(String path);
+	static private native void nativeOnLowMemory();
 	
 	static public void MessageController(int what, int arg1, int arg2) {
         Message msg = msgHandler.obtainMessage();
@@ -749,10 +755,18 @@ public class KR2Activity extends Cocos2dxActivity {
     
     public int get_res_sd_operate_step() { return -1; }
 
-    void guideDialogForLEXA(String path) {
-    	AlertDialog.Builder builder = new AlertDialog.Builder(this);
-    	ImageView image = new ImageView(this);
-    	image.setImageResource(get_res_sd_operate_step());
+    static void requireLEXA(final String path) {
+		msgHandler.post(new Runnable() {
+			@Override
+			public void run() {
+				guideDialogForLEXA(path);
+			}
+		});
+    }
+    static void guideDialogForLEXA(final String path) {
+    	AlertDialog.Builder builder = new AlertDialog.Builder(sInstance);
+    	ImageView image = new ImageView(sInstance);
+    	image.setImageResource(sInstance.get_res_sd_operate_step());
     	builder
     		.setView(image)
     		.setTitle(path)

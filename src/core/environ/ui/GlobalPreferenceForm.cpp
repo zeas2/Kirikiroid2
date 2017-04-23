@@ -13,7 +13,24 @@ using namespace cocos2d::ui;
 
 const char * const FileName_NaviBar = "ui/NaviBar.csb";
 const char * const FileName_Body = "ui/ListView.csb";
-
+static bool PreferenceGetValueBool(const std::string &name, bool defval) {
+	return GlobalConfigManager::GetInstance()->GetValue<bool>(name, defval);
+}
+static void PreferenceSetValueBool(const std::string &name, bool v) {
+	GlobalConfigManager::GetInstance()->SetValueInt(name, v);
+}
+static std::string PreferenceGetValueString(const std::string &name, const std::string& defval) {
+	return GlobalConfigManager::GetInstance()->GetValue<std::string>(name, defval);
+}
+static void PreferenceSetValueString(const std::string &name, const std::string& v) {
+	GlobalConfigManager::GetInstance()->SetValue(name, v);
+}
+static float PreferenceGetValueFloat(const std::string &name, float defval) {
+	return GlobalConfigManager::GetInstance()->GetValue<float>(name, defval);
+}
+static void PreferenceSetValueFloat(const std::string &name, float v) {
+	GlobalConfigManager::GetInstance()->SetValueFloat(name, v);
+}
 #include "PreferenceConfig.h"
 
 TVPGlobalPreferenceForm * TVPGlobalPreferenceForm::create(const tPreferenceScreen *config) {

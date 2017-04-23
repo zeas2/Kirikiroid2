@@ -640,6 +640,17 @@ public:
 
 	tjs_uint GetMaxCount() { return MaxCount; }
 };
+
+// for std::hash
+struct ttstr_hasher {
+	tjs_uint32 operator ()(const ttstr &str) const {
+		tjs_uint32 *hint = const_cast<ttstr*>(&str)->GetHint();
+		if (!hint) return 0;
+		if (*hint) return *hint;
+		return (*hint = tTJSHashFunc<ttstr>::Make(str));
+	}
+};
+
 //---------------------------------------------------------------------------
 } // namespace TJS
 //---------------------------------------------------------------------------

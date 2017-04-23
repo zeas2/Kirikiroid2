@@ -153,6 +153,10 @@ void TVPGetLocalFileListAt(const ttstr &name, const std::function<void(const tts
 			if (!TVP_stat(fullpath.c_str(), stat_buf))
 				continue;
 			ttstr file(direntp->d_name);
+			if (file.length() <= 2) {
+				if (file == TJS_W(".") || file == TJS_W(".."))
+					continue;
+			}
 			tjs_char *p = file.Independ();
 			while (*p)
 			{
@@ -581,10 +585,10 @@ bool TVPCheckExistentLocalFolder(const ttstr &name)
 
 
 
-tTVPArchive * TVPOpenZIPArchive(const ttstr & name, tTJSBinaryStream *st);
-tTVPArchive * TVPOpen7ZArchive(const ttstr & name, tTJSBinaryStream *st);
-tTVPArchive * TVPOpenTARArchive(const ttstr & name, tTJSBinaryStream *st);
-static tTVPArchive*(*ArchiveCreators[])(const ttstr & name, tTJSBinaryStream *st) = {
+tTVPArchive * TVPOpenZIPArchive(const ttstr & name, tTJSBinaryStream *st, bool normalizeFileName);
+tTVPArchive * TVPOpen7ZArchive(const ttstr & name, tTJSBinaryStream *st, bool normalizeFileName);
+tTVPArchive * TVPOpenTARArchive(const ttstr & name, tTJSBinaryStream *st, bool normalizeFileName);
+static tTVPArchive*(*ArchiveCreators[])(const ttstr & name, tTJSBinaryStream *st, bool normalizeFileName) = {
 	TVPOpenZIPArchive,
 	TVPOpen7ZArchive,
 	TVPOpenTARArchive,
@@ -594,7 +598,7 @@ static tTVPArchive*(*ArchiveCreators[])(const ttstr & name, tTJSBinaryStream *st
 //---------------------------------------------------------------------------
 // TVPOpenArchive
 //---------------------------------------------------------------------------
-tTVPArchive * TVPOpenArchive(const ttstr & name)
+tTVPArchive * TVPOpenArchive(const ttstr & name, bool normalizeFileName)
 {
 #if 0
 	tTVPArchive * archive = TVPOpenSusieArchive(name); // in SusieArchive.h
@@ -603,8 +607,8 @@ tTVPArchive * TVPOpenArchive(const ttstr & name)
 	tTJSBinaryStream *st = TVPCreateStream(name);
 	if (!st) return nullptr;
 	for (int i = 0; i < sizeof(ArchiveCreators) / sizeof(ArchiveCreators[0]); ++i) {
-		tTVPArchive*(*creator)(const ttstr &, tTJSBinaryStream*) = ArchiveCreators[i];
-		tTVPArchive * archive = creator(name, st);
+		tTVPArchive*(*creator)(const ttstr &, tTJSBinaryStream*, bool) = ArchiveCreators[i];
+		tTVPArchive * archive = creator(name, st, normalizeFileName);
 		if (archive) return archive;
 		st->SetPosition(0);
 	}
@@ -617,7 +621,7 @@ int TVPCheckArchive(const ttstr &localname)
 	tTVPArchive *arc = nullptr;
 	int validArchive = 2; // archive but no startup.tjs
 	try {
-		arc = TVPOpenArchive(TVPNormalizeStorageName(localname));
+		arc = TVPOpenArchive(TVPNormalizeStorageName(localname), false);
 		if (arc) {
 			tjs_uint count = arc->GetCount();
 			ttstr str_startup_tjs = TJS_W("startup.tjs");
@@ -1504,3 +1508,30 @@ TJS_END_NATIVE_STATIC_METHOD_DECL_OUTER(/*object to register*/cls,
 }
 //---------------------------------------------------------------------------
 
+static FILE *_fileopen(ttstr path) {
+	std::string strpath = path.AsStdString();
+	FILE *fp = fopen(strpath.c_str(), "wb");
+	if (!fp) { // make dirs
+		path = TVPExtractStoragePath(path);
+		TVPCreateFolders(path);
+		fp = fopen(strpath.c_str(), "wb");
+	}
+	return fp;
+}
+
+bool TVPSaveStreamToFile(tTJSBinaryStream *st, tjs_uint64 offset, tjs_uint64 size, ttstr outpath) {
+	FILE *fp = _fileopen(outpath);
+	if (!fp) return false;
+	tjs_uint64 origpos = st->GetPosition();
+	st->SetPosition(offset);
+	std::vector<char> buffer; buffer.resize(2 * 1024 * 1024);
+	while (size > 0) {
+		unsigned int readsize = size > buffer.size() ? buffer.size() : size;
+		readsize = st->Read(&buffer.front(), readsize);
+		fwrite(&buffer.front(), 1, readsize, fp);
+		size -= readsize;
+	}
+	fclose(fp);
+	st->SetPosition(origpos);
+	return true;
+}

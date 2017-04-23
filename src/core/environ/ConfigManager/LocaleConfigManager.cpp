@@ -61,6 +61,12 @@ bool LocaleConfigManager::initText(cocos2d::ui::Text *ctrl) {
 	return initText(ctrl, ctrl->getString());
 }
 
+bool LocaleConfigManager::initText(cocos2d::ui::Button *ctrl)
+{
+	if (!ctrl) return false;
+	return initText(ctrl, ctrl->getTitleText());
+}
+
 bool LocaleConfigManager::initText(cocos2d::ui::Text *ctrl, const std::string &tid) {
 	if (!ctrl) return false;
 

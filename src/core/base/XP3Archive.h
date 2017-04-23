@@ -115,10 +115,10 @@ public:
 
 public:
 	tTVPXP3Archive(const ttstr & name, int) : tTVPArchive(name) {}
-	tTVPXP3Archive(const ttstr & name, tTJSBinaryStream *st = nullptr, tjs_int64 offset = -1);
+	tTVPXP3Archive(const ttstr & name, tTJSBinaryStream *st = nullptr, tjs_int64 offset = -1, bool normalizeFileName = true);
 	~tTVPXP3Archive();
 
-	static tTVPArchive *Create(const ttstr & name, tTJSBinaryStream *st = nullptr);
+	static tTVPArchive *Create(const ttstr & name, tTJSBinaryStream *st = nullptr, bool normalizeFileName = true);
 
 	tjs_uint GetCount() { return Count; }
 	const ttstr & GetName(tjs_uint idx) const { return ItemVector[idx].Name; }

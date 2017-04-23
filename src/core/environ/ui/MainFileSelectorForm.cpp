@@ -19,6 +19,7 @@
 #include "tinyxml2/tinyxml2.h"
 #include "StorageImpl.h"
 #include "TipsHelpForm.h"
+#include "XP3RepackForm.h"
 
 using namespace cocos2d;
 using namespace cocos2d::ui;
@@ -108,7 +109,7 @@ static bool _CheckGameFolder(const std::string &path) {
 					return c - ('A' - 'a');
 				return c;
 			});
-			int pos = lowername.rfind('.');
+			size_t pos = lowername.rfind('.');
 			if (pos == lowername.npos) return;
 			if (lowername.substr(pos) == ".xp3") {
 				isValidGameFolder = true;
@@ -220,7 +221,8 @@ TVPMainFileSelectorForm * TVPMainFileSelectorForm::create() {
 void TVPMainFileSelectorForm::initFromFile()
 {
 	_LoadHistory();
-	if (!_HistoryPath.empty()) {
+//	if (!_HistoryPath.empty())
+	{
 		CSBReader reader;
 		Node *root = reader.Load("ui/MainFileSelector.csb");
 		_fileList = reader.findController("fileList");
@@ -302,13 +304,14 @@ void TVPMainFileSelectorForm::showMenu(Ref*) {
 
 		// captions
 		LocaleConfigManager *localeMgr = LocaleConfigManager::GetInstance();
-		localeMgr->initText(dynamic_cast<Text*>(reader.findController("titleRotate")));
-		localeMgr->initText(dynamic_cast<Text*>(reader.findController("titleGlobalPref")));
-		localeMgr->initText(dynamic_cast<Text*>(reader.findController("titleNewLocalPref")));
-		localeMgr->initText(dynamic_cast<Text*>(reader.findController("titleLocalPref")));
-		localeMgr->initText(dynamic_cast<Text*>(reader.findController("titleHelp")));
-		localeMgr->initText(dynamic_cast<Text*>(reader.findController("titleAbout")));
-		localeMgr->initText(dynamic_cast<Text*>(reader.findController("titleExit")));
+		localeMgr->initText(reader.findController<Text>("titleRotate"));
+		localeMgr->initText(reader.findController<Text>("titleGlobalPref"));
+		localeMgr->initText(reader.findController<Text>("titleNewLocalPref"));
+		localeMgr->initText(reader.findController<Text>("titleLocalPref"));
+		localeMgr->initText(reader.findController<Text>("titleHelp"));
+		localeMgr->initText(reader.findController<Text>("titleAbout"));
+		localeMgr->initText(reader.findController<Text>("titleExit"));
+		localeMgr->initText(reader.findController<Text>("titleRepack"));
 
 		// button events
 		reader.findWidget("btnRotate")->addClickEventListener([](Ref*) {
@@ -380,6 +383,10 @@ void TVPMainFileSelectorForm::showMenu(Ref*) {
 				_AskExit();
 			});
 		}
+		reader.findWidget("btnRepack")->addClickEventListener([this](Ref*) {
+			TVPProcessXP3Repack(CurrentPath);
+			hideMenu(nullptr);
+		});
 
 	}
 	const Size &uiSize = getContentSize();

@@ -1,20 +1,27 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <functional>
 
-class tTVPXP3ArchiveEx;
+class XP3ArchiveRepackAsyncImpl;
 class XP3ArchiveRepackAsync {
-	std::vector<std::pair<tTVPXP3ArchiveEx*, std::string> > ConvFileList;
-	void * /*std::thread*/ Thread = nullptr;
 
 public:
-	XP3ArchiveRepackAsync(const std::string &xp3filter);
+	XP3ArchiveRepackAsync();
 	~XP3ArchiveRepackAsync();
-	uint64_t AddTask(const std::string &src/*, const std::string &dst*/);
-	void Clear();
+	uint64_t AddTask(const std::string &src);
 	void Start();
-	void DoConv();
-	
-public:
-	bool UsingETC2 = false;
+	void Stop();
+	void SetXP3Filter(const std::string &xp3filter);
+	void SetCallback(
+		const std::function<void(int, uint64_t, const std::string &)> &onNewFile,
+		const std::function<void(int, uint64_t, const std::string &)> &onNewArchive,
+		const std::function<void(uint64_t, uint64_t, uint64_t)> &onProgress,
+		const std::function<void(int, const std::string &)> &onError,
+		const std::function<void()> &onEnded);
+
+	void SetOption(const std::string &name, bool v);
+
+private:
+	XP3ArchiveRepackAsyncImpl *_impl;
 };

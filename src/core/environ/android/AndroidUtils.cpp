@@ -696,26 +696,62 @@ bool TVPCreateFolders(const ttstr &folder)
 	return false;
 }
 
-bool TVPWriteDataToFile(const ttstr &filepath, const void *data, unsigned int size) {
-	std::string filename = filepath.AsStdString();
-// 	int Handle = open(filename.c_str(), O_RDWR | O_CREAT | O_TRUNC, 0666);
-// 	if (Handle >= 0) {
-// 		bool ret = write(Handle, data, size) == size;
-// 		close(Handle);
-// 		return ret;
-// 	}
+static bool TVPWriteDataToFileJava(const std::string &filename, const void* data, unsigned int size) {
 	JniMethodInfo methodInfo;
 	if (JniHelper::getStaticMethodInfo(methodInfo, "org/tvp/kirikiri2/KR2Activity", "WriteFile", "(Ljava/lang/String;[B)Z")) {
-		jstring jstr = methodInfo.env->NewStringUTF(filename.c_str());
-		jbyteArray arr = methodInfo.env->NewByteArray(size);
-		methodInfo.env->SetByteArrayRegion(arr, 0, size, (jbyte*)data);
-		bool ret = methodInfo.env->CallStaticBooleanMethod(methodInfo.classID, methodInfo.methodID, jstr, arr);
-		methodInfo.env->DeleteLocalRef(arr);
-		methodInfo.env->DeleteLocalRef(jstr);
-		methodInfo.env->DeleteLocalRef(methodInfo.classID);
+		cocos2d::FileUtils *fileutil = cocos2d::FileUtils::getInstance();
+		bool ret = false;
+		do { // write files until file not exist
+			jstring jstr = methodInfo.env->NewStringUTF(filename.c_str());
+			jbyteArray arr = methodInfo.env->NewByteArray(size);
+			methodInfo.env->SetByteArrayRegion(arr, 0, size, (jbyte*)data);
+			bool ret = methodInfo.env->CallStaticBooleanMethod(methodInfo.classID, methodInfo.methodID, jstr, arr);
+			methodInfo.env->DeleteLocalRef(arr);
+			methodInfo.env->DeleteLocalRef(jstr);
+			methodInfo.env->DeleteLocalRef(methodInfo.classID);
+		} while (!fileutil->isFileExist(filename));
 		return ret;
 	}
 	return false;
+}
+
+bool TVPWriteDataToFile(const ttstr &filepath, const void *data, unsigned int size) {
+	cocos2d::FileUtils *fileutil = cocos2d::FileUtils::getInstance();
+	std::string filename = filepath.AsStdString();
+	if (fileutil->isFileExist(filename)) {
+		// for number filename suffix issue
+		time_t t = time(nullptr);
+		std::vector<char> buffer;
+		buffer.resize(filename.size() + 32);
+		sprintf(&buffer.front(), "%s.%d.bak", filename.c_str(), (int)t);
+		std::string tempname = &buffer.front();
+		if (rename(filename.c_str(), tempname.c_str()) == 0) {
+			// file api is OK
+			FILE *fp = fopen(filename.c_str(), "wb");
+			if (fp) {
+				bool ret = fwrite(data, 1, size, fp) == size;
+				fclose(fp);
+				ret = (remove(tempname.c_str()) == 0) && ret;
+				return ret;
+			}
+		}
+		while (fileutil->isFileExist(filename)) {
+			if (!TVPRenameFile(filename, tempname)) {
+				return false;
+			}
+		}
+		bool ret = TVPWriteDataToFileJava(filename, data, size);
+		ret = TVPDeleteFile(tempname) && ret;
+		return ret;
+	}
+	FILE *fp = fopen(filename.c_str(), "wb");
+	if (fp) {
+		// file api is OK
+		int writed = fwrite(data, 1, size, fp);
+		fclose(fp);
+		return writed == size;
+	}
+	return TVPWriteDataToFileJava(filename, data, size);
 }
 
 std::string TVPGetCurrentLanguage() {

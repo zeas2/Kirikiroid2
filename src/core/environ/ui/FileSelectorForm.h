@@ -73,7 +73,6 @@ protected:
 	void onCutClicked(cocos2d::Ref *owner);
 	void onPasteClicked(cocos2d::Ref *owner);
 	void onUnpackClicked(cocos2d::Ref *owner);
-	void onRepackClicked(cocos2d::Ref *owner);
 	void onDeleteClicked(cocos2d::Ref *owner);
 	void onSendToClicked(cocos2d::Ref *owner);
 	void updateFileMenu();

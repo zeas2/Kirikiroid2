@@ -13,6 +13,50 @@
 #include <memory>
 #include "VideoRenderer.h"
 
+#ifdef ANDROID
+//#define HAS_OMXPLAYER 1
+#endif
+#ifdef HAS_OMXPLAYER
+#include "../omxplayer/OMXCore.h"
+#include "../omxplayer/OMXClock.h"
+#else
+
+// dummy class to avoid ifdefs where calls are made
+class OMXClock
+{
+public:
+	bool OMXInitialize(KRMovie::CDVDClock *clock) { return false; }
+	void OMXDeinitialize() {}
+	bool OMXIsPaused() { return false; }
+	bool OMXStop(bool lock = true) { return false; }
+	bool OMXStep(int steps = 1, bool lock = true) { return false; }
+	bool OMXReset(bool has_video, bool has_audio, bool lock = true) { return false; }
+	double OMXMediaTime(bool lock = true) { return 0.0; }
+	double OMXClockAdjustment(bool lock = true) { return 0.0; }
+	bool OMXMediaTime(double pts, bool lock = true) { return false; }
+	bool OMXPause(bool lock = true) { return false; }
+	bool OMXResume(bool lock = true) { return false; }
+	bool OMXSetSpeed(int speed, bool lock = true, bool pause_resume = false) { return false; }
+	bool OMXFlush(bool lock = true) { return false; }
+	bool OMXStateExecute(bool lock = true) { return false; }
+	void OMXStateIdle(bool lock = true) {}
+	bool HDMIClockSync(bool lock = true) { return false; }
+	void OMXSetSpeedAdjust(double adjust, bool lock = true) {}
+};
+#endif
+
+struct SOmxPlayerState
+{
+	OMXClock av_clock;              // openmax clock component
+//	EINTERLACEMETHOD interlace_method; // current deinterlace method
+	bool bOmxWaitVideo;             // whether we need to wait for video to play out on EOS
+	bool bOmxWaitAudio;             // whether we need to wait for audio to play out on EOS
+	bool bOmxSentEOFs;              // flag if we've send EOFs to audio/video players
+	float threshold;                // current fifo threshold required to come out of buffering
+	unsigned int last_check_time;   // we periodically check for gpu underrun
+	double stamp;                   // last media timestamp
+};
+
 class tTJSNI_Window;
 class tTJSNI_VideoOverlay;
 struct IStream;
@@ -270,6 +314,7 @@ public:
 	bool IsStopped() { return m_bStop; }
 	void SeekTime(int64_t iTimeMS);
 	int64_t GetTime();
+	int GetCurrentFrame();
 	int GetVideoStreamCount();
 	int GetVideoStream();
 	int GetAudioStreamCount();
@@ -371,7 +416,8 @@ private:
 	bool m_HasVideo = false;
 	bool m_HasAudio = false;
 
-//	bool m_omxplayer_mode;            // using omxplayer acceleration
+	struct SOmxPlayerState m_OmxPlayerState;
+	bool m_omxplayer_mode = false;            // using omxplayer acceleration
 
 	Timer m_player_status_timer;
 	CBaseRenderer *m_pRenderer;

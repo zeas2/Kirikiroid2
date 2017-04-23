@@ -71,3 +71,12 @@ void TVPGetMemoryInfo(TVPMemoryInfo &m)
 void TVPRelinquishCPU(){
 	sched_yield();
 }
+
+void TVP_utime(const char *name, time_t modtime) {
+	timeval mt[2];
+	mt[0].tv_sec = modtime;
+	mt[0].tv_usec = 0;
+	mt[1].tv_sec = modtime;
+	mt[1].tv_usec = 0;
+	utimes(name, mt);
+}

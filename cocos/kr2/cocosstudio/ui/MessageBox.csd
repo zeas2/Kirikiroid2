@@ -1,5 +1,5 @@
 <GameFile>
-  <PropertyGroup Name="MessageBox" Type="Layer" ID="bf9b3cee-a64d-48be-a767-64e6f23af9b5" Version="3.10.0.0" />
+  <PropertyGroup Name="MessageBox" Type="Layer" ID="dcd674b2-1a82-418f-b8c5-708a548451ac" Version="3.10.0.0" />
   <Content ctype="GameProjectContent">
     <Content>
       <Animation Duration="0" Speed="0.9833" />

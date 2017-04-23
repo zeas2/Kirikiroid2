@@ -13,6 +13,7 @@
 
 
 #include "StorageIntf.h"
+#include <functional>
 
 
 
@@ -174,7 +175,59 @@ public:
 
 };
 //---------------------------------------------------------------------------
+class tTVPUnpackArchiveImpl;
+class tTVPUnpackArchive {
+public:
+	tTVPUnpackArchive();
+	virtual ~tTVPUnpackArchive(); // must ve deconstructed from main thread
+	int Prepare(const std::string &path, const std::string &_outpath, tjs_uint64 *totalSize);
+	void Start();
+	void Stop();
 
+	void SetCallback(
+		const std::function<void()> &funcOnEnded,
+		const std::function<void(int, const char *)> &funcOnError,
+		const std::function<void(tjs_uint64, tjs_uint64)> &funcOnProgress,
+		const std::function<void(int, const char*, tjs_uint64)> &funcOnNewFile) {
+		FuncOnEnded = funcOnEnded;
+		FuncOnError = funcOnError;
+		FuncOnProgress = funcOnProgress;
+		FuncOnNewFile = funcOnNewFile;
+	}
 
+protected:
+	// these callbacks are not in main thread !
+	virtual void OnEnded() {
+		if (FuncOnEnded)
+			FuncOnEnded();
+	}
+	virtual void OnError(int err, const char *msg) {
+		if (FuncOnError)
+			FuncOnError(err, msg);
+	}
+	virtual void OnProgress(tjs_uint64 total_size, tjs_uint64 file_size) {
+		if (FuncOnProgress)
+			FuncOnProgress(total_size, file_size);
+	}
+	virtual void OnNewFile(int idx, const char * utf8name, tjs_uint64 file_size) {
+		if (FuncOnNewFile)
+			FuncOnNewFile(idx, utf8name, file_size);
+	}
+
+private:
+	void Process();
+	FILE *FpIn = nullptr;
+	struct archive *ArcObj = nullptr;
+	std::string OutPath;
+	friend class tTVPUnpackArchiveImpl;
+	tTVPUnpackArchiveImpl *Impl = nullptr;
+	tTVPArchive *pTVPArc = nullptr;
+	bool StopRequired = false;
+
+	std::function<void()> FuncOnEnded;
+	std::function<void(int , const char *)> FuncOnError;
+	std::function<void(tjs_uint64 , tjs_uint64 )> FuncOnProgress;
+	std::function<void(int , const char * , tjs_uint64 )> FuncOnNewFile;
+};
 
 #endif

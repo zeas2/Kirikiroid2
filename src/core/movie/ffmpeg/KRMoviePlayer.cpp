@@ -66,8 +66,7 @@ void TVPMoviePlayer::SetFrame(int f)
 
 void TVPMoviePlayer::GetFrame(int *f)
 {
-	// TODO accuracy
-	*f = m_pPlayer->GetTime() * m_pPlayer->GetFPS() / DVD_PLAYSPEED_NORMAL;
+	*f = m_pPlayer->GetCurrentFrame();
 }
 
 void TVPMoviePlayer::GetFPS(double *f)

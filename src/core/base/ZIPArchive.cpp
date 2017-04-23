@@ -196,25 +196,13 @@ static voidpf zip_open64file(voidpf opaque, const void * filename, int mode) {
 	return nullptr;
 }
 
-static uLong zip_readfile(voidpf, voidpf s, void *buf, uLong size) {
-	return ((tTJSBinaryStream*)s)->Read(buf, size);
-}
-
-static uLong zip_writefile(voidpf, voidpf s, const void *buf, uLong size) {
-	return ((tTJSBinaryStream*)s)->Write(buf, size);
-}
-
-static ZPOS64_T zip_tell64file(voidpf, voidpf s) {
-	return ((tTJSBinaryStream*)s)->GetPosition();
-}
-
-static long zip_seek64file(voidpf, voidpf s, ZPOS64_T offset, int origin) {
-	((tTJSBinaryStream*)s)->Seek(offset, origin);
-	return 0;
-}
+static uLong zip_readfile(voidpf, voidpf s, void *buf, uLong size);
+static uLong zip_writefile(voidpf, voidpf s, const void *buf, uLong size);
+static ZPOS64_T zip_tell64file(voidpf, voidpf s);
+static long zip_seek64file(voidpf, voidpf s, ZPOS64_T offset, int origin);
 
 static int zip_closefile(voidpf, voidpf s) {
-	delete ((tTJSBinaryStream*)s);
+//	delete ((tTJSBinaryStream*)s);
 	return 0;
 }
 
@@ -2060,21 +2048,41 @@ class ZipArchive : public tTVPArchive {
 
 public:
 	~ZipArchive();
-	ZipArchive(const ttstr & name, tTJSBinaryStream *st);
+	ZipArchive(const ttstr & name, tTJSBinaryStream *st, bool normalizeFileName);
 
 	bool isValid() { return uf != nullptr; }
 	virtual tjs_uint GetCount() { return filelist.size(); }
 	virtual ttstr GetName(tjs_uint idx) { return filelist[idx].first; }
 	virtual tTJSBinaryStream * CreateStreamByIndex(tjs_uint idx);
+
+	tTJSBinaryStream *_st = nullptr;
 };
 
-tTVPArchive * TVPOpenZIPArchive(const ttstr & name, tTJSBinaryStream *st) {
+static uLong zip_readfile(voidpf, voidpf s, void *buf, uLong size) {
+	return ((ZipArchive*)s)->_st->Read(buf, size);
+}
+
+static uLong zip_writefile(voidpf, voidpf s, const void *buf, uLong size) {
+	return ((ZipArchive*)s)->_st->Write(buf, size);
+}
+
+static ZPOS64_T zip_tell64file(voidpf, voidpf s) {
+	return ((ZipArchive*)s)->_st->GetPosition();
+}
+
+static long zip_seek64file(voidpf, voidpf s, ZPOS64_T offset, int origin) {
+	((ZipArchive*)s)->_st->Seek(offset, origin);
+	return 0;
+}
+
+tTVPArchive * TVPOpenZIPArchive(const ttstr & name, tTJSBinaryStream *st, bool normalizeFileName) {
 	tjs_uint64 pos = st->GetPosition();
 	bool checkZIP = st->ReadI16LE() == 0x4B50; // 'PK'
 	st->SetPosition(pos);
 	if (!checkZIP) return nullptr;
-	ZipArchive *arc = new ZipArchive(name, st);
+	ZipArchive *arc = new ZipArchive(name, st, normalizeFileName);
 	if (!arc->isValid()) {
+		arc->_st = nullptr;
 		delete arc;
 		return nullptr;
 	}
@@ -2108,12 +2116,17 @@ ZipArchive::~ZipArchive() {
 		unzClose(uf);
 		uf = NULL;
 	}
+	if (_st) {
+		delete _st;
+		_st = nullptr;
+	}
 }
 
 void storeFilename(ttstr &name, const char *narrowName, const ttstr &filename);
-ZipArchive::ZipArchive(const ttstr & name, tTJSBinaryStream *st) : tTVPArchive(name) {
+ZipArchive::ZipArchive(const ttstr & name, tTJSBinaryStream *st, bool normalizeFileName) : tTVPArchive(name) {
 	if (!st) st = TVPCreateStream(name);
-	if ((uf = unzOpenInternal(st, &zipfunc, 1)) != NULL) {
+	_st = st;
+	if ((uf = unzOpenInternal(this, &zipfunc, 1)) != NULL) {
 		//unzGoToFirstFile64(uf, NULL, NULL, 0);
 		unz_file_info file_info;
 		do {
@@ -2123,14 +2136,17 @@ ZipArchive::ZipArchive(const ttstr & name, tTJSBinaryStream *st) : tTVPArchive(n
 				char filename_inzip[1024];
 				if (unzGetCurrentFileInfo(uf, &file_info, filename_inzip, sizeof(filename_inzip), NULL, 0) == UNZ_OK) {
 					storeFilename(filename, filename_inzip, name);
-					NormalizeInArchiveStorageName(filename);
+					if (normalizeFileName)
+						NormalizeInArchiveStorageName(filename);
 					filelist.emplace_back(filename, entry);
 				}
 			}
 		} while (unzGoToNextFile64(uf, NULL, NULL, 0) == UNZ_OK);
-		std::sort(filelist.begin(), filelist.end(), [](const FileEntry& a, const FileEntry& b){
-			return a.first < b.first;
-		});
+		if (normalizeFileName) {
+			std::sort(filelist.begin(), filelist.end(), [](const FileEntry& a, const FileEntry& b) {
+				return a.first < b.first;
+			});
+		}
 	}
 }
 

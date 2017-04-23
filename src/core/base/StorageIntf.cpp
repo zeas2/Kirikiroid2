@@ -775,7 +775,7 @@ public:
 		}
 
 		// not exist in the cache
-		tTVPArchive *arc = TVPOpenArchive(name);
+		tTVPArchive *arc = TVPOpenArchive(name, true);
 		tHolder holder(arc);
 		ArchiveCache.AddWithHash(name, hash, holder);
 		return arc;

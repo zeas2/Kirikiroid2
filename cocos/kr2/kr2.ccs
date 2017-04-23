@@ -57,6 +57,7 @@
           </Folder>
           <Project Name="BottomBar.csd" Type="Layer" />
           <Project Name="BottomBarTextInput.csd" Type="Layer" />
+          <Project Name="CheckListDialog.csd" Type="Layer" />
           <Project Name="FileItem.csd" Type="Layer" />
           <Project Name="FileManageMenu.csd" Type="Layer" />
           <Project Name="GameMenu.csd" Type="Layer" />
@@ -70,6 +71,7 @@
           <Project Name="MessageBox.csd" Type="Layer" />
           <Project Name="NaviBar.csd" Type="Layer" />
           <Project Name="NaviBarWithMenu.csd" Type="Layer" />
+          <Project Name="ProgressBox.csd" Type="Layer" />
           <Project Name="RecentListItem.csd" Type="Layer" />
           <Project Name="SelectList.csd" Type="Layer" />
           <Project Name="SelectListItem.csd" Type="Layer" />

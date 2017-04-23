@@ -50,9 +50,12 @@
     <Item id="preference_reset" text="重置"/>
     <Item id="preference_hide_android_sys_btn" text="隐藏系统键（需重启软件）"/>
     <Item id="preference_default_font" text="默认字体（留空使用内置字体）"/>
+    <Item id="preference_force_def_font" text="强制使用默认字体"/>
     <Item id="ok" text="OK"/>
     <Item id="cancel" text="取消"/>
     <Item id="retry" text="重试"/>
+    <Item id="start" text="开始"/>
+    <Item id="stop" text="停止"/>
     <Item id="reactive" text="重新激活"/>
     <Item id="ensure_to_override_file" text="确认要覆盖吗："/>
     <Item id="readonly_storage" text="发现只读的外部存储器"/>
@@ -69,6 +72,7 @@
     <Item id="menu_about" text="关于"/>
     <Item id="menu_exit" text="退出"/>
     <Item id="menu_help" text="查看帮助"/>
+    <Item id="menu_archive_repack" text="转换/解密XP3封包"/>
     <Item id="about_content" text="可以在github补丁页面寻找补丁：&#10;https://zeas2.github.io/Kirikiroid2_patch/patch&#10;如遇到问题，请反馈到到项目页面：&#10;https://github.com/zeas2/Kirikiroid2/issues&#10;或者到百度贴吧寻找解决方案：&#10;百度Kirikiroid2吧"/>
     <Item id="about_content_i" text=""/>
     <Item id="sure_to_exit" text="确定退出吗？"/>
@@ -78,6 +82,7 @@
     <Item id="msgbox_nerver_notice" text="不再提示"/>
     <Item id="use_last_path" text="使用最近启动的路径："/>
 	
+    <Item id="notice" text="提示"/>
     <Item id="err_narrow_to_wide" text="无法转换字节字符为宽字符，可能数据被加密或损坏，也可能是使用了错误的文本编码。&#10;如果数据被加密，您可能需要xp3filter.tjs&#10;如果文本不是以SHIFT_JIS编码，需要用patch.tjs指定正确的编码格式。"/>
 	<Item id="err_no_memory" text="内存不足（若经常出现此问题，可以试着在选项里限制内存用量）"/>
 	<Item id="err_occured" text="发生错误"/>
@@ -104,5 +109,14 @@
 	<Item id="filemgr_cut" text="剪切"/>
 	<Item id="filemgr_paste" text="粘贴到这里"/>
 	<Item id="filemgr_sendto" text="发送到"/>
+	<Item id="filemgr_unpack" text="解压缩"/>
 	<Item id="file_operate_failed" text="文件操作失败："/>
+	<Item id="fail_to_open_archive" text="无法作为压缩包打开："/>
+	
+	<Item id="archive_repack_desc" text="解密并转换封包可以加快运行的速度并减少发热量。请保证剩余的空间大于最大的封包文件大小，否则转换操作可能会失败。"/>
+	<Item id="archive_repack_merge_img" text="合并遮罩图片"/>
+	<Item id="archive_repack_conv_etc2" text="转换图片格式为ETC2"/>
+	<Item id="archive_repack_proc_title" text="转换进行中..."/>
+	<Item id="archive_repack_no_xp3filter" text="当前目录未发现xp3filter，可能不需要进行转换。仍然继续？"/>
+	<Item id="archive_repack_no_xp3" text="当前目录未发现xp3封包，操作中止。"/>
 </Locale>

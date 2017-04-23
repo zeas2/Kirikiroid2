@@ -63,9 +63,6 @@ void GetVideoOverlayObject(
 	tTJSNI_VideoOverlay* callbackwin, IStream *stream, const tjs_char * streamname,
 	const tjs_char *type, uint64_t size, iTVPVideoOverlay **out)
 {
-	TVPInitDirectSound(); // to avoid initialize in other thread
-	TVPInitLibAVCodec();
-
 	*out = new KRMovie::MoviePlayerOverlay;
 
 	if (*out)
@@ -76,9 +73,6 @@ void GetVideoLayerObject(
 	tTJSNI_VideoOverlay* callbackwin, IStream *stream, const tjs_char * streamname,
 	const tjs_char *type, uint64_t size, iTVPVideoOverlay **out)
 {
-	TVPInitDirectSound(); // to avoid initialize in other thread
-	TVPInitLibAVCodec();
-
 	*out = new KRMovie::MoviePlayerLayer;
 
 	if (*out)
@@ -89,9 +83,6 @@ void GetMixingVideoOverlayObject(
 	tTJSNI_VideoOverlay* callbackwin, IStream *stream, const tjs_char * streamname,
 	const tjs_char *type, uint64_t size, iTVPVideoOverlay **out)
 {
-	TVPInitDirectSound(); // to avoid initialize in other thread
-	TVPInitLibAVCodec();
-
 	*out = new KRMovie::MoviePlayerOverlay;
 
 	if (*out)
@@ -102,9 +93,6 @@ void GetMFVideoOverlayObject(
 	tTJSNI_VideoOverlay* callbackwin, IStream *stream, const tjs_char * streamname,
 	const tjs_char *type, uint64_t size, iTVPVideoOverlay **out)
 {
-	TVPInitDirectSound(); // to avoid initialize in other thread
-	TVPInitLibAVCodec();
-
 	*out = new KRMovie::MoviePlayerOverlay;
 
 	if (*out)

@@ -117,14 +117,6 @@ void CDVDAudioCodecFFmpeg::Dispose()
   avcodec_free_context(&m_pCodecContext);
 }
 
-static int _getChannelsByLayout(uint64_t layout) {
-	int n = 0;
-	for (; layout; ++n) {
-		layout &= layout - 1;
-	}
-	return n;
-}
-
 int CDVDAudioCodecFFmpeg::Decode(uint8_t* pData, int iSize, double dts, double pts)
 {
   int iBytesUsed;
@@ -145,7 +137,7 @@ int CDVDAudioCodecFFmpeg::Decode(uint8_t* pData, int iSize, double dts, double p
   {
     return iBytesUsed;
   } else if (m_pFrame1->channels == 0) { // fix channels issue
-	  m_pFrame1->channels = _getChannelsByLayout(m_pFrame1->channel_layout);
+	  m_pFrame1->channels = av_frame_get_channels(m_pFrame1);
   }
 
   /* some codecs will attempt to consume more data than what we gave */

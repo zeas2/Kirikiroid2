@@ -13,6 +13,8 @@
 #include "base/CCDirector.h"
 #include "MessageBox.h"
 #include "platform/CCDevice.h"
+#include "base/CCScheduler.h"
+#include "utils/TickCount.h"
 
 using namespace cocos2d;
 using namespace cocos2d::extension;
@@ -219,7 +221,6 @@ void TVPBaseFileSelectorForm::onCellLongPress(int idx)
 			LocaleConfigManager::GetInstance()->initText(reader.findController<Text>("titleCut"));
 			LocaleConfigManager::GetInstance()->initText(reader.findController<Text>("titlePaste"));
 			LocaleConfigManager::GetInstance()->initText(reader.findController<Text>("titleUnpack"));
-			LocaleConfigManager::GetInstance()->initText(reader.findController<Text>("titleRepack", false));
 			LocaleConfigManager::GetInstance()->initText(reader.findController<Text>("titleDelete"));
 			LocaleConfigManager::GetInstance()->initText(reader.findController<Text>("titleSendTo"));
 			_fileOperateMenulist = reader.findController<ListView>("list");
@@ -229,7 +230,6 @@ void TVPBaseFileSelectorForm::onCellLongPress(int idx)
 			_fileOperateCell_cut = reader.findWidget("cut");
 			_fileOperateCell_paste = reader.findWidget("paste");
 			_fileOperateCell_delete = reader.findWidget("delete");
-			_fileOperateCell_repack = reader.findWidget("repack", false);
 			_fileOperateCell_unpack = reader.findWidget("unpack", false);
 			_fileOperateCell_sendto = reader.findWidget("sendto");
 			Widget *btn;;
@@ -250,9 +250,6 @@ void TVPBaseFileSelectorForm::onCellLongPress(int idx)
 			}
 			if ((btn = reader.findWidget("btnUnpack", false))) {
 				btn->addClickEventListener(std::bind(&TVPBaseFileSelectorForm::onUnpackClicked, this, std::placeholders::_1));
-			}
-			if ((btn = reader.findWidget("btnRepack", false))) {
-				btn->addClickEventListener(std::bind(&TVPBaseFileSelectorForm::onRepackClicked, this, std::placeholders::_1));
 			}
 			if ((btn = reader.findWidget("btnDelete"))) {
 				btn->addClickEventListener(std::bind(&TVPBaseFileSelectorForm::onDeleteClicked, this, std::placeholders::_1));
@@ -485,14 +482,143 @@ void TVPBaseFileSelectorForm::onPasteClicked(cocos2d::Ref *owner)
 
 void TVPBaseFileSelectorForm::onUnpackClicked(cocos2d::Ref *owner)
 {
-
+	if (_selectedFileIndex.size() != 1) {
+		return;
+	}
+	FileInfo &info = CurrentDirList[*_selectedFileIndex.begin()];
+	_selectedFileIndex.clear();
 	clearFileMenu();
-}
+	ttstr outpath = TVPChopStorageExt(info.FullPath);
 
-void TVPBaseFileSelectorForm::onRepackClicked(cocos2d::Ref *owner)
-{
+	class UnpackArchive  {
+		const int UpdateMS = 100; // update rate 10 fps
+		tTVPUnpackArchive ArcUnpacker;
 
-	clearFileMenu();
+	public:
+		bool Init(const std::string &path, const std::string &outpath) {
+			if (ArcUnpacker.Prepare(path, outpath, &TotalSize) <= 0) {
+				return false;
+			}
+			if (TotalSize > 1024 * 1024) {
+				ProgressForm = TVPSimpleProgressForm::create();
+				TVPMainScene::GetInstance()->pushUIForm(ProgressForm, TVPMainScene::eEnterAniNone);
+				std::vector<std::pair<std::string, std::function<void(cocos2d::Ref*)> > > vecButtons;
+				vecButtons.emplace_back("Stop", [this](Ref*) {
+					ArcUnpacker.Stop();
+				});
+				ProgressForm->initButtons(vecButtons);
+				ProgressForm->setTitle("Unpacking...");
+				ProgressForm->setPercentOnly(0);
+				ProgressForm->setPercentOnly2(0);
+				ProgressForm->setPercentText("");
+				ProgressForm->setPercentText2("");
+				ProgressForm->setContent("");
+			}
+			ArcUnpacker.SetCallback(
+				std::bind(&UnpackArchive::OnEnded, this),
+				std::bind(&UnpackArchive::OnError, this, std::placeholders::_1, std::placeholders::_2),
+				std::bind(&UnpackArchive::OnProgress, this, std::placeholders::_1, std::placeholders::_2),
+				std::bind(&UnpackArchive::OnNewFile, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)
+				);
+			return true;
+		}
+		virtual ~UnpackArchive() {
+			if (ProgressForm) {
+				TVPMainScene::GetInstance()->popUIForm(ProgressForm, TVPMainScene::eLeaveAniNone);
+				ProgressForm = nullptr;
+			}
+		}
+		void Start(const std::function<void()> &onEnded) {
+			FuncOnEnded = onEnded;
+			ArcUnpacker.Start();
+		}
+
+	private:
+		void OnEnded() {
+			Director::getInstance()->getScheduler()->performFunctionInCocosThread([this] {
+				if (FuncOnEnded)
+					FuncOnEnded();
+				delete this;
+			});
+		}
+		void OnError(int err, const char *msg) {
+			Director::getInstance()->getScheduler()->performFunctionInCocosThread([this, err, msg] {
+				char buf[64];
+				sprintf(buf, "Error %d\n", err);
+				ttstr strmsg(buf);
+				strmsg += msg;
+				TVPShowSimpleMessageBox(strmsg, TJS_W("Fail to unpack archive"));
+			});
+		}
+		void OnProgress(tjs_uint64 total_size, tjs_uint64 file_size) {
+			if (!ProgressForm) return;
+			tjs_uint32 tick = TVPGetRoughTickCount32();
+			if ((int)(tick - LastUpdate) < UpdateMS) {
+				return;
+			}
+			LastUpdate = tick;
+			Director::getInstance()->getScheduler()->performFunctionInCocosThread([this, total_size, file_size] {
+				ProgressForm->setPercentOnly((float)total_size / TotalSize);
+				ProgressForm->setPercentOnly2((float)file_size / CurrentFileSize);
+				char buf[64];
+				int sizeMB = static_cast<int>(total_size / (1024 * 1024)),
+					totalMB = static_cast<int>(TotalSize / (1024 * 1024));
+				sprintf(buf, "%d / %dMB", sizeMB, totalMB);
+				ProgressForm->setPercentText(buf);
+				sizeMB = static_cast<int>(file_size / (1024 * 1024));
+				totalMB = static_cast<int>(CurrentFileSize / (1024 * 1024));
+				sprintf(buf, "%d / %dMB", sizeMB, totalMB);
+				ProgressForm->setPercentText2(buf);
+			});
+		}
+		void OnNewFile(int idx, const char * utf8name, tjs_uint64 file_size) {
+			if (!ProgressForm) return;
+			tjs_uint32 tick = TVPGetRoughTickCount32();
+			if ((int)(tick - LastUpdate) < UpdateMS && file_size < 1024 * 1024) {
+				return;
+			}
+			LastUpdate = tick;
+			CurrentFileSize = file_size;
+			std::string filename(utf8name);
+			Director::getInstance()->getScheduler()->performFunctionInCocosThread([this, filename] {
+				ProgressForm->setContent(filename);
+			});
+		}
+
+		TVPSimpleProgressForm *ProgressForm = nullptr;
+		tjs_uint32 LastUpdate = 0;
+		tjs_uint64 TotalSize, CurrentFileSize;
+		std::function<void()> FuncOnEnded;
+	};
+	UnpackArchive *unpacker = new UnpackArchive;
+	// using libarchive to unpack archive
+	if (unpacker->Init(info.FullPath, outpath.AsStdString())) {
+		unpacker->Start([this]() {
+			ListDir(CurrentPath);
+		});
+		return;
+	}
+	delete unpacker;
+
+	// use internal archive module
+	tTVPArchive *arc = TVPOpenArchive(info.FullPath, false);
+	if (!arc) {
+		LocaleConfigManager *localeMgr = LocaleConfigManager::GetInstance();
+		TVPShowSimpleMessageBox(info.FullPath, localeMgr->GetText("fail_to_open_archive"));
+		return;
+	}
+	
+	tjs_uint count = arc->GetCount();
+	for (tjs_uint i = 0; i < count; ++i) {
+		ttstr name = arc->GetName(i);
+		ttstr fullpath = outpath + name;
+		tTJSBinaryStream *st = arc->CreateStreamByIndex(i);
+		if (!st) continue;
+		TVPSaveStreamToFile(st, 0, st->GetSize(), fullpath);
+		delete st;
+	}
+
+	delete arc;
 }
 
 void TVPBaseFileSelectorForm::onDeleteClicked(cocos2d::Ref *owner)
@@ -540,8 +666,7 @@ void TVPBaseFileSelectorForm::updateFileMenu()
 	}
 	if (_selectedFileIndex.size() == 1) {
 		if (_fileOperateCell_view) _fileOperateMenulist->pushBackCustomItem(_fileOperateCell_view.get());
-	//	_fileOperateMenulist->pushBackCustomItem(_fileOperateCell_unpack.get());
-	//	_fileOperateMenulist->pushBackCustomItem(_fileOperateCell_repack.get());
+		_fileOperateMenulist->pushBackCustomItem(_fileOperateCell_unpack.get());
 	//	_fileOperateMenulist->pushBackCustomItem(_fileOperateCell_sendto.get());
 	}
 	if (!_selectedFileIndex.empty()) {

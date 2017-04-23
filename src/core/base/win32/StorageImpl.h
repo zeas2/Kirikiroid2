@@ -199,4 +199,5 @@ public:
 //---------------------------------------------------------------------------
 
 void TVPListDir(const std::string &folder, std::function<void(const std::string&, int)> cb);
+bool TVPSaveStreamToFile(tTJSBinaryStream *st, tjs_uint64 offset, tjs_uint64 size, ttstr outpath);
 #endif

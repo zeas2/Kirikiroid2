@@ -54,4 +54,4 @@ struct tTVP_stat {
 
 bool TVP_stat(const tjs_char *name, tTVP_stat &s);
 bool TVP_stat(const char *name, tTVP_stat &s);
-
+void TVP_utime(const char *name, time_t modtime);

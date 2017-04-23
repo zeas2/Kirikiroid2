@@ -63,6 +63,7 @@ private:
 
 	tTJSHashTable<ttstr, tjs_uint, tTJSHashFunc<ttstr>, 1024> Hash;
 	bool Init;
+
 public:
 	ttstr ArchiveName;
 
@@ -151,7 +152,7 @@ public:
 //---------------------------------------------------------------------------
 // must be implemented in each platform
 //---------------------------------------------------------------------------
-extern tTVPArchive * TVPOpenArchive(const ttstr & name);
+extern tTVPArchive * TVPOpenArchive(const ttstr & name, bool normalizeFileName);
 	// open archive and return tTVPArchive instance.
 
 TJS_EXP_FUNC_DEF(ttstr, TVPGetTemporaryName, ());
@@ -341,12 +342,12 @@ public:
 			break;
 		}
 		if (CurrentPos < 0) CurrentPos = 0;
-		else if (CurrentPos > DataLength) CurrentPos = DataLength;
+		else if (CurrentPos > (tjs_int64)DataLength) CurrentPos = DataLength;
 		_instr->SetPosition(CurrentPos + StartPos);
 		return CurrentPos;
 	}
 	virtual tjs_uint TJS_INTF_METHOD Read(void *buffer, tjs_uint read_size) {
-		if (CurrentPos + read_size >= DataLength) {
+		if (CurrentPos + read_size >= (tjs_int64)DataLength) {
 			read_size = (tjs_uint)(DataLength - CurrentPos);
 		}
 

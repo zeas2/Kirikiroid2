@@ -526,7 +526,8 @@ void tTVPXP3Archive::Init(tTJSBinaryStream *st, tjs_int64 off, bool normalizeNam
 		}
 
 		// sort item vector by its name (required for tTVPArchive specification)
-		std::stable_sort(ItemVector.begin(), ItemVector.end());
+		if(normalizeName)
+			std::stable_sort(ItemVector.begin(), ItemVector.end());
 	}
 	catch(...)
 	{
@@ -542,10 +543,10 @@ void tTVPXP3Archive::Init(tTJSBinaryStream *st, tjs_int64 off, bool normalizeNam
 }
 
 //---------------------------------------------------------------------------
-tTVPXP3Archive::tTVPXP3Archive(const ttstr & name, tTJSBinaryStream *st, tjs_int64 offset) : tTVPArchive(name)
+tTVPXP3Archive::tTVPXP3Archive(const ttstr & name, tTJSBinaryStream *st, tjs_int64 offset, bool normalizeFileName) : tTVPArchive(name)
 {
 	if (!st) st = TVPCreateStream(name);
-	Init(st, offset);
+	Init(st, offset, normalizeFileName);
 }
 //---------------------------------------------------------------------------
 tTVPXP3Archive::~tTVPXP3Archive()
@@ -553,7 +554,7 @@ tTVPXP3Archive::~tTVPXP3Archive()
 	TVPFreeArchiveHandlePoolByPointer(this);
 }
 
-tTVPArchive * tTVPXP3Archive::Create(const ttstr & name, tTJSBinaryStream *st)
+tTVPArchive * tTVPXP3Archive::Create(const ttstr & name, tTJSBinaryStream *st, bool normalizeFileName)
 {
 	bool refStream = st;
 	if (!st) {
@@ -564,7 +565,7 @@ tTVPArchive * tTVPXP3Archive::Create(const ttstr & name, tTJSBinaryStream *st)
 		if (!refStream) delete st;
 		return nullptr;
 	}
-	return new tTVPXP3Archive(name, st, offset);
+	return new tTVPXP3Archive(name, st, offset, normalizeFileName);
 }
 
 //---------------------------------------------------------------------------

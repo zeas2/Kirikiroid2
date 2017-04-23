@@ -9,13 +9,14 @@
 #include "Platform.h"
 #include "ui/MessageBox.h"
 #include "ui/GlobalPreferenceForm.h"
+#include "CustomFileUtils.h"
 
 USING_NS_CC;
 
 static Size designResolutionSize(960, 640);
 bool TVPCheckStartupArg();
 std::string TVPGetCurrentLanguage();
-cocos2d::FileUtils *TVPCreateCustomFileUtils();
+cocos2d::CustomFileUtils *TVPCreateCustomFileUtils();
 
 void TVPAppDelegate::applicationWillEnterForeground() {
 	::Application->OnActivate();
@@ -30,7 +31,8 @@ void TVPAppDelegate::applicationDidEnterBackground() {
 bool TVPAppDelegate::applicationDidFinishLaunching() {
 	cocos2d::log("applicationDidFinishLaunching");
 	// initialize director
-	FileUtils::setDelegate(TVPCreateCustomFileUtils());
+	cocos2d::CustomFileUtils *fileutil = TVPCreateCustomFileUtils();
+	FileUtils::setDelegate(fileutil);
 	auto director = Director::getInstance();
 	auto glview = director->getOpenGLView();
 	if (!glview) {
@@ -55,6 +57,15 @@ bool TVPAppDelegate::applicationDidFinishLaunching() {
 	// We use the ratio of resource's height to the height of design resolution,
 	// this can make sure that the resource's height could fit for the height of design resolution.
 	searchPath.emplace_back("res");
+
+	std::string skinpath = GlobalConfigManager::GetInstance()->GetValue<std::string>("skin_path", "");
+	if (!skinpath.empty()) {
+		if (!fileutil->isFileExist(skinpath)) {
+			GlobalConfigManager::GetInstance()->SetValue("skin_path", "");
+		} else {
+			fileutil->addAutoSearchArchive(skinpath);
+		}
+	}
 
 	// set searching path
 	FileUtils::getInstance()->setSearchPaths(searchPath);

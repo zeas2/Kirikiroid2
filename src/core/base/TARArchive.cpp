@@ -51,7 +51,7 @@ public:
 	~TARArchive() {
 		TVPFreeArchiveHandlePoolByPointer(this);
 	}
-	bool init(tTJSBinaryStream * _instr) {
+	bool init(tTJSBinaryStream * _instr, bool normalizeFileName) {
 		if (_instr) {
 			tjs_uint64 archiveSize = _instr->GetSize();
 			TAR_HEADER tar_header;
@@ -86,16 +86,19 @@ public:
 				}
 				EntryInfo item;
 				storeFilename(item.filename, &filename[0], ArchiveName);
-				NormalizeInArchiveStorageName(item.filename);
+				if (normalizeFileName)
+					NormalizeInArchiveStorageName(item.filename);
 				item.size = original_size;
 				item.offset = _instr->GetPosition();
 				filelist.emplace_back(item);
 				tjs_uint64 readsize = (original_size + (TBLOCK - 1)) & ~(TBLOCK - 1);
 				_instr->SetPosition(item.offset + readsize);
 			}
-			std::sort(filelist.begin(), filelist.end(), [](const EntryInfo& a, const EntryInfo& b){
-				return a.filename < b.filename;
-			});
+			if (normalizeFileName) {
+				std::sort(filelist.begin(), filelist.end(), [](const EntryInfo& a, const EntryInfo& b) {
+					return a.filename < b.filename;
+				});
+			}
 			TVPReleaseCachedArchiveHandle(this, _instr);
 			return true;
 		}
@@ -111,9 +114,9 @@ tTJSBinaryStream * TARArchive::CreateStreamByIndex(tjs_uint idx) {
 	return new TArchiveStream(this, info.offset, info.size);
 }
 
-tTVPArchive * TVPOpenTARArchive(const ttstr & name, tTJSBinaryStream * st) {
+tTVPArchive * TVPOpenTARArchive(const ttstr & name, tTJSBinaryStream * st, bool normalizeFileName) {
 	TARArchive *arc = new TARArchive(name);
-	if (!arc->init(st)) {
+	if (!arc->init(st, normalizeFileName)) {
 		delete arc;
 		return nullptr;
 	}
