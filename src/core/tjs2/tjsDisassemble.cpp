@@ -631,7 +631,7 @@ void tTJSInterCodeContext::Disassemble(tjs_int start, tjs_int end)
 	Disassemble(tTJSScriptBlock::GetConsoleOutput(), Block, start, end);
 }
 //---------------------------------------------------------------------------
-void tTJSInterCodeContext::DisassenbleSrcLine(tjs_int codepos)
+void tTJSInterCodeContext::DisassembleSrcLine(tjs_int codepos)
 {
 	tjs_int start = FindSrcLineStartCodePos(codepos);
 	Disassemble(start, codepos + 1);

@@ -54,12 +54,12 @@ void XKPageView::adjust(float offset)
 		xOrY  = pageSize.height;
 	}
 
-	if (abs(offset) < xOrY / 2){
+	if (std::abs(offset) < xOrY / 2){
 		this->setContentOffsetInDuration(vec, 0.1f);
 		return;
 	}
 
-	int i  = abs(offset  / xOrY) + 1;
+	int i  = std::abs(offset  / xOrY) + 1;
 	if (offset  < 0) {
 		current_index += i;
 		if (current_index >= pageCount){

@@ -16,7 +16,6 @@ USING_NS_CC;
 static Size designResolutionSize(960, 640);
 bool TVPCheckStartupArg();
 std::string TVPGetCurrentLanguage();
-cocos2d::CustomFileUtils *TVPCreateCustomFileUtils();
 
 void TVPAppDelegate::applicationWillEnterForeground() {
 	::Application->OnActivate();
@@ -31,8 +30,7 @@ void TVPAppDelegate::applicationDidEnterBackground() {
 bool TVPAppDelegate::applicationDidFinishLaunching() {
 	cocos2d::log("applicationDidFinishLaunching");
 	// initialize director
-	cocos2d::CustomFileUtils *fileutil = TVPCreateCustomFileUtils();
-	FileUtils::setDelegate(fileutil);
+	FileUtils::setDelegate(TVPCreateCustomFileUtils());
 	auto director = Director::getInstance();
 	auto glview = director->getOpenGLView();
 	if (!glview) {
@@ -60,10 +58,10 @@ bool TVPAppDelegate::applicationDidFinishLaunching() {
 
 	std::string skinpath = GlobalConfigManager::GetInstance()->GetValue<std::string>("skin_path", "");
 	if (!skinpath.empty()) {
-		if (!fileutil->isFileExist(skinpath)) {
+		if (!FileUtils::getInstance()->isFileExist(skinpath)) {
 			GlobalConfigManager::GetInstance()->SetValue("skin_path", "");
 		} else {
-			fileutil->addAutoSearchArchive(skinpath);
+			TVPAddAutoSearchArchive(skinpath);
 		}
 	}
 

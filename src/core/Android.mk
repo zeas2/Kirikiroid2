@@ -74,7 +74,7 @@ LOCAL_C_INCLUDES += $(LOCAL_PATH)/base  \
                  $(LOCAL_PATH)/../../vendor/opus/opusfile/include \
                  $(LOCAL_PATH)/../../vendor/opencv/current/build/include \
                  $(LOCAL_PATH)/../../vendor/openal/current/include \
-                 $(LOCAL_PATH)/../../vendor/threadpool11/ext/include \
+                 $(LOCAL_PATH)/../../vendor/lz4 \
 				 $(LOCAL_PATH)/../../libs/android/bpg/include \
 				 $(LOCAL_PATH)/../../libs/android/ffmpeg/include \
 				 $(LOCAL_PATH)/../../libs/android/libarchive/include \
@@ -86,7 +86,7 @@ LOCAL_C_INCLUDES += $(LOCAL_PATH)/base  \
     $(LOCAL_PATH)/../../vendor/cocos2d-x/current/external/png/include/android \
     $(LOCAL_PATH)/../../vendor/cocos2d-x/current/external \
 
-LOCAL_CPPFLAGS += -DTJS_TEXT_OUT_CRLF -D__STDC_CONSTANT_MACROS
+LOCAL_CPPFLAGS += -DTJS_TEXT_OUT_CRLF -D__STDC_CONSTANT_MACROS -DUSE_UNICODE_FSTRING
 LOCAL_CFLAGS += -DTJS_TEXT_OUT_CRLF -D_7ZIP_ST
 LOCAL_STATIC_LIBRARIES := ffmpeg libopencv_imgproc libopencv_core libopencv_hal libtbb gdiplus_static cpufeatures \
         opusfile_static opus_static onig_static libbpg_static vorbis_static cairo_static pixman_static expat_static \

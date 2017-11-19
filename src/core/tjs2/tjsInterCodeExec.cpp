@@ -21,6 +21,7 @@
 #include "tjsArray.h"
 #include "tjsDebug.h"
 #include "tjsOctPack.h"
+#include "tjsGlobalStringMap.h"
 #include <set>
 #include <mutex>
 
@@ -916,7 +917,7 @@ void tTJSInterCodeContext::DisplayExceptionGeneratedCode(tjs_int codepos,
 
 	tjs->OutputToConsole(info.c_str());
 	tjs->OutputToConsole(TJS_W("-- Disassembled VM code --"));
-	DisassenbleSrcLine(codepos);
+	DisassembleSrcLine(codepos);
 
 	tjs->OutputToConsole(TJS_W("-- Register dump --"));
 
@@ -2100,7 +2101,8 @@ void tTJSInterCodeContext::TypeOfMemberDirect(tTJSVariant *ra,
 	}
 	else if(hr == TJS_E_MEMBERNOTFOUND)
 	{
-		TJS_GET_VM_REG(ra, code[1]) = TJS_W("undefined");
+		static tTJSString undefined_name(TJSMapGlobalStringMap(TJS_W("undefined")));
+		TJS_GET_VM_REG(ra, code[1]) = undefined_name;
 	}
 	else if(TJS_FAILED(hr))
 		TJSThrowFrom_tjs_error(hr, TJS_GET_VM_REG(DataArea, code[3]).GetString());
@@ -2866,12 +2868,12 @@ void tTJSInterCodeContext::ProcessOctetFunction(const tjs_char *member, const tT
 void tTJSInterCodeContext::TypeOf(tTJSVariant &val)
 {
 	// processes TJS2's typeof operator.
-	static tTJSString void_name(TJS_W("void"));
-	static tTJSString Object_name(TJS_W("Object"));
-	static tTJSString String_name(TJS_W("String"));
-	static tTJSString Integer_name(TJS_W("Integer"));
-	static tTJSString Real_name(TJS_W("Real"));
-	static tTJSString Octet_name(TJS_W("Octet"));
+	static tTJSString void_name(TJSMapGlobalStringMap(TJS_W("void")));
+	static tTJSString Object_name(TJSMapGlobalStringMap(TJS_W("Object")));
+	static tTJSString String_name(TJSMapGlobalStringMap(TJS_W("String")));
+	static tTJSString Integer_name(TJSMapGlobalStringMap(TJS_W("Integer")));
+	static tTJSString Real_name(TJSMapGlobalStringMap(TJS_W("Real")));
+	static tTJSString Octet_name(TJSMapGlobalStringMap(TJS_W("Octet")));
 
 	switch(val.Type())
 	{

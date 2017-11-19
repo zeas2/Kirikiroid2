@@ -504,7 +504,7 @@ public:
 	void Disassemble(void (*output_func)(const tjs_char *msg, void* data), void *data,
 		tjs_int start = 0, tjs_int end = 0);
 	void Disassemble(tjs_int start = 0, tjs_int end = 0);
-	void DisassenbleSrcLine(tjs_int codepos);
+	void DisassembleSrcLine(tjs_int codepos);
 
 
 	//--------------------------------------------------------- execute stuff

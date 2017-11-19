@@ -471,17 +471,35 @@ public:
 
 	void onMouseDownEvent(Event *_e) {
 		EventMouse *e = static_cast<EventMouse*>(_e);
-		if (e->getMouseButton() == 1) {
+		int btn = e->getMouseButton();
+		switch (btn) {
+		case 1:
 			_mouseBtn = mbRight;
 			onMouseDown(e->getLocation());
+			break;
+		case 2:
+			_mouseBtn = mbMiddle;
+			onMouseDown(e->getLocation());
+			break;
+		default:
+			break;
 		}
 	}
 
 	void onMouseUpEvent(Event *_e) {
 		EventMouse *e = static_cast<EventMouse*>(_e);
-		if (e->getMouseButton() == 1) {
+		int btn = e->getMouseButton();
+		switch (btn) {
+		case 1:
 			_mouseBtn = mbRight;
 			onMouseUp(e->getLocation());
+			break;
+		case 2:
+			_mouseBtn = mbMiddle;
+			onMouseUp(e->getLocation());
+			break;
+		default:
+			break;
 		}
 	}
 
@@ -531,6 +549,9 @@ public:
 			_mouseBtn = ::mbRight;
 			_touchPoint = (_touchPoint + touch->getLocation()) / 2;
 			break;
+		case 3:
+			_mouseBtn = ::mbMiddle;
+			//_touchPoint = (_touchPoint + touch->getLocation()) / 2;
 		default:
 			break;
 		}
@@ -897,7 +918,7 @@ public:
 				sh = tex->GetInternalHeight()* ((float)LayerHeight / tex->GetHeight());
 				_drawTextureScaleY = 1 / _drawTextureScaleY;
 			}
-			DrawSprite->setTextureRect(Rect(0, 0, sw, sh)/*, false, Size(tex->GetWidth(), tex->GetHeight())*/);
+			DrawSprite->setTextureRect(Rect(0, 0, sw, sh));
 			DrawSprite->setBlendFunc(BlendFunc::DISABLE);
 			ResetDrawSprite();
 		}

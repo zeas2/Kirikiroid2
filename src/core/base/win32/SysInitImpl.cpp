@@ -1405,7 +1405,7 @@ void TVPAfterSystemInit()
 	}
 
         // draw thread num
-        tjs_int drawThreadNum = 1;
+        tjs_int drawThreadNum = 0;
         if (TVPGetCommandLine(TJS_W("-drawthread"), &opt)) {
           ttstr str(opt);
           if (str == TJS_W("auto"))

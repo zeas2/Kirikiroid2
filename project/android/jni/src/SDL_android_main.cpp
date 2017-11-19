@@ -4,6 +4,7 @@
 #include "cocos2d/AppDelegate.h"
 #include "cocos2d/MainScene.h"
 #include "ConfigManager/GlobalConfigManager.h"
+#include "Application.h"
 
 /*******************************************************************************
                  Functions called by JNI
@@ -16,8 +17,6 @@
 #include "client/linux/handler/minidump_descriptor.h"
 
 //std::string Android_GetDumpStoragePath();
-void start_profile() {}
-void stop_profile() {}
 
 static bool __DumpCallback(const google_breakpad::MinidumpDescriptor& descriptor,
 	void* context, bool succeeded)
@@ -274,4 +273,10 @@ extern "C" {
 		return true;
 	}
 
+	JNIEXPORT void JNICALL Java_org_tvp_kirikiri2_KR2Activity_nativeOnLowMemory(JNIEnv* env, jclass cls)
+	{
+		Android_PushEvents([]() {
+			::Application->OnLowMemory();
+		});
+	}
 }

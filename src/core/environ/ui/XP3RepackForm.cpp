@@ -338,7 +338,7 @@ void TVPProcessXP3Repack(const std::string &dir)
 		delete st;
 	});
 	if (filelist.empty()) {
-		TVPShowSimpleMessageBox(locmgr->GetText("archive_repack_no_xp3").c_str(), "XP3Repack", 0, nullptr);
+		TVPShowSimpleMessageBox(locmgr->GetText("archive_repack_no_xp3").c_str(), "XP3Repack");
 	} else {
 		TVPXP3RepackFileListForm::show(filelist, dir);
 	}

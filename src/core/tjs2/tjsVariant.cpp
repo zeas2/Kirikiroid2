@@ -193,11 +193,11 @@ tTJSVariantString * TJSObjectToString(const tTJSVariantClosure &dsp)
 	{
 		// retrieve object type information from debugging facility
 		tjs_char tmp[256];
-		TJS_snprintf(tmp, sizeof(tmp)/sizeof(tjs_char), TJS_W("(object 0x%p"), dsp.Object);
+		TJS_snprintf(tmp, sizeof(tmp)/sizeof(tjs_char), TJS_W("(object %p"), dsp.Object);
 		ttstr ret = tmp;
 		ttstr type = TJSGetObjectTypeInfo(dsp.Object);
 		if(!type.IsEmpty()) ret += TJS_W("[") + type + TJS_W("]");
-		TJS_snprintf(tmp, sizeof(tmp)/sizeof(tjs_char), TJS_W(":0x%p"), dsp.ObjThis);
+		TJS_snprintf(tmp, sizeof(tmp)/sizeof(tjs_char), TJS_W(":%p"), dsp.ObjThis);
 		ret += tmp;
 		type = TJSGetObjectTypeInfo(dsp.ObjThis);
 		if(!type.IsEmpty()) ret += TJS_W("[") + type + TJS_W("]");
@@ -209,7 +209,7 @@ tTJSVariantString * TJSObjectToString(const tTJSVariantClosure &dsp)
 	else
 	{
 		tjs_char tmp[256];
-		TJS_snprintf(tmp, sizeof(tmp)/sizeof(tjs_char), TJS_W("(object 0x%p:0x%p)"), dsp.Object, dsp.ObjThis);
+		TJS_snprintf(tmp, sizeof(tmp)/sizeof(tjs_char), TJS_W("(object %p:%p)"), dsp.Object, dsp.ObjThis);
 		return TJSAllocVariantString(tmp);
 	}
 }

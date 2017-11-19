@@ -3136,14 +3136,14 @@ public:
 				isDoubleEqual(srcpt[0].y, srcpt[1].y) &&
 				isDoubleEqual(srcpt[1].x, srcpt[5].x) &&
 				isDoubleEqual(srcpt[0].x, srcpt[2].x) &&
-				isDoubleEqual(srcpt[2].y, srcpt[5].y)
-				&&
+				isDoubleEqual(srcpt[2].y, srcpt[5].y);
+			bool isDstRect =
 				isDoubleEqual(dstpt[0].y, dstpt[1].y) &&
 				isDoubleEqual(dstpt[1].x, dstpt[5].x) &&
 				isDoubleEqual(dstpt[0].x, dstpt[2].x) &&
 				isDoubleEqual(dstpt[2].y, dstpt[5].y);
 
-			while (isSrcRect) {
+			while (isSrcRect && isDstRect) {
 				tTVPRect dstrect(dstpt[0].x, dstpt[0].y, dstpt[5].x, dstpt[5].y);
 				tTVPRect refrect(srcpt[0].x, srcpt[0].y, srcpt[5].x, srcpt[5].y);
 				if (dstrect.left > dstrect.right || dstrect.top > dstrect.bottom
@@ -3192,21 +3192,50 @@ public:
 			const uint8_t *sdata;
 			int spitch = src->GetPitch();
 			sdata = (const uint8_t *)src->GetPixelData();
-			cv::Mat src_img(src->GetHeight(), src->GetWidth(), CV_8UC4, (void*)sdata, spitch);
-			cv::Mat dst_img;
-			cv::Size dst_size(rcclip.get_width(), rcclip.get_height());
 
 			// upper-left, upper-right, bottom-right, bottom-left
 			cv::Point2f pts_src[] = {
 				cv::Point2f(srcpt[0].x, srcpt[0].y),
 				cv::Point2f(srcpt[1].x + 1, srcpt[1].y),
 				cv::Point2f(srcpt[5].x + 1, srcpt[5].y + 1),
-				cv::Point2f(srcpt[2].x, srcpt[2].y + 1) };
+				cv::Point2f(srcpt[2].x, srcpt[2].y + 1),
+			};
 			cv::Point2f pts_dst[] = {
 				cv::Point2f(dstpt[0].x - rcclip.left, dstpt[0].y - rcclip.top),
 				cv::Point2f(dstpt[1].x - rcclip.left, dstpt[1].y - rcclip.top),
 				cv::Point2f(dstpt[5].x - rcclip.left, dstpt[5].y - rcclip.top),
-				cv::Point2f(dstpt[2].x - rcclip.left, dstpt[2].y - rcclip.top) };
+				cv::Point2f(dstpt[2].x - rcclip.left, dstpt[2].y - rcclip.top),
+			};
+
+			cv::Mat src_img;
+			if (isSrcRect) {
+				tTVPRect rcsrc(0x7FFFFFFF, 0x7FFFFFFF, -1, -1);
+				for (int i = 0; i < 4; ++i) {
+					const cv::Point2f& pt = pts_src[i];
+					tjs_int x = pt.x;
+					if (x < rcsrc.left) rcsrc.left = x;
+					if (++x > rcsrc.right) rcsrc.right = x;
+					tjs_int y = pt.y;
+					if (y < rcsrc.top) rcsrc.top = y;
+					if (++y > rcsrc.bottom) rcsrc.bottom = y;
+				}
+				sdata += rcsrc.top * spitch + rcsrc.left * 4;
+				for (int i = 0; i < 4; ++i) {
+					cv::Point2f& pt = pts_src[i];
+					pt.x -= rcsrc.left;
+					pt.y -= rcsrc.top;
+				}
+				tjs_int sw = src->GetWidth(), sh = src->GetHeight();
+				if (rcsrc.get_width() > sw) rcsrc.set_width(sw);
+				if (rcsrc.get_height() > sh) rcsrc.set_height(sh);
+				src_img = cv::Mat(rcsrc.get_height(), rcsrc.get_width(), CV_8UC4,
+					(void*)sdata, spitch);
+			} else {
+				src_img = cv::Mat(src->GetHeight(), src->GetWidth(), CV_8UC4, (void*)sdata, spitch);
+			}
+
+			cv::Mat dst_img;
+			cv::Size dst_size(rcclip.get_width(), rcclip.get_height());
 #ifdef USE_CV_AFFINE
 			if (isSrcRect && checkQuadSquared(dstpt)) {
 // #ifdef _DEBUG
@@ -3247,6 +3276,7 @@ public:
 			tTVPRect rc(0, 0, dst_size.width, dst_size.height);
 // 			if (rc.right > dst->GetWidth()) rc.right = dst->GetWidth();
 // 			if (rc.bottom > dst->GetHeight()) rc.bottom = dst->GetHeight();
+
 			((tTVPRenderMethod_Software*)method)->DoRender(
 				target, rcclip,
 				target, rcclip,

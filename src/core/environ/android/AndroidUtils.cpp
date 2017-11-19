@@ -600,17 +600,23 @@ void TVPForceSwapBuffer() {
 	eglSwapBuffers(eglGetCurrentDisplay(), eglGetCurrentSurface(EGL_DRAW));
 }
 
-static bool _IsLollipop() {
+static int _GetAndroidSDKVersion() {
 	JNIEnv *pEnv = JniHelper::getEnv();
 	jclass classID = pEnv->FindClass("android/os/Build$VERSION");
 	jfieldID idSDK_INT = pEnv->GetStaticFieldID(classID, "SDK_INT", "I");
-	jint sdkid = pEnv->GetStaticIntField(classID, idSDK_INT);
-	return sdkid >= 21;
+	return pEnv->GetStaticIntField(classID, idSDK_INT);
+}
+static int GetAndroidSDKVersion() {
+	static int result = _GetAndroidSDKVersion();
+	return result;
 }
 
 static bool IsLollipop() {
-	static bool result = _IsLollipop();
-	return result;
+	return GetAndroidSDKVersion() >= 21;
+}
+
+static bool IsOreo() {
+	return GetAndroidSDKVersion() >= 26;
 }
 
 void TVPFetchSDCardPermission() {
@@ -701,24 +707,25 @@ static bool TVPWriteDataToFileJava(const std::string &filename, const void* data
 	if (JniHelper::getStaticMethodInfo(methodInfo, "org/tvp/kirikiri2/KR2Activity", "WriteFile", "(Ljava/lang/String;[B)Z")) {
 		cocos2d::FileUtils *fileutil = cocos2d::FileUtils::getInstance();
 		bool ret = false;
-		do { // write files until file not exist
+		int retry = 3;
+		do {
 			jstring jstr = methodInfo.env->NewStringUTF(filename.c_str());
 			jbyteArray arr = methodInfo.env->NewByteArray(size);
 			methodInfo.env->SetByteArrayRegion(arr, 0, size, (jbyte*)data);
-			bool ret = methodInfo.env->CallStaticBooleanMethod(methodInfo.classID, methodInfo.methodID, jstr, arr);
+			ret = methodInfo.env->CallStaticBooleanMethod(methodInfo.classID, methodInfo.methodID, jstr, arr);
 			methodInfo.env->DeleteLocalRef(arr);
 			methodInfo.env->DeleteLocalRef(jstr);
 			methodInfo.env->DeleteLocalRef(methodInfo.classID);
-		} while (!fileutil->isFileExist(filename));
+		} while (!fileutil->isFileExist(filename) && --retry);
 		return ret;
 	}
 	return false;
 }
 
 bool TVPWriteDataToFile(const ttstr &filepath, const void *data, unsigned int size) {
-	cocos2d::FileUtils *fileutil = cocos2d::FileUtils::getInstance();
 	std::string filename = filepath.AsStdString();
-	if (fileutil->isFileExist(filename)) {
+	cocos2d::FileUtils *fileutil = cocos2d::FileUtils::getInstance();
+	while (fileutil->isFileExist(filename)) {
 		// for number filename suffix issue
 		time_t t = time(nullptr);
 		std::vector<char> buffer;
@@ -731,17 +738,14 @@ bool TVPWriteDataToFile(const ttstr &filepath, const void *data, unsigned int si
 			if (fp) {
 				bool ret = fwrite(data, 1, size, fp) == size;
 				fclose(fp);
-				ret = (remove(tempname.c_str()) == 0) && ret;
+				remove(tempname.c_str());
 				return ret;
 			}
 		}
-		while (fileutil->isFileExist(filename)) {
-			if (!TVPRenameFile(filename, tempname)) {
-				return false;
-			}
-		}
 		bool ret = TVPWriteDataToFileJava(filename, data, size);
-		ret = TVPDeleteFile(tempname) && ret;
+		if (fileutil->isFileExist(tempname.c_str())) {
+			TVPDeleteFile(tempname);
+		}
 		return ret;
 	}
 	FILE *fp = fopen(filename.c_str(), "wb");

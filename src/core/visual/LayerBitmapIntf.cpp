@@ -1140,9 +1140,6 @@ bool iTVPBaseBitmap::Copy9Patch( const iTVPBaseBitmap *ref, tTVPRect& margin )
 {
 	if(!Is32BPP()) return false;
 
-	if (!TVPGetRenderManager()->IsSoftware())
-		return false; // TODO implement universal version
-
 	tjs_int w = ref->GetWidth();
 	tjs_int h = ref->GetHeight();
 	// 9 + 上下の11ピクセルは必要
@@ -1151,6 +1148,51 @@ bool iTVPBaseBitmap::Copy9Patch( const iTVPBaseBitmap *ref, tTVPRect& margin )
 	tjs_int dh = GetHeight();
 	// コピー先が元画像よりも小さい時はコピー不可
 	if( dw < (w-2) || dh < (h-2) ) return false;
+
+	if (!TVPGetRenderManager()->IsSoftware()) {
+		static iTVPRenderMethod *method = TVPGetRenderManager()->GetRenderMethod("Copy");
+		iTVPTexture2D *reftex = GetTexture();
+		tTVPRect rcdest(0, 0, dw, dh);
+		iTVPTexture2D *dsttex = GetTextureForRender(method->IsBlendTarget(), &rcdest);
+		tRenderTexRectArray::Element src_tex;
+		tRenderTexRectArray srctex(&src_tex, 1);
+		src_tex.first = ref->GetTexture();
+		if (margin.top > 0) {
+			src_tex.second.top = 0;
+			src_tex.second.bottom = margin.top;
+			tTVPRect rect(0, 0, 0, margin.top);
+			if (margin.left > 0) { // LT
+				src_tex.second.left = 0;
+				src_tex.second.right = margin.left;
+				rect.left = 0;
+				rect.bottom = margin.left;
+				TVPGetRenderManager()->OperateRect(method, dsttex, reftex, rect, srctex);
+			}
+			if (margin.get_width() > 0) { // T
+				src_tex.second.left = margin.left;
+				src_tex.second.right = margin.right;
+				TVPGetRenderManager()->OperateRect(method, dsttex, reftex, tTVPRect(margin.left, 0, dw - margin.right, margin.top), srctex);
+			}
+			if (margin.right < w) { // RT
+				src_tex.second.left = margin.right;
+				src_tex.second.right = w;
+				TVPGetRenderManager()->OperateRect(method, dsttex, reftex, tTVPRect(dw - margin.right, 0, dw, margin.top), srctex);
+			}
+		}
+		if (margin.get_height() > 0) {
+			if (margin.left > 0) { // L
+				src_tex.second.left = 0;
+				src_tex.second.top = margin.top;
+				src_tex.second.right = margin.left;
+				src_tex.second.bottom = margin.bottom;
+				TVPGetRenderManager()->OperateRect(method, dsttex, reftex, tTVPRect(0, margin.top, margin.left, dh - margin.bottom), srctex);
+			}
+			if (margin.get_width() > 0) { // C
+				;
+			}
+		}
+		return false; // TODO implement universal version
+	}
 
 	const tjs_uint32 *src = (const tjs_uint32*)ref->GetScanLine(0);
 	tjs_int pitch = ref->GetPitchBytes() / sizeof(tjs_uint32);
@@ -4475,12 +4517,9 @@ void iTVPBaseBitmap::UDFlip(const tTVPRect &rect)
 		rect.bottom > (tjs_int)GetHeight())
 				TVPThrowExceptionMessage(TVPSrcRectOutOfBitmap);
 
-	tjs_int w = GetWidth();
-	tjs_int h = GetHeight();
-
 	iTVPTexture2D * reftex = GetTexture();
 	tRenderTexRectArray::Element src_tex[] = {
-		tRenderTexRectArray::Element(reftex, tTVPRect(0, h, w, 0))
+		tRenderTexRectArray::Element(reftex, tTVPRect(rect.left, rect.bottom, rect.right, rect.top))
 	};
 	static iTVPRenderMethod* method = GetRenderManager()->GetRenderMethod("Copy");
 	TVPGetRenderManager()->OperateRect(method, GetTextureForRender(method->IsBlendTarget(), &rect),
@@ -4529,13 +4568,9 @@ void iTVPBaseBitmap::LRFlip(const tTVPRect &rect)
 		rect.bottom > (tjs_int)GetHeight())
 				TVPThrowExceptionMessage(TVPSrcRectOutOfBitmap);
 
-	tjs_int h = rect.bottom - rect.top;
-	tjs_int w = rect.right - rect.left;
-#if 0
-#endif
 	iTVPTexture2D * reftex = GetTexture();
 	tRenderTexRectArray::Element src_tex[] = {
-		tRenderTexRectArray::Element(reftex, tTVPRect(w, 0, 0, h))
+		tRenderTexRectArray::Element(reftex, tTVPRect(rect.right, rect.top, rect.left, rect.bottom))
 	};
 	static iTVPRenderMethod* method = GetRenderManager()->GetRenderMethod("Copy");
 	TVPGetRenderManager()->OperateRect(method, GetTextureForRender(method->IsBlendTarget(), &rect),

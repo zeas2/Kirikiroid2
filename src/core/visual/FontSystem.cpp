@@ -64,31 +64,33 @@ ttstr FontSystem::GetBeingFont(ttstr fonts) {
 		vfont = false;
 	}
 
-	bool force_default_font = IndividualConfigManager::GetInstance()->GetValue<bool>("force_default_font", false);
-	bool prev_empty_name = false;
-	while(fonts!=TJS_W("")) {
-		ttstr fontname;
-		int pos = fonts.IndexOf(TJS_W(","));
-		if (pos != -1) {
-			fontname = Trim( fonts.SubString( 0, pos) );
-			fonts = fonts.SubString(pos + 1, -1);
-		} else {
-			fontname = Trim(fonts);
-			fonts=TJS_W("");
-		}
-
-		// no existing check if previously specified font candidate is empty
-		// eg. ",Fontname"
-
-		if(fontname != TJS_W("") && (prev_empty_name || FontExists(fontname) ) ) {
-			if(vfont && fontname.c_str()[0] != TJS_W('@')) {
-				return  TJS_W("@") + fontname;
+	static bool force_default_font = IndividualConfigManager::GetInstance()->GetValue<bool>("force_default_font", false);
+	if (!force_default_font) {
+		bool prev_empty_name = false;
+		while (fonts != TJS_W("")) {
+			ttstr fontname;
+			int pos = fonts.IndexOf(TJS_W(","));
+			if (pos != -1) {
+				fontname = Trim(fonts.SubString(0, pos));
+				fonts = fonts.SubString(pos + 1, -1);
 			} else {
-				return fontname;
+				fontname = Trim(fonts);
+				fonts = TJS_W("");
 			}
-		}
 
-		prev_empty_name = (fontname == TJS_W(""));
+			// no existing check if previously specified font candidate is empty
+			// eg. ",Fontname"
+
+			if (fontname != TJS_W("") && (prev_empty_name || FontExists(fontname))) {
+				if (vfont && fontname.c_str()[0] != TJS_W('@')) {
+					return  TJS_W("@") + fontname;
+				} else {
+					return fontname;
+				}
+			}
+
+			prev_empty_name = (fontname == TJS_W(""));
+		}
 	}
 
 	if(vfont) {

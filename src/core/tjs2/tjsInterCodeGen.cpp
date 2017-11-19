@@ -3903,11 +3903,12 @@ std::vector<tjs_uint8>* tTJSInterCodeContext::ExportByteCode( bool outputdebug, 
 		name = constarray.PutString(Name);
 	}
 	// 13 * 4 データ部分のサイズ
-	int srcpossize = 0;
-	if( outputdebug ) {
-		srcpossize = SourcePosArraySize * 8;
+	int count = 0;
+	if (outputdebug) {
+		count = SourcePosArraySize;
 	}
-	int codesize = (CodeAreaSize%2) == 1 ? CodeAreaSize * 2+2 : CodeAreaSize * 2;
+	int srcpossize = count * 8;
+	int codesize = (CodeAreaSize % 2) == 1 ? CodeAreaSize * 2 + 2 : CodeAreaSize * 2;
 	int datasize = DataAreaSize * 4;
 	int scgpsize = (int)(SuperClassGetterPointer.size() * 4);
 	int propsize = (int)((Properties != NULL ? Properties->size() * 8 : 0)+4);
@@ -3928,7 +3929,6 @@ std::vector<tjs_uint8>* tTJSInterCodeContext::ExportByteCode( bool outputdebug, 
 	Add4ByteToVector( result, propGetter );
 	Add4ByteToVector( result, superClassGetter );
 
-	int count = srcpossize;
 	Add4ByteToVector( result, count);
 	if( outputdebug ) {
 		for( int i = 0; i < count ; i++ ) {

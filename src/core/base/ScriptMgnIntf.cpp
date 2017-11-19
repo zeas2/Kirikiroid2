@@ -917,7 +917,7 @@ void TVPExecuteStartupScript()
 		std::vector<ttstr> btns;
 		btns.emplace_back(LocaleConfigManager::GetInstance()->GetText("msgbox_ok"));
 		btns.emplace_back(LocaleConfigManager::GetInstance()->GetText("browse_patch_lib"));
-		if (TVPShowSimpleMessageBox(msg, TVPGetPackageVersionString()) == 1) {
+		if (TVPShowSimpleMessageBox(msg, TVPGetPackageVersionString(), btns) == 1) {
 			TVPOpenPatchLibUrl();
 		}
 	}

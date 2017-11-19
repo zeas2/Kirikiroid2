@@ -2118,8 +2118,10 @@ const void * tTVPOGLTexture2D::GetScanLineForRead(tjs_uint l)
 		if (!PixelData) {
 			PixelData = new unsigned char[internalW * internalH * 4];
 #ifdef _MSC_VER
-			GL::glGetTextureImage(texture, 0, GL_RGBA, GL_UNSIGNED_BYTE, internalH * internalW * 4, PixelData);
-			return &PixelData[l * internalW * 4];
+			if (GL::glGetTextureImage) {
+				GL::glGetTextureImage(texture, 0, GL_RGBA, GL_UNSIGNED_BYTE, internalH * internalW * 4, PixelData);
+				return &PixelData[l * internalW * 4];
+			}
 #endif
 			TVPSetRenderTarget(texture);
 			glViewport(0, 0, internalW, internalH);
@@ -3650,9 +3652,23 @@ public:
 				tTVPRect rc = textures[i].second;
 				if (reftar) {
 					newtex = (tTVPOGLTexture2D *)reftar;
-				} else {
+				} else if (rc.get_width() >= 0 && rc.get_height() >= 0) {
 					newtex = GetTempTexture2D(tex, rc);
 					rc.set_offsets(0, 0);
+				} else {
+					tTVPRect rcsrc(rc);
+					tjs_int w = rc.get_width(), h = rc.get_height();
+					if (w < 0) {
+						std::swap(rcsrc.left, rcsrc.right);
+						rc.right = 0;
+						rc.left = -w;
+					}
+					if (h < 0) {
+						std::swap(rcsrc.top, rcsrc.bottom);
+						rc.bottom = 0;
+						rc.top = -h;
+					}
+					newtex = GetTempTexture2D(tex, rcsrc);
 				}
 				newtex->ApplyVertex(texitem, rc);
 			} else {

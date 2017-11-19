@@ -62,7 +62,7 @@
     <Item id="cannot_create_preference" text="Can not create individual preference file."/>
     <Item id="use_internal_path" text="Please copy your game folder into package path to avoid this warning or you may lost your savedata:&#10;%1&#10;&#10;Continue anyway?"/>
     <Item id="continue_run" text="Continue"/>
-    <Item id="get_sdcard_permission" text="Fetch Permission"/>
+    <Item id="get_sdcard_permission" text="Fetch Permission(May Slow)"/>
     <Item id="crash_report" text="Crash Report"/>
     <Item id="crash_report_msg" text="Crash detected, send data (%d files) to help improving this app?"/>
     <Item id="menu_rotate" text="Rotate Screen"/>

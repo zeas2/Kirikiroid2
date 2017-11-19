@@ -1617,32 +1617,6 @@ void Swizzle(const uint8* data, const ptrdiff_t pitch, uint8* output)
 	}
 }
 
-class BlockData
-{
-public:
-//	BlockData(const char* fn);
-//	BlockData(const char* fn, const v2i& size, bool mipmap);
-	BlockData(const v2i& size, bool mipmap);
-	~BlockData();
-
-	BitmapPtr Decode();
-	void Dissect();
-
-	void Process(const uint32* src, uint32 blocks, size_t offset, size_t width, Channels type, bool dither, bool etc2);
-	void *Detach(size_t& len) {
-		uint8* ret = m_data; m_data = nullptr;
-		len = m_maplen;
-		return ret;
-	}
-
-private:
-	uint8* m_data;
-	v2i m_size;
-	size_t m_dataOffset;
-//	FILE* m_file;
-	size_t m_maplen;
-};
-
 static int AdjustSizeForMipmaps(const v2i& size, int levels)
 {
 	int len = 0;
@@ -1678,55 +1652,6 @@ static uint8* OpenForWriting(/*const char* fn,*/ size_t len, const v2i& size, /*
 	*dst++ = 0;           // metadata size
 
 	return ret;
-}
-
-BlockData::BlockData(/*const char* fn,*/ const v2i& size, bool mipmap)
-	: m_size(size)
-	, m_dataOffset(52)
-	, m_maplen(52 + m_size.x*m_size.y / 2)
-{
-	assert(m_size.x % 4 == 0 && m_size.y % 4 == 0);
-
-	uint32 cnt = m_size.x * m_size.y / 16;
-//	DBGPRINT(cnt << " blocks");
-
-	int levels = 1;
-
-	if (mipmap)
-	{
-		levels = NumberOfMipLevels(size);
-	//	DBGPRINT("Number of mipmaps: " << levels);
-		m_maplen += AdjustSizeForMipmaps(size, levels);
-	}
-
-	m_data = OpenForWriting(/*fn,*/ m_maplen, m_size/*, &m_file*/, levels);
-}
-
-// BlockData::BlockData(const v2i& size, bool mipmap)
-// 	: m_size(size)
-// 	, m_dataOffset(52)
-// //	, m_file(nullptr)
-// 	, m_maplen(52 + m_size.x*m_size.y / 2)
-// {
-// 	assert(m_size.x % 4 == 0 && m_size.y % 4 == 0);
-// 	if (mipmap)
-// 	{
-// 		const int levels = NumberOfMipLevels(size);
-// 		m_maplen += AdjustSizeForMipmaps(size, levels);
-// 	}
-// 	m_data = new uint8[m_maplen];
-// }
-
-BlockData::~BlockData()
-{
-// 	if (m_file)
-// 	{
-// 		munmap(m_data, m_maplen);
-// 		fclose(m_file);
-// 	} else
-	{
-		delete[] m_data;
-	}
 }
 
 static uint64 _f_rgb(uint8* ptr)

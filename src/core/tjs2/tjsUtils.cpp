@@ -57,7 +57,8 @@ tTJSCriticalSection::~tTJSCriticalSection() {
 
 void tTJSSpinLock::lock() {
 	while (atom_lock.test_and_set(std::memory_order_acquire)) {
-		TVPRelinquishCPU();
+		std::this_thread::yield();
+//		TVPRelinquishCPU();
 	}
 }
 

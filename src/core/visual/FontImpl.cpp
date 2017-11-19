@@ -50,50 +50,32 @@ void TVPReleaseFontLibrary() {
 	}
 }
 //---------------------------------------------------------------------------
-int TVPEnumFontsProc(const ttstr &FontPath)
-{
-    unsigned int faceCount = 0;
-    if(!TVPIsExistentStorageNoSearch(FontPath)) {
-        return faceCount;
-    }
-
-    tTJSBinaryStream * Stream = TVPCreateStream(FontPath, TJS_BS_READ);
-    if(!Stream) {
-        return faceCount;
-    }
-    int bufflen = Stream->GetSize();
-    FT_Byte *pBuf = new FT_Byte[bufflen]; 
-    if(!pBuf) {
-        delete Stream;
-		return 0;
-    }
-    Stream->ReadBuffer(pBuf, bufflen);
-    delete Stream;
-    FT_Face fontface;
-    FT_Error error = FT_New_Memory_Face(
+static int TVPInternalEnumFonts(FT_Byte* pBuf, int buflen, const ttstr &FontPath, const std::function<tTJSBinaryStream*(TVPFontNamePathInfo*)>& getter) {
+	unsigned int faceCount = 0;
+	FT_Face fontface;
+	FT_Error error = FT_New_Memory_Face(
 		TVPGetFontLibrary(),
-        pBuf,
-        bufflen,
-        0,
-        &fontface);
-    if(error) {
-        TVPAddLog(ttstr(TJS_W("Load Font \"") + FontPath + "\" failed (" + TJSIntegerToString((int)error) + ")"));
-        delete []pBuf;
-        return faceCount;
-    }
-    int nFaceNum = fontface->num_faces;
-    for(int i = 0; i <nFaceNum; ++i) {
-        if( i > 0) {
-            if(FT_New_Memory_Face(
+		pBuf,
+		buflen,
+		0,
+		&fontface);
+	if (error) {
+		TVPAddLog(ttstr(TJS_W("Load Font \"") + FontPath + "\" failed (" + TJSIntegerToString((int)error) + ")"));
+		return faceCount;
+	}
+	int nFaceNum = fontface->num_faces;
+	for (int i = 0; i < nFaceNum; ++i) {
+		if (i > 0) {
+			if (FT_New_Memory_Face(
 				TVPGetFontLibrary(),
-                pBuf,
-                bufflen,
-                i,
-                &fontface)) {
-                continue;
-            }
-        }
-        if(FT_IS_SCALABLE(fontface)) {
+				pBuf,
+				buflen,
+				i,
+				&fontface)) {
+				continue;
+			}
+		}
+		if (FT_IS_SCALABLE(fontface)) {
 			FT_UInt namecount = FT_Get_Sfnt_Name_Count(fontface);
 			int addCount = 0;
 			for (FT_UInt i = 0; i < namecount; ++i) {
@@ -135,6 +117,7 @@ int TVPEnumFontsProc(const ttstr &FontPath)
 				TVPFontNamePathInfo info;
 				info.Path = FontPath;
 				info.Index = i;
+				info.Getter = getter;
 				TVPFontNames.Add(fontname, info);
 				addCount = 1;
 			}
@@ -143,15 +126,32 @@ int TVPEnumFontsProc(const ttstr &FontPath)
 				TVPFontNamePathInfo info;
 				info.Path = FontPath;
 				info.Index = i;
+				info.Getter = getter;
 				TVPFontNames.Add(fontname, info);
 			}
 			++faceCount;
 		}
 
-        FT_Done_Face(fontface);
+		FT_Done_Face(fontface);
+	}
+	return faceCount;
+}
+
+int TVPEnumFontsProc(const ttstr &FontPath)
+{
+    if(!TVPIsExistentStorageNoSearch(FontPath)) {
+        return 0;
     }
-    delete []pBuf;
-    return faceCount;
+
+    tTJSBinaryStream * Stream = TVPCreateStream(FontPath, TJS_BS_READ);
+    if(!Stream) {
+        return 0;
+    }
+    int bufflen = Stream->GetSize();
+	std::vector<FT_Byte> buf; buf.resize(bufflen);
+    Stream->ReadBuffer(&buf.front(), bufflen);
+    delete Stream;
+	return TVPInternalEnumFonts(&buf.front(), bufflen, FontPath, nullptr);
 }
 
 tTJSBinaryStream* TVPCreateFontStream(const ttstr &fontname)
@@ -160,6 +160,9 @@ tTJSBinaryStream* TVPCreateFontStream(const ttstr &fontname)
 	if (!info) {
 		info = TVPFontNames.Find(TVPDefaultFontName);
 		if (!info) return nullptr;
+	}
+	if (info->Getter) {
+		return info->Getter(info);
 	}
 	return TVPCreateBinaryStreamForRead(info->Path, TJS_W(""));
 }
@@ -175,6 +178,7 @@ void TVPInitFontNames()
     static bool TVPFontNamesInit = false;
     // enumlate all fonts
     if(TVPFontNamesInit) return;
+	TVPFontNamesInit = true;
 #ifdef __ANDROID__
 	std::vector<ttstr> pathlist = Android_GetExternalStoragePath();
 #endif
@@ -195,7 +199,17 @@ void TVPInitFontNames()
 		if (fontCount) break;
 		
 		if (TVPEnumFontsProc(Android_GetInternalStoragePath() + "/default.ttf")) break;
-		if (TVPEnumFontsProc(Android_GetApkStoragePath() + ">assets/DroidSansFallback.ttf")) break;
+
+		{	// from internal storage
+			auto data = cocos2d::FileUtils::getInstance()->getDataFromFile("DroidSansFallback.ttf");
+			if (TVPInternalEnumFonts(data.getBytes(), data.getSize(), "DroidSansFallback.ttf", [](TVPFontNamePathInfo* info)->tTJSBinaryStream* {
+				auto data = cocos2d::FileUtils::getInstance()->getDataFromFile(info->Path.AsStdString());
+				tTVPMemoryStream *ret = new tTVPMemoryStream();
+				ret->WriteBuffer(data.getBytes(), data.getSize());
+				ret->SetPosition(0);
+				return ret;
+			})) break;
+		}
 		if (TVPEnumFontsProc(TJS_W("file://./system/fonts/DroidSansFallback.ttf"))) break;
 		if (TVPEnumFontsProc(TJS_W("file://./system/fonts/NotoSansHans-Regular.otf"))) break;
 		if (TVPEnumFontsProc(TJS_W("file://./system/fonts/DroidSans.ttf"))) break;
@@ -237,8 +251,6 @@ void TVPInitFontNames()
 	if (TVPDefaultFontName.IsEmpty()) {
 		TVPShowSimpleMessageBox(("Could not found any font.\nPlease ensure that at least \"default.ttf\" exists"), "Exception Occured");
     }
-
-    TVPFontNamesInit = true;
 }
 //---------------------------------------------------------------------------
 TVPFontNamePathInfo* TVPFindFont(const ttstr &fontname)
