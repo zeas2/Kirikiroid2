@@ -46,7 +46,7 @@
             <OutlineColor A="255" R="255" G="0" B="0" />
             <ShadowColor A="255" R="255" G="127" B="80" />
           </AbstractNodeData>
-          <AbstractNodeData Name="select_check" ActionTag="-1565335157" Tag="309" IconVisible="False" PositionPercentYEnabled="True" HorizontalEdge="RightEdge" LeftMargin="552.0000" RightMargin="8.0000" TopMargin="8.0000" BottomMargin="8.0000" TouchEnable="True" CheckedState="True" ctype="CheckBoxObjectData">
+          <AbstractNodeData Name="select_check" ActionTag="-1565335157" Tag="309" IconVisible="False" PositionPercentYEnabled="True" HorizontalEdge="RightEdge" LeftMargin="552.0000" RightMargin="8.0000" TopMargin="8.0000" BottomMargin="8.0000" CheckedState="True" ctype="CheckBoxObjectData">
             <Size X="80.0000" Y="80.0000" />
             <AnchorPoint ScaleX="1.0000" ScaleY="0.5000" />
             <Position X="632.0000" Y="48.0000" />
@@ -63,7 +63,7 @@
           <AbstractNodeData Name="dir_icon" ActionTag="759566553" Tag="62" IconVisible="False" PositionPercentYEnabled="True" HorizontalEdge="RightEdge" LeftMargin="552.0000" RightMargin="8.0000" TopMargin="8.0000" BottomMargin="8.0000" ClipAble="False" BackColorAlpha="102" ColorAngle="90.0000" Scale9Width="1" Scale9Height="1" ctype="PanelObjectData">
             <Size X="80.0000" Y="80.0000" />
             <Children>
-              <AbstractNodeData Name="Panel_2_9_4" ActionTag="303139165" Tag="63" RotationSkewX="-135.0000" RotationSkewY="-135.0000" IconVisible="False" PositionPercentYEnabled="True" HorizontalEdge="RightEdge" LeftMargin="70.0000" RightMargin="-35.0000" TopMargin="30.0000" BottomMargin="40.0000" TouchEnable="True" ClipAble="False" ComboBoxIndex="1" ColorAngle="90.0000" Scale9Width="1" Scale9Height="1" ctype="PanelObjectData">
+              <AbstractNodeData Name="Panel_2_9_4" ActionTag="303139165" Tag="63" RotationSkewX="-135.0000" RotationSkewY="-135.0000" IconVisible="False" PositionPercentYEnabled="True" HorizontalEdge="RightEdge" LeftMargin="70.0000" RightMargin="-35.0000" TopMargin="30.0000" BottomMargin="40.0000" ClipAble="False" ComboBoxIndex="1" ColorAngle="90.0000" Scale9Width="1" Scale9Height="1" ctype="PanelObjectData">
                 <Size X="45.0000" Y="10.0000" />
                 <AnchorPoint />
                 <Position X="70.0000" Y="40.0000" />
@@ -76,7 +76,7 @@
                 <EndColor A="255" R="255" G="255" B="255" />
                 <ColorVector ScaleY="1.0000" />
               </AbstractNodeData>
-              <AbstractNodeData Name="Panel_2_0_11_6" ActionTag="1575774268" Tag="64" RotationSkewX="135.0006" RotationSkewY="135.0000" IconVisible="False" PositionPercentYEnabled="True" HorizontalEdge="RightEdge" LeftMargin="70.0000" RightMargin="-35.0000" TopMargin="40.0000" BottomMargin="30.0000" TouchEnable="True" ClipAble="False" ComboBoxIndex="1" ColorAngle="90.0000" Scale9Width="1" Scale9Height="1" ctype="PanelObjectData">
+              <AbstractNodeData Name="Panel_2_0_11_6" ActionTag="1575774268" Tag="64" RotationSkewX="135.0006" RotationSkewY="135.0000" IconVisible="False" PositionPercentYEnabled="True" HorizontalEdge="RightEdge" LeftMargin="70.0000" RightMargin="-35.0000" TopMargin="40.0000" BottomMargin="30.0000" ClipAble="False" ComboBoxIndex="1" ColorAngle="90.0000" Scale9Width="1" Scale9Height="1" ctype="PanelObjectData">
                 <Size X="45.0000" Y="10.0000" />
                 <AnchorPoint ScaleY="1.0000" />
                 <Position X="70.0000" Y="40.0000" />

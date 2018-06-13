@@ -61,6 +61,7 @@
           <Project Name="FileItem.csd" Type="Layer" />
           <Project Name="FileManageMenu.csd" Type="Layer" />
           <Project Name="GameMenu.csd" Type="Layer" />
+          <Project Name="KeySelect.csd" Type="Layer" />
           <Project Name="ListItem.csd" Type="Layer" />
           <Project Name="ListView.csd" Type="Layer" />
           <Project Name="MainFileSelector.csd" Type="Layer" />

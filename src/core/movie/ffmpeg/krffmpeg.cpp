@@ -15,8 +15,6 @@ extern "C" {
 #include "KRMoviePlayer.h"
 #include "KRMovieLayer.h"
 
-void TVPInitDirectSound();
-
 extern std::thread::id TVPMainThreadID;
 
 static int lockmgr(void **arg, enum AVLockOp op)

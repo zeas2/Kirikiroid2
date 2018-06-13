@@ -22,7 +22,6 @@
 #include "../omxplayer/OMXHelper.h"
 #endif
 
-void TVPInitDirectSound();
 void TVPInitLibAVCodec();
 
 NS_KRMOVIE_BEGIN
@@ -1868,16 +1867,18 @@ void BasePlayer::SeekTime(int64_t iTime)
 // return the time in milliseconds
 int64_t BasePlayer::GetTime()
 {
+#if 0 // TODO delay tunning ?
 	if (m_VideoPlayerAudio) {
 		CDVDAudio *audioDev = m_VideoPlayerAudio->GetOutputDevice();
 		if (audioDev && audioDev->m_pAudioStream) {
-			TVPALSoundWrap *alsound = (TVPALSoundWrap*)audioDev->m_pAudioStream->GetNativeImpl();
+			iTVPSoundBuffer *alsound = audioDev->m_pAudioStream->GetNativeImpl();
 			int remainSamples = alsound->GetUnprocessedSamples();
 // 			double audio_clk = is->audio_clock - (double)remainSamples / is->audio_tgt.freq;
 // 			set_clock_at(&is->audclk, audio_clk, is->audio_clock_serial, av_gettime() / 1000000.0);
 // 			sync_clock_to_slave(&is->extclk, &is->audclk);
 		}
 	}
+#endif
 	CSingleLock lock(m_StateSection);
 	double offset = 0;
 	const double limit = DVD_MSEC_TO_TIME(500);

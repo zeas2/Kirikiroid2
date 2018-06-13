@@ -28,7 +28,7 @@
 #ifndef __DSOUND_INCLUDED__
 struct IDirectSound;
 #endif
-class TVPALSoundWrap;
+class iTVPSoundBuffer;
 
 
 /*]*/
@@ -76,7 +76,7 @@ public:
 
 	//-- buffer management ------------------------------------------------
 private:
-	TVPALSoundWrap* SoundBuffer;
+	iTVPSoundBuffer* SoundBuffer;
 #if 0
 	LPDIRECTSOUND3DBUFFER Sound3DBuffer;
 #endif

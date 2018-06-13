@@ -47,7 +47,7 @@
           <AbstractNodeData Name="list" ActionTag="235528911" Tag="417" IconVisible="False" PercentWidthEnable="True" PercentWidthEnabled="True" VerticalEdge="BothEdge" TopMargin="98.0000" TouchEnable="True" StretchHeightEnable="True" ClipAble="True" ComboBoxIndex="1" ColorAngle="90.0000" Scale9Width="1" Scale9Height="1" ScrollDirectionType="0" DirectionType="Vertical" ctype="ListViewObjectData">
             <Size X="720.0000" Y="902.0000" />
             <Children>
-              <AbstractNodeData Name="unselect" ActionTag="-1971645612" Tag="310" IconVisible="False" TopMargin="134.0000" BottomMargin="672.0000" ClipAble="False" BackColorAlpha="102" ColorAngle="90.0000" Scale9Width="1" Scale9Height="1" ctype="PanelObjectData">
+              <AbstractNodeData Name="unselect" ActionTag="-1971645612" Tag="310" IconVisible="False" BottomMargin="806.0000" ClipAble="False" BackColorAlpha="102" ColorAngle="90.0000" Scale9Width="1" Scale9Height="1" ctype="PanelObjectData">
                 <Size X="720.0000" Y="96.0000" />
                 <Children>
                   <AbstractNodeData Name="btnUnselect" ActionTag="-1172839931" Tag="311" IconVisible="False" PercentWidthEnable="True" PercentHeightEnable="True" PercentWidthEnabled="True" PercentHeightEnabled="True" TouchEnable="True" FontSize="14" Scale9Enable="True" Scale9Width="1" Scale9Height="1" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="ButtonObjectData">
@@ -93,14 +93,14 @@
                 <Position Y="806.0000" />
                 <Scale ScaleX="1.0000" ScaleY="1.0000" />
                 <CColor A="255" R="255" G="255" B="255" />
-                <PrePosition Y="0.7450" />
+                <PrePosition Y="0.8936" />
                 <PreSize X="1.0000" Y="0.1064" />
                 <SingleColor A="255" R="150" G="200" B="255" />
                 <FirstColor A="255" R="150" G="200" B="255" />
                 <EndColor A="255" R="255" G="255" B="255" />
                 <ColorVector ScaleY="1.0000" />
               </AbstractNodeData>
-              <AbstractNodeData Name="browse" ActionTag="1869104691" ZOrder="1" Tag="647" IconVisible="False" TopMargin="230.0000" BottomMargin="576.0000" ClipAble="False" BackColorAlpha="102" ColorAngle="90.0000" Scale9Width="1" Scale9Height="1" ctype="PanelObjectData">
+              <AbstractNodeData Name="browse" ActionTag="1869104691" ZOrder="1" Tag="647" IconVisible="False" TopMargin="96.0000" BottomMargin="710.0000" ClipAble="False" BackColorAlpha="102" ColorAngle="90.0000" Scale9Width="1" Scale9Height="1" ctype="PanelObjectData">
                 <Size X="720.0000" Y="96.0000" />
                 <Children>
                   <AbstractNodeData Name="btnBrowse" ActionTag="1868109539" Tag="648" IconVisible="False" PercentWidthEnable="True" PercentHeightEnable="True" PercentWidthEnabled="True" PercentHeightEnabled="True" TouchEnable="True" FontSize="14" Scale9Enable="True" Scale9Width="1" Scale9Height="1" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="ButtonObjectData">
@@ -224,14 +224,14 @@
                 <Position Y="710.0000" />
                 <Scale ScaleX="1.0000" ScaleY="1.0000" />
                 <CColor A="255" R="255" G="255" B="255" />
-                <PrePosition Y="0.6386" />
+                <PrePosition Y="0.7871" />
                 <PreSize X="1.0000" Y="0.1064" />
                 <SingleColor A="255" R="150" G="200" B="255" />
                 <FirstColor A="255" R="150" G="200" B="255" />
                 <EndColor A="255" R="255" G="255" B="255" />
                 <ColorVector ScaleY="1.0000" />
               </AbstractNodeData>
-              <AbstractNodeData Name="paste" ActionTag="1336476886" ZOrder="2" Tag="538" IconVisible="False" TopMargin="326.0000" BottomMargin="480.0000" ClipAble="False" BackColorAlpha="102" ColorAngle="90.0000" Scale9Width="1" Scale9Height="1" ctype="PanelObjectData">
+              <AbstractNodeData Name="paste" ActionTag="1336476886" ZOrder="2" Tag="538" IconVisible="False" TopMargin="192.0000" BottomMargin="614.0000" ClipAble="False" BackColorAlpha="102" ColorAngle="90.0000" Scale9Width="1" Scale9Height="1" ctype="PanelObjectData">
                 <Size X="720.0000" Y="96.0000" />
                 <Children>
                   <AbstractNodeData Name="btnPaste" ActionTag="1425966242" Tag="539" IconVisible="False" PercentWidthEnable="True" PercentHeightEnable="True" PercentWidthEnabled="True" PercentHeightEnabled="True" TouchEnable="True" FontSize="14" Scale9Enable="True" Scale9Width="1" Scale9Height="1" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="ButtonObjectData">
@@ -407,14 +407,14 @@
                 <Position Y="614.0000" />
                 <Scale ScaleX="1.0000" ScaleY="1.0000" />
                 <CColor A="255" R="255" G="255" B="255" />
-                <PrePosition Y="0.5322" />
+                <PrePosition Y="0.6807" />
                 <PreSize X="1.0000" Y="0.1064" />
                 <SingleColor A="255" R="150" G="200" B="255" />
                 <FirstColor A="255" R="150" G="200" B="255" />
                 <EndColor A="255" R="255" G="255" B="255" />
                 <ColorVector ScaleY="1.0000" />
               </AbstractNodeData>
-              <AbstractNodeData Name="copy" ActionTag="1458837513" ZOrder="3" Tag="520" IconVisible="False" TopMargin="422.0000" BottomMargin="384.0000" ClipAble="False" BackColorAlpha="102" ColorAngle="90.0000" Scale9Width="1" Scale9Height="1" ctype="PanelObjectData">
+              <AbstractNodeData Name="copy" ActionTag="1458837513" ZOrder="3" Tag="520" IconVisible="False" TopMargin="288.0000" BottomMargin="518.0000" ClipAble="False" BackColorAlpha="102" ColorAngle="90.0000" Scale9Width="1" Scale9Height="1" ctype="PanelObjectData">
                 <Size X="720.0000" Y="96.0000" />
                 <Children>
                   <AbstractNodeData Name="btnCopy" ActionTag="-1963333081" Tag="521" IconVisible="False" PercentWidthEnable="True" PercentHeightEnable="True" PercentWidthEnabled="True" PercentHeightEnabled="True" TouchEnable="True" FontSize="14" Scale9Enable="True" Scale9Width="1" Scale9Height="1" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="ButtonObjectData">
@@ -592,14 +592,14 @@
                 <Position Y="518.0000" />
                 <Scale ScaleX="1.0000" ScaleY="1.0000" />
                 <CColor A="255" R="255" G="255" B="255" />
-                <PrePosition Y="0.4257" />
+                <PrePosition Y="0.5743" />
                 <PreSize X="1.0000" Y="0.1064" />
                 <SingleColor A="255" R="150" G="200" B="255" />
                 <FirstColor A="255" R="150" G="200" B="255" />
                 <EndColor A="255" R="255" G="255" B="255" />
                 <ColorVector ScaleY="1.0000" />
               </AbstractNodeData>
-              <AbstractNodeData Name="unpack" ActionTag="2127441022" ZOrder="4" Tag="89" IconVisible="False" TopMargin="518.0000" BottomMargin="288.0000" ClipAble="False" BackColorAlpha="102" ColorAngle="90.0000" Scale9Width="1" Scale9Height="1" ctype="PanelObjectData">
+              <AbstractNodeData Name="unpack" ActionTag="2127441022" ZOrder="4" Tag="89" IconVisible="False" TopMargin="384.0000" BottomMargin="422.0000" ClipAble="False" BackColorAlpha="102" ColorAngle="90.0000" Scale9Width="1" Scale9Height="1" ctype="PanelObjectData">
                 <Size X="720.0000" Y="96.0000" />
                 <Children>
                   <AbstractNodeData Name="btnUnpack" ActionTag="-228576734" Tag="90" IconVisible="False" PercentWidthEnable="True" PercentHeightEnable="True" PercentWidthEnabled="True" PercentHeightEnabled="True" TouchEnable="True" FontSize="14" Scale9Enable="True" Scale9Width="1" Scale9Height="1" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="ButtonObjectData">
@@ -629,10 +629,10 @@
                     <OutlineColor A="255" R="255" G="0" B="0" />
                     <ShadowColor A="255" R="110" G="110" B="110" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="Panel_3" ActionTag="1511200133" Tag="88" IconVisible="False" LeftMargin="-132.7136" RightMargin="652.7136" TopMargin="51.8487" BottomMargin="-105.8487" ClipAble="False" ComboBoxIndex="1" ColorAngle="90.0000" ctype="PanelObjectData">
+                  <AbstractNodeData Name="Panel_3" ActionTag="1511200133" Tag="88" IconVisible="False" LeftMargin="-132.7136" RightMargin="652.7136" TopMargin="51.8487" BottomMargin="-105.8487" ClipAble="False" ComboBoxIndex="1" ColorAngle="90.0000" Scale9Width="1" Scale9Height="1" ctype="PanelObjectData">
                     <Size X="200.0000" Y="150.0000" />
                     <Children>
-                      <AbstractNodeData Name="Panel_10" ActionTag="2055335152" Tag="99" RotationSkewX="30.0000" IconVisible="False" TopMargin="-100.0000" BottomMargin="150.0000" ClipAble="False" ComboBoxIndex="1" ColorAngle="90.0000" ctype="PanelObjectData">
+                      <AbstractNodeData Name="Panel_10" ActionTag="2055335152" Tag="99" RotationSkewX="30.0000" IconVisible="False" TopMargin="-100.0000" BottomMargin="150.0000" ClipAble="False" ComboBoxIndex="1" ColorAngle="90.0000" Scale9Width="1" Scale9Height="1" ctype="PanelObjectData">
                         <Size X="200.0000" Y="100.0000" />
                         <AnchorPoint />
                         <Position Y="150.0000" />
@@ -645,7 +645,7 @@
                         <EndColor A="255" R="255" G="255" B="255" />
                         <ColorVector ScaleY="1.0000" />
                       </AbstractNodeData>
-                      <AbstractNodeData Name="Panel_2" ActionTag="-797320115" Tag="87" RotationSkewY="-60.0000" IconVisible="False" LeftMargin="200.0000" RightMargin="-100.0000" ClipAble="False" ComboBoxIndex="1" ColorAngle="90.0000" ctype="PanelObjectData">
+                      <AbstractNodeData Name="Panel_2" ActionTag="-797320115" Tag="87" RotationSkewY="-60.0000" IconVisible="False" LeftMargin="200.0000" RightMargin="-100.0000" ClipAble="False" ComboBoxIndex="1" ColorAngle="90.0000" Scale9Width="1" Scale9Height="1" ctype="PanelObjectData">
                         <Size X="100.0000" Y="150.0000" />
                         <AnchorPoint ScaleY="1.0000" />
                         <Position X="200.0000" Y="150.0000" />
@@ -709,60 +709,73 @@
                     <EndColor A="255" R="255" G="255" B="255" />
                     <ColorVector ScaleY="1.0000" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="Panel_3_0" ActionTag="2082500911" Tag="100" IconVisible="False" LeftMargin="-452.3427" RightMargin="972.3427" TopMargin="-61.7125" BottomMargin="-42.2875" ClipAble="False" ComboBoxIndex="1" ColorAngle="90.0000" Scale9Width="1" Scale9Height="1" ctype="PanelObjectData">
-                    <Size X="200.0000" Y="200.0000" />
-                    <Children>
-                      <AbstractNodeData Name="Panel_10" ActionTag="-2108068058" Tag="101" RotationSkewX="30.0000" IconVisible="False" TopMargin="-100.0000" BottomMargin="200.0000" ClipAble="False" ComboBoxIndex="1" ColorAngle="90.0000" Scale9Width="1" Scale9Height="1" ctype="PanelObjectData">
-                        <Size X="200.0000" Y="100.0000" />
-                        <AnchorPoint />
-                        <Position Y="200.0000" />
-                        <Scale ScaleX="1.0000" ScaleY="1.0000" />
-                        <CColor A="255" R="255" G="255" B="255" />
-                        <PrePosition Y="1.0000" />
-                        <PreSize X="1.0000" Y="0.5000" />
-                        <SingleColor A="255" R="191" G="191" B="191" />
-                        <FirstColor A="255" R="150" G="200" B="255" />
-                        <EndColor A="255" R="255" G="255" B="255" />
-                        <ColorVector ScaleY="1.0000" />
-                      </AbstractNodeData>
-                      <AbstractNodeData Name="Panel_2" ActionTag="-269815273" Tag="102" RotationSkewY="-60.0000" IconVisible="False" LeftMargin="200.0000" RightMargin="-100.0000" ClipAble="False" ComboBoxIndex="1" ColorAngle="90.0000" Scale9Width="1" Scale9Height="1" ctype="PanelObjectData">
-                        <Size X="100.0000" Y="200.0000" />
-                        <AnchorPoint ScaleY="1.0000" />
-                        <Position X="200.0000" Y="200.0000" />
-                        <Scale ScaleX="1.0000" ScaleY="1.0000" />
-                        <CColor A="255" R="255" G="255" B="255" />
-                        <PrePosition X="1.0000" Y="1.0000" />
-                        <PreSize X="0.5000" Y="1.0000" />
-                        <SingleColor A="255" R="77" G="77" B="77" />
-                        <FirstColor A="255" R="150" G="200" B="255" />
-                        <EndColor A="255" R="255" G="255" B="255" />
-                        <ColorVector ScaleY="1.0000" />
-                      </AbstractNodeData>
-                    </Children>
-                    <AnchorPoint ScaleX="1.0000" ScaleY="1.0000" />
-                    <Position X="-252.3427" Y="157.7125" />
-                    <Scale ScaleX="0.3000" ScaleY="0.3000" />
-                    <CColor A="255" R="255" G="255" B="255" />
-                    <PrePosition X="-0.3505" Y="1.6428" />
-                    <PreSize X="0.2778" Y="2.0833" />
-                    <SingleColor A="255" R="229" G="229" B="229" />
-                    <FirstColor A="255" R="150" G="200" B="255" />
-                    <EndColor A="255" R="255" G="255" B="255" />
-                    <ColorVector ScaleY="1.0000" />
-                  </AbstractNodeData>
                 </Children>
                 <AnchorPoint />
                 <Position Y="422.0000" />
                 <Scale ScaleX="1.0000" ScaleY="1.0000" />
                 <CColor A="255" R="255" G="255" B="255" />
-                <PrePosition Y="0.3193" />
+                <PrePosition Y="0.4678" />
                 <PreSize X="1.0000" Y="0.1064" />
                 <SingleColor A="255" R="150" G="200" B="255" />
                 <FirstColor A="255" R="150" G="200" B="255" />
                 <EndColor A="255" R="255" G="255" B="255" />
                 <ColorVector ScaleY="1.0000" />
               </AbstractNodeData>
-              <AbstractNodeData Name="cut" ActionTag="719063930" ZOrder="5" Tag="554" IconVisible="False" TopMargin="614.0000" BottomMargin="192.0000" ClipAble="False" BackColorAlpha="102" ColorAngle="90.0000" Scale9Width="1" Scale9Height="1" ctype="PanelObjectData">
+              <AbstractNodeData Name="rename" ActionTag="1412152790" ZOrder="5" Tag="381" IconVisible="False" TopMargin="480.0000" BottomMargin="326.0000" ClipAble="False" BackColorAlpha="102" ColorAngle="90.0000" Scale9Width="1" Scale9Height="1" ctype="PanelObjectData">
+                <Size X="720.0000" Y="96.0000" />
+                <Children>
+                  <AbstractNodeData Name="btnRename" ActionTag="757640737" Tag="382" IconVisible="False" PercentWidthEnable="True" PercentHeightEnable="True" PercentWidthEnabled="True" PercentHeightEnabled="True" TouchEnable="True" FontSize="14" Scale9Enable="True" Scale9Width="1" Scale9Height="1" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="ButtonObjectData">
+                    <Size X="720.0000" Y="96.0000" />
+                    <AnchorPoint />
+                    <Position />
+                    <Scale ScaleX="1.0000" ScaleY="1.0000" />
+                    <CColor A="255" R="255" G="255" B="255" />
+                    <PrePosition />
+                    <PreSize X="1.0000" Y="1.0000" />
+                    <TextColor A="255" R="65" G="65" B="70" />
+                    <DisabledFileData Type="Normal" Path="img/empty.png" Plist="" />
+                    <PressedFileData Type="Normal" Path="img/white.png" Plist="" />
+                    <NormalFileData Type="Normal" Path="img/empty.png" Plist="" />
+                    <OutlineColor A="255" R="255" G="0" B="0" />
+                    <ShadowColor A="255" R="110" G="110" B="110" />
+                  </AbstractNodeData>
+                  <AbstractNodeData Name="titleRename" ActionTag="-295986795" Tag="383" IconVisible="False" VerticalEdge="TopEdge" LeftMargin="96.0000" RightMargin="170.0000" TopMargin="8.0000" BottomMargin="4.0000" FontSize="64" LabelText="filemgr_rename" OutlineSize="0" ShadowOffsetX="0.0000" ShadowOffsetY="0.0000" ctype="TextObjectData">
+                    <Size X="454.0000" Y="84.0000" />
+                    <AnchorPoint ScaleY="0.5000" />
+                    <Position X="96.0000" Y="46.0000" />
+                    <Scale ScaleX="1.0000" ScaleY="1.0000" />
+                    <CColor A="255" R="192" G="192" B="192" />
+                    <PrePosition X="0.1333" Y="0.4792" />
+                    <PreSize X="0.6306" Y="0.8750" />
+                    <FontResource Type="Normal" Path="DroidSansFallback.ttf" Plist="" />
+                    <OutlineColor A="255" R="255" G="0" B="0" />
+                    <ShadowColor A="255" R="110" G="110" B="110" />
+                  </AbstractNodeData>
+                  <AbstractNodeData Name="Text_0" ActionTag="517696897" Tag="393" IconVisible="False" LeftMargin="34.0236" RightMargin="662.9764" TopMargin="6.0000" BottomMargin="6.0000" FontSize="64" LabelText="I" OutlineSize="0" ShadowOffsetX="0.0000" ShadowOffsetY="0.0000" ctype="TextObjectData">
+                    <Size X="23.0000" Y="84.0000" />
+                    <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
+                    <Position X="45.5236" Y="48.0000" />
+                    <Scale ScaleX="1.4000" ScaleY="1.4000" />
+                    <CColor A="255" R="192" G="192" B="192" />
+                    <PrePosition X="0.0632" Y="0.5000" />
+                    <PreSize X="0.0319" Y="0.8750" />
+                    <FontResource Type="Normal" Path="DroidSansFallback.ttf" Plist="" />
+                    <OutlineColor A="255" R="255" G="0" B="0" />
+                    <ShadowColor A="255" R="110" G="110" B="110" />
+                  </AbstractNodeData>
+                </Children>
+                <AnchorPoint />
+                <Position Y="326.0000" />
+                <Scale ScaleX="1.0000" ScaleY="1.0000" />
+                <CColor A="255" R="255" G="255" B="255" />
+                <PrePosition Y="0.3614" />
+                <PreSize X="1.0000" Y="0.1064" />
+                <SingleColor A="255" R="150" G="200" B="255" />
+                <FirstColor A="255" R="150" G="200" B="255" />
+                <EndColor A="255" R="255" G="255" B="255" />
+                <ColorVector ScaleY="1.0000" />
+              </AbstractNodeData>
+              <AbstractNodeData Name="cut" ActionTag="719063930" ZOrder="6" Tag="554" IconVisible="False" TopMargin="576.0000" BottomMargin="230.0000" ClipAble="False" BackColorAlpha="102" ColorAngle="90.0000" Scale9Width="1" Scale9Height="1" ctype="PanelObjectData">
                 <Size X="720.0000" Y="96.0000" />
                 <Children>
                   <AbstractNodeData Name="btnCut" ActionTag="-1746235388" Tag="555" IconVisible="False" PercentWidthEnable="True" PercentHeightEnable="True" PercentWidthEnabled="True" PercentHeightEnabled="True" TouchEnable="True" FontSize="14" Scale9Enable="True" Scale9Width="1" Scale9Height="1" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="ButtonObjectData">
@@ -911,17 +924,17 @@
                   </AbstractNodeData>
                 </Children>
                 <AnchorPoint />
-                <Position Y="326.0000" />
+                <Position Y="230.0000" />
                 <Scale ScaleX="1.0000" ScaleY="1.0000" />
                 <CColor A="255" R="255" G="255" B="255" />
-                <PrePosition Y="0.2129" />
+                <PrePosition Y="0.2550" />
                 <PreSize X="1.0000" Y="0.1064" />
                 <SingleColor A="255" R="150" G="200" B="255" />
                 <FirstColor A="255" R="150" G="200" B="255" />
                 <EndColor A="255" R="255" G="255" B="255" />
                 <ColorVector ScaleY="1.0000" />
               </AbstractNodeData>
-              <AbstractNodeData Name="delete" ActionTag="-677530050" ZOrder="6" Tag="496" IconVisible="False" TopMargin="710.0000" BottomMargin="96.0000" ClipAble="False" BackColorAlpha="102" ColorAngle="90.0000" Scale9Width="1" Scale9Height="1" ctype="PanelObjectData">
+              <AbstractNodeData Name="delete" ActionTag="-677530050" ZOrder="7" Tag="496" IconVisible="False" TopMargin="672.0000" BottomMargin="134.0000" ClipAble="False" BackColorAlpha="102" ColorAngle="90.0000" Scale9Width="1" Scale9Height="1" ctype="PanelObjectData">
                 <Size X="720.0000" Y="96.0000" />
                 <Children>
                   <AbstractNodeData Name="btnDelete" ActionTag="-531707876" Tag="519" IconVisible="False" PercentWidthEnable="True" PercentHeightEnable="True" PercentWidthEnabled="True" PercentHeightEnabled="True" TouchEnable="True" FontSize="14" Scale9Enable="True" Scale9Width="1" Scale9Height="1" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="ButtonObjectData">
@@ -1031,17 +1044,17 @@
                   </AbstractNodeData>
                 </Children>
                 <AnchorPoint />
-                <Position Y="230.0000" />
+                <Position Y="134.0000" />
                 <Scale ScaleX="1.0000" ScaleY="1.0000" />
                 <CColor A="255" R="255" G="255" B="255" />
-                <PrePosition Y="0.1064" />
+                <PrePosition Y="0.1486" />
                 <PreSize X="1.0000" Y="0.1064" />
                 <SingleColor A="255" R="150" G="200" B="255" />
                 <FirstColor A="255" R="150" G="200" B="255" />
                 <EndColor A="255" R="255" G="255" B="255" />
                 <ColorVector ScaleY="1.0000" />
               </AbstractNodeData>
-              <AbstractNodeData Name="sendto" ActionTag="1125643210" ZOrder="7" Tag="633" IconVisible="False" TopMargin="806.0000" ClipAble="False" BackColorAlpha="102" ColorAngle="90.0000" Scale9Width="1" Scale9Height="1" ctype="PanelObjectData">
+              <AbstractNodeData Name="sendto" ActionTag="1125643210" ZOrder="8" Tag="633" IconVisible="False" TopMargin="768.0000" BottomMargin="38.0000" ClipAble="False" BackColorAlpha="102" ColorAngle="90.0000" Scale9Width="1" Scale9Height="1" ctype="PanelObjectData">
                 <Size X="720.0000" Y="96.0000" />
                 <Children>
                   <AbstractNodeData Name="btnSendTo" ActionTag="247155124" Tag="634" IconVisible="False" PercentWidthEnable="True" PercentHeightEnable="True" PercentWidthEnabled="True" PercentHeightEnabled="True" TouchEnable="True" FontSize="14" Scale9Enable="True" Scale9Width="1" Scale9Height="1" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="ButtonObjectData">
@@ -1164,10 +1177,10 @@
                   </AbstractNodeData>
                 </Children>
                 <AnchorPoint />
-                <Position Y="134.0000" />
+                <Position Y="38.0000" />
                 <Scale ScaleX="1.0000" ScaleY="1.0000" />
                 <CColor A="255" R="255" G="255" B="255" />
-                <PrePosition />
+                <PrePosition Y="0.0421" />
                 <PreSize X="1.0000" Y="0.1064" />
                 <SingleColor A="255" R="150" G="200" B="255" />
                 <FirstColor A="255" R="150" G="200" B="255" />

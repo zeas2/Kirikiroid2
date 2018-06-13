@@ -2065,7 +2065,7 @@ void tTJSNI_WaveSoundBuffer::TryCreateSoundBuffer(bool use3d)
 	if(Level2Buffer) delete [] Level2Buffer, Level2Buffer = NULL;
 	Level2Buffer = new tjs_uint8[Level2BufferSize];
 
-	SoundBuffer = TVPALSoundWrap::Create(InputFormat);
+	SoundBuffer = TVPCreateSoundBuffer(InputFormat, L1BufferUnits);
 #if 0
 	// setup parameters
 	DSBUFFERDESC dsbd;
@@ -2181,7 +2181,7 @@ void tTJSNI_WaveSoundBuffer::CreateSoundBuffer()
 			}
 
 
-			if(failed)
+			if(failed || !SoundBuffer)
 			{
 				failed = false;
 				//TVPWaveFormatToWAVEFORMATEXTENSIBLE2(&InputFormat, &Format, use3d);
@@ -2198,7 +2198,7 @@ void tTJSNI_WaveSoundBuffer::CreateSoundBuffer()
 				}
 			}
 
-			if(failed)
+			if(failed || !SoundBuffer)
 			{
 		try16bits:
 				failed = false;
@@ -2657,7 +2657,7 @@ bool tTJSNI_WaveSoundBuffer::FillBuffer(bool firstwrite, bool allowpause)
 		// drift between main clock and clocks which come from other sources
 		// is a good environ noise.
 #endif
-	SoundBufferWritePos = SoundBuffer->GetNextBufferIndex();
+	// SoundBufferWritePos = SoundBuffer->GetNextBufferIndex();
 
 	// check position
 	tTVPWaveSegmentQueue * segment;
@@ -2668,12 +2668,12 @@ bool tTJSNI_WaveSoundBuffer::FillBuffer(bool firstwrite, bool allowpause)
 		writepos = 0;
 		segment = L1BufferSegmentQueues + 0;
 		bufferdecodesamplepos = L1BufferDecodeSamplePos + 0;
-#if 0
+#if 1
 		PlayStopPos = -1;
 		SoundBufferWritePos = 1;
 		SoundBufferPrevReadPos = 0;
 #endif
-		SoundBuffer->SetSampleOffset(0);
+		// SoundBuffer->SetSampleOffset(0);
 	}
 	else
 	{
@@ -2733,14 +2733,15 @@ bool tTJSNI_WaveSoundBuffer::FillBuffer(bool firstwrite, bool allowpause)
 		}
 #endif
 		writepos = SoundBufferWritePos * AccessUnitBytes;
-		if (!SoundBuffer->IsBufferValid())
+		if (SoundBuffer->GetRemainBuffers() >= TVPAL_BUFFER_COUNT)
 		{
-			if (!SoundBuffer->IsPlaying()) { // run out of buffer
-				SoundBuffer->Play();
-				// reset offset
-				SoundBuffer->SetSampleOffset(writepos / InputFormat.BytesPerSample / InputFormat.Channels);
-			}
-			else {
+// 			if (!SoundBuffer->IsPlaying()) { // run out of buffer
+// 				SoundBuffer->Play();
+// 				// reset offset
+// 				SoundBuffer->SetSampleOffset(writepos / InputFormat.BytesPerSample / InputFormat.Channels);
+// 			}
+// 			else
+			{
 				return true;
 			}
 		}
@@ -2829,7 +2830,7 @@ void tTJSNI_WaveSoundBuffer::ResetLastCheckedDecodePos(DWORD pp)
 		rblock = SoundBufferWritePos;
 		offset = 0;
 	} else {
-		offset = SoundBuffer->GetCurrentSampleOffset();
+		offset = SoundBuffer->GetCurrentPlaySamples();
 		rblock = offset / AccessUnitSamples;
 		offset %= AccessUnitSamples;
 		rblock %= L1BufferUnits;
@@ -3129,7 +3130,7 @@ tjs_uint64 tTJSNI_WaveSoundBuffer::GetSamplePosition()
 		rblock = SoundBufferWritePos;
 		offset = 0;
 	} else {
-		offset = SoundBuffer->GetCurrentSampleOffset();
+		offset = SoundBuffer->GetCurrentPlaySamples();
 		rblock = offset / AccessUnitSamples;
 		offset %= AccessUnitSamples;
 		rblock %= L1BufferUnits;
@@ -3439,7 +3440,7 @@ tjs_int tTJSNI_WaveSoundBuffer::GetVisBuffer(tjs_int16 *dest, tjs_int numsamples
 		// the critical section protects only here;
 		// the rest is not important code (does anyone care about that the retrieved
 		// visualization becomes wrong a little ?)
-		offset = SoundBuffer->GetCurrentSampleOffset() + aheadsamples;
+		offset = SoundBuffer->GetCurrentPlaySamples() + aheadsamples;
 		int rblock = offset / AccessUnitSamples;
 		offset %= buffersamples;
 		if (L1BufferSegmentQueues[rblock % L1BufferUnits].GetFilteredLength() == 0)

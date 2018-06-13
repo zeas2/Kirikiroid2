@@ -61,6 +61,7 @@ protected:
 		_fileOperateCell_unpack,
 		_fileOperateCell_repack, // TODO
 		_fileOperateCell_delete,
+		_fileOperateCell_rename,
 		_fileOperateCell_sendto;
 	
 	std::vector<std::string> _clipboardForFileManager;
@@ -75,6 +76,7 @@ protected:
 	void onUnpackClicked(cocos2d::Ref *owner);
 	void onDeleteClicked(cocos2d::Ref *owner);
 	void onSendToClicked(cocos2d::Ref *owner);
+	void onBtnRenameClicked(cocos2d::Ref *owner);
 	void updateFileMenu();
 	void clearFileMenu();
 
@@ -152,7 +154,7 @@ protected:
 			if (ret) {
 				_impl = nullptr;
 				ret->retain();
-				ret->removeFromParent();
+				ret->removeFromParentAndCleanup(false);
 				ret->reset();
 			}
 			return ret;

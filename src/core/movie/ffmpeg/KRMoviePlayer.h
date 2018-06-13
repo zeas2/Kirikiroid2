@@ -4,7 +4,7 @@
 #include "krmovie.h"
 #include "ComplexRect.h"
 struct SwsContext;
-class TVPALSoundWrap;
+class iTVPSoundBuffer;
 class TVPYUVSprite;
 
 namespace cocos2d {
@@ -119,7 +119,7 @@ public:
 
 protected:
 	TVPMoviePlayer();
-	TVPALSoundWrap* GetSoundDevice();
+	iTVPSoundBuffer* GetSoundDevice();
 
 	uint32_t	RefCount = 1;
 	bool		Visible = false;

@@ -35,7 +35,7 @@ static int64_t GetLayoutByChannels(int nChannel) {
 }
 
 class CAEStreamAL : public IAEStream {
-	TVPALSoundWrap *m_impl = nullptr;
+	iTVPSoundBuffer *m_impl = nullptr;
 	AEAudioFormat m_format;
 	IAEClockCallback *m_cbClock;
 	double m_lastPts = 0;
@@ -116,7 +116,7 @@ public:
 		format.SpeakerConfig = 0;
 		format.IsFloat = false;
 		format.Seekable = false;
-		m_impl = TVPALSoundWrap::Create(format);
+		m_impl = TVPCreateSoundBuffer(format, 8);
 	}
 
 	virtual ~CAEStreamAL() {
@@ -182,7 +182,7 @@ public:
 	}
 
 	virtual double GetDelay() override {
-		return (double)m_impl->GetUnprocessedSamples() / m_format.m_sampleRate;
+		return (double)m_impl->GetLatencySeconds();
 	}
 
 	virtual CAESyncInfo GetSyncInfo() override {
@@ -200,7 +200,8 @@ public:
 	}
 
 	virtual double GetCacheTotal() override {
-		return std::max(GetDelay(), (double)TVPAL_BUFFER_COUNT);
+		// return std::max(GetDelay(), (double)TVPAL_BUFFER_COUNT);
+		return GetDelay();
 	}
 
 	virtual void Pause() override { m_impl->Pause(); }
@@ -211,7 +212,7 @@ public:
 		m_impl->Reset();
 	}
 
-	virtual void* GetNativeImpl() override { return m_impl; }
+	virtual iTVPSoundBuffer* GetNativeImpl() override { return m_impl; }
 };
 
 

@@ -5,6 +5,7 @@
 extern "C" {
 #include "libavcodec/avcodec.h"
 }
+class iTVPSoundBuffer;
 
 NS_KRMOVIE_BEGIN
 /**
@@ -252,7 +253,7 @@ public:
    */
   virtual bool HasDSP() { return false; }
 
-  virtual void* GetNativeImpl() { return nullptr; }
+  virtual iTVPSoundBuffer* GetNativeImpl() { return nullptr; }
 };
 
 NS_KRMOVIE_END
