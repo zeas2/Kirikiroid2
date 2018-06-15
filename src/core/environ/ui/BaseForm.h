@@ -33,12 +33,22 @@ namespace cocostudio {
 class NodeMap : public std::unordered_map<std::string, cocos2d::Node*> {
 protected:
 	const char *FileName;
+	void onLoadError(const std::string &name) const;
+
 public:
 	NodeMap();
 	NodeMap(const char *filename, cocos2d::Node* node);
 	template<typename T = cocos2d::Node>
 	T *findController(const std::string &name, bool notice = true) const {
-		return dynamic_cast<T*>(findController<cocos2d::Node>(name, notice));
+		cocos2d::Node *node = findController<cocos2d::Node>(name, notice);
+		if (node) {
+			T *ret = dynamic_cast<T*>(node);
+			if (!ret) {
+				onLoadError(name);
+			}
+			return ret;
+		}
+		return nullptr;
 	}
 	cocos2d::ui::Widget *findWidget(const std::string &name, bool notice = true) const {
 		return findController<cocos2d::ui::Widget>(name, notice);

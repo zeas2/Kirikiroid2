@@ -79,6 +79,7 @@ static size_t _TextStream_mbstowcs(int(*func_mbtowc)(unsigned short *, const uns
     }
     return count;
 }
+
 /*
 	Text stream is used by TJS's Array.save, Dictionary.saveStruct etc.
 	to input/output text files.
@@ -103,6 +104,46 @@ extern size_t TextStream_mbstowcs(tjs_char *pwcs, const tjs_nchar *s, size_t n) 
 		}
 	}
 	return ret;
+}
+
+static ttstr enc_utf8 = TJS_W("utf8"), enc_utf8_2 = TJS_W("utf-8"), enc_utf16 = TJS_W("utf16"),
+	enc_utf16_2 = TJS_W("utf-16"), enc_gbk = TJS_W("gbk"), enc_jis = TJS_W("sjis"),
+	enc_jis_2 = TJS_W("shiftjis"), enc_jis_3 = TJS_W("shift_jis"), enc_jis_4 = TJS_W("shift-jis");
+bool TVPStringDecode(const void *p, int len, ttstr& result, ttstr encoding /*= "utf8"*/) {
+	if (encoding == enc_utf8 || encoding == enc_utf8_2) {
+		int n = (int)TJS_mbstowcs(NULL, (char*)p, len);
+		if (n == -1) return false;
+		TJS_mbstowcs(result.AllocBuffer(n), (char*)p, len);
+	} else if (encoding == enc_utf16 || encoding == enc_utf16_2) {
+		memcpy(result.AllocBuffer(len / 2), p, len);
+		result.FixLen();
+	} else if (encoding == enc_jis || encoding == enc_jis_2 || encoding == enc_jis_3 || encoding == enc_jis_4) {
+		int n = _TextStream_mbstowcs(sjis_mbtowc, NULL, (char*)p, len);
+		if (n == -1) return false;
+		_TextStream_mbstowcs(sjis_mbtowc, result.AllocBuffer(n), (char*)p, len);
+	} else if (encoding == enc_gbk) {
+		int n = _TextStream_mbstowcs(gbk_mbtowc, NULL, (char*)p, len);
+		if (n == -1) return false;
+		_TextStream_mbstowcs(gbk_mbtowc, result.AllocBuffer(n), (char*)p, len);
+	} else {
+		return false;
+	}
+	return true;
+}
+
+bool TVPStringEncode(const ttstr &src, std::string &result, ttstr encoding /*= "utf8"*/)
+{
+	if (encoding == enc_utf8 || encoding == enc_utf8_2) {
+		result = src.AsNarrowStdString();
+	} else if (encoding == enc_utf16 || encoding == enc_utf16_2) {
+		result.resize(src.length() * 2);
+		memcpy((char*)result.c_str(), src.c_str(), src.length() * 2);
+// 	} else if (encoding == enc_jis || encoding == enc_jis_2 || encoding == enc_jis_3 || encoding == enc_jis_4) {
+// 	} else if (encoding == enc_gbk) { // unsupported yet
+	} else {
+		return false;
+	}
+	return true;
 }
 
 #ifdef TVP_TEXT_READ_ANSI_MBCS
@@ -734,11 +775,11 @@ void TVPSetDefaultReadEncoding(const ttstr& encoding)
 {
 	DefaultReadEncoding = encoding;
 	ttstr codestr = encoding;  codestr.ToLowerCase();
-	if (codestr == TJS_W("gbk")) {
+	if (codestr == enc_gbk) {
 		mbtowc_for_text_stream = gbk_mbtowc;
-	} else if (codestr == TJS_W("utf8") || codestr == TJS_W("utf-8") || codestr == TJS_W("utf_8")) {
+	} else if (codestr == enc_utf8 || codestr == enc_utf8_2) {
 		mbtowc_for_text_stream = utf8_mbtowc;
-	} else if (codestr == TJS_W("sjis") || codestr == TJS_W("shiftjis") || codestr == TJS_W("shift_jis") || codestr == TJS_W("shift-jis")) {
+	} else if (codestr == enc_jis || codestr == enc_jis_2 || codestr == enc_jis_3 || codestr == enc_jis_4) {
 		mbtowc_for_text_stream = sjis_mbtowc;
 	} else {
 		TVPThrowExceptionMessage(TVPUnsupportedEncoding, encoding);

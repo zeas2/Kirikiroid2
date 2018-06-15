@@ -840,13 +840,23 @@ bool TVP_stat(const tjs_char *name, tTVP_stat &s) {
 	return TVP_stat(holder, s);
 }
 
+#undef st_atime
+#undef st_ctime
+#undef st_mtime
+//int stat64(const char* __path, struct stat64* __buf) __INTRODUCED_IN(21); // force link it !
 bool TVP_stat(const char *name, tTVP_stat &s) {
-	struct stat64 t;
-	bool ret = !stat64(name, &t);
+	struct stat t;
+	// static_assert(sizeof(t.st_size) == 4, "");
+	static_assert(sizeof(t.st_size) == 8, "");
+	bool ret = !stat(name, &t);
 	s.st_mode = t.st_mode;
 	s.st_size = t.st_size;
-	s.st_atime = t.st_atime;
-	s.st_mtime = t.st_mtime;
-	s.st_ctime = t.st_ctime;
+	s.st_atime = t.st_atim.tv_sec;
+	s.st_mtime = t.st_mtim.tv_sec;
+	s.st_ctime = t.st_ctim.tv_sec;
 	return ret;
+}
+
+void TVPSendToOtherApp(const std::string &filename) {
+
 }

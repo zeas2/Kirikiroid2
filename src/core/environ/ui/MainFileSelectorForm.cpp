@@ -312,6 +312,7 @@ void TVPMainFileSelectorForm::showMenu(Ref*) {
 		localeMgr->initText(reader.findController<Text>("titleAbout"));
 		localeMgr->initText(reader.findController<Text>("titleExit"));
 		localeMgr->initText(reader.findController<Text>("titleRepack"));
+		localeMgr->initText(reader.findController<Text>("titleNewFolder"));
 
 		// button events
 		reader.findWidget("btnRotate")->addClickEventListener([](Ref*) {
@@ -385,6 +386,23 @@ void TVPMainFileSelectorForm::showMenu(Ref*) {
 		}
 		reader.findWidget("btnRepack")->addClickEventListener([this](Ref*) {
 			TVPProcessXP3Repack(CurrentPath);
+			hideMenu(nullptr);
+		});
+		reader.findWidget("btnNewFolder")->addClickEventListener([this](Ref*) {
+			ttstr name = TJS_W("New Folder");
+			std::vector<ttstr> btns;
+			btns.emplace_back("OK");
+			btns.emplace_back("Cancel");
+			if (TVPShowSimpleInputBox(name, "Input name", "", btns) == 0) {
+				ttstr newname(CurrentPath);
+				newname += TJS_W("/");
+				newname += name;
+				if (!TVPCreateFolders(newname)) {
+					TVPShowSimpleMessageBox(TJS_W("Fail to create folder."), TJS_W("Error"));
+				} else {
+					ListDir(CurrentPath);
+				}
+			}
 			hideMenu(nullptr);
 		});
 

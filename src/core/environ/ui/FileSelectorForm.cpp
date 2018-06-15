@@ -527,7 +527,7 @@ void TVPBaseFileSelectorForm::onUnpackClicked(cocos2d::Ref *owner)
 				std::bind(&UnpackArchive::OnError, this, std::placeholders::_1, std::placeholders::_2),
 				std::bind(&UnpackArchive::OnProgress, this, std::placeholders::_1, std::placeholders::_2),
 				std::bind(&UnpackArchive::OnNewFile, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)
-				//std::bind(&UnpackArchive::OnPassword, this)
+				// std::bind(&UnpackArchive::OnPassword, this)
 				);
 			return true;
 		}
@@ -669,6 +669,9 @@ void TVPBaseFileSelectorForm::onDeleteClicked(cocos2d::Ref *owner)
 
 void TVPBaseFileSelectorForm::onSendToClicked(cocos2d::Ref *owner)
 {
+	if (_selectedFileIndex.size() != 1) return;
+	FileInfo &info = CurrentDirList[*_selectedFileIndex.begin()];
+	TVPSendToOtherApp(info.FullPath);
 	clearFileMenu();
 }
 
@@ -711,7 +714,9 @@ void TVPBaseFileSelectorForm::updateFileMenu()
 		if (_fileOperateCell_view) _fileOperateMenulist->pushBackCustomItem(_fileOperateCell_view.get());
 		_fileOperateMenulist->pushBackCustomItem(_fileOperateCell_unpack.get());
 		_fileOperateMenulist->pushBackCustomItem(_fileOperateCell_rename.get());
-	//	_fileOperateMenulist->pushBackCustomItem(_fileOperateCell_sendto.get());
+#if CC_PLATFORM_IOS == CC_TARGET_PLATFORM // TODO implement other platform
+		_fileOperateMenulist->pushBackCustomItem(_fileOperateCell_sendto.get());
+#endif
 	}
 	if (!_selectedFileIndex.empty()) {
 		_fileOperateMenulist->pushBackCustomItem(_fileOperateCell_copy.get());

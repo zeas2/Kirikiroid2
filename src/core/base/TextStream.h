@@ -21,6 +21,8 @@ TJS_EXP_FUNC_DEF(iTJSTextReadStream *, TVPCreateTextStreamForRead, (const ttstr 
 TJS_EXP_FUNC_DEF(iTJSTextWriteStream *, TVPCreateTextStreamForWrite, (const ttstr &name, const ttstr &modestr));
 TJS_EXP_FUNC_DEF(void, TVPSetDefaultReadEncoding, (const ttstr& encoding));
 TJS_EXP_FUNC_DEF(const tjs_char*, TVPGetDefaultReadEncoding, ());
+bool TVPStringDecode(const void *p, int len, ttstr& result, ttstr encoding = "utf8");
+bool TVPStringEncode(const ttstr &s, std::string &result, ttstr encoding = "utf8");
 //---------------------------------------------------------------------------
 
 #endif

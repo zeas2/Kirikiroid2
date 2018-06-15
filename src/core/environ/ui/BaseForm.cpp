@@ -30,8 +30,7 @@ cocos2d::Node * NodeMap::findController<cocos2d::Node>(const std::string &name, 
 		warntext += name.c_str();
 		warntext += " not exist in ";
 		warntext += FileName;
-		const char *btn = "OK";
-		TVPShowSimpleMessageBox(warntext.c_str(), "Fail to load ui", 1, &btn);
+		TVPShowSimpleMessageBox(warntext, "Fail to load ui");
 	}
 	return nullptr;
 }
@@ -43,6 +42,15 @@ void NodeMap::initFromNode(cocos2d::Node* node) {
 		if (!name.empty()) (*this)[name] = child;
 		initFromNode(child);
 	}
+}
+
+void NodeMap::onLoadError(const std::string &name) const
+{
+	std::string warntext("Node ");
+	warntext += name.c_str();
+	warntext += " wrong controller type in ";
+	warntext += FileName;
+	TVPShowSimpleMessageBox(warntext, "Fail to load ui");
 }
 
 Node* CSBReader::Load(const char *filename) {
@@ -174,55 +182,6 @@ void iTVPBaseForm::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d
 // 		BottomBar.Panel->pushBackCustomItem(root);
 // 	}
 // }
-
-#if CC_PLATFORM_WIN32 == CC_TARGET_PLATFORM
-#include "ui/UIEditBox/UIEditBox.h"
-#include "ui/UIEditBox/UIEditBoxImpl-win32.h"
-
-static bool _isModaling;
-
-int TVPShowSimpleInputBox(ttstr &text, const ttstr &caption, const ttstr &prompt, const std::vector<ttstr> &vecButtons) {
-	Scale9Sprite *bg = Scale9Sprite::create();
-	EditBox *box = EditBox::create(Size(1, 1), bg);
-	box->setInputFlag(EditBox::InputFlag::SENSITIVE);
-	box->setText(text.AsStdString().c_str());
-	box->setPlaceHolder(prompt.AsStdString().c_str());
-	class Delegate : public EditBoxDelegate {
-		virtual void editBoxReturn(EditBox* editBox) {
-			_isModaling = false;
-		}
-	};
-
-	Delegate* del = new Delegate;
-	box->setDelegate(del);
-
-	class HackForEditBox : public EditBox {
-	public:
-		EditBoxImpl* getImpl() { return _editBoxImpl; }
-	};
-	EditBoxImplWin *impl = static_cast<EditBoxImplWin*>(static_cast<HackForEditBox*>(box)->getImpl());
-
-	box->touchDownAction(nullptr, Widget::TouchEventType::ENDED);
-
-	_isModaling = true;
-
-	while (_isModaling)
-	{
-		MSG msg;
-		if (!GetMessage(&msg, NULL, 0, 0))
-			break;
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
-	}
-
-	text = box->getText();
-	box->setDelegate(nullptr);
-	delete del;
-
-	return 0;
-}
-
-#endif
 
 void iTVPFloatForm::rearrangeLayout()
 {
