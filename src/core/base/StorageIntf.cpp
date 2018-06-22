@@ -1196,7 +1196,7 @@ ttstr TVPGetPlacedPath(const ttstr & name)
 	}
 
 	// not found
-	TVPAutoPathCache.Add(name, ttstr());
+	// TVPAutoPathCache.Add(name, ttstr()); // do not cache now
 	return ttstr();
 }
 //---------------------------------------------------------------------------
@@ -1247,7 +1247,8 @@ static tTJSBinaryStream * _TVPCreateStream(const ttstr & _name, tjs_uint32 flags
 	else
 		name = TVPGetPlacedPath(_name); // file must exist
 
-	if(name.IsEmpty()) TVPThrowExceptionMessage(TVPCannotOpenStorage, _name);
+	if(name.IsEmpty())
+		TVPThrowExceptionMessage(TVPCannotOpenStorage, _name);
 
 	// does name contain > ?
 	const tjs_char * sharp_pos = TJS_strchr(name.c_str(), TVPArchiveDelimiter);
@@ -1271,10 +1272,10 @@ static tTJSBinaryStream * _TVPCreateStream(const ttstr & _name, tjs_uint32 flags
 		catch(...)
 		{
 			arc->Release();
-			if(access >= 1) TVPClearStorageCaches();
+			if(access >= 1) TVPRemoveFromStorageCache(_name);
 			throw;
 		}
-		if(access >= 1) TVPClearStorageCaches();
+		if(access >= 1) TVPRemoveFromStorageCache(_name);
 		arc->Release();
 		return stream;
 	}
@@ -1286,10 +1287,10 @@ static tTJSBinaryStream * _TVPCreateStream(const ttstr & _name, tjs_uint32 flags
 	}
 	catch(...)
 	{
-		if(access >= 1) TVPClearStorageCaches();
+		if(access >= 1) TVPRemoveFromStorageCache(_name);
 		throw;
 	}
-	if(access >= 1) TVPClearStorageCaches();
+	if (access >= 1) TVPRemoveFromStorageCache(_name);
 	return stream;
 }
 
@@ -1346,7 +1347,9 @@ void TVPClearStorageCaches()
 }
 //---------------------------------------------------------------------------
 
-
+void TVPRemoveFromStorageCache(const ttstr &name) {
+	TVPAutoPathCache.Delete(name);
+}
 
 
 //---------------------------------------------------------------------------
