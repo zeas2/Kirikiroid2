@@ -43,6 +43,7 @@
     <Item id="preference_mem_medium" text="中等占用(<200MB)"/>
     <Item id="preference_mem_low" text="低占用(<100MB)"/>
     <Item id="preference_show_fps" text="显示 FPS"/>
+    <Item id="preference_fps_limit" text="限制 FPS"/>
     <Item id="preference_hide_loading_ad" text="加载时不显示广告"/>
     <Item id="preference_rotate_screen_180" text="反转游戏屏幕"/>
     <Item id="preference_virtual_cursor_scale" text="虚拟鼠标缩放比"/>
@@ -69,6 +70,7 @@
     <Item id="menu_global_preference" text="全局设置"/>
     <Item id="menu_new_local_pref" text="新建独立设置"/>
     <Item id="menu_local_pref" text="独立设置"/>
+    <Item id="menu_new_folder" text="新建文件夹"/>
     <Item id="menu_about" text="关于"/>
     <Item id="menu_exit" text="退出"/>
     <Item id="menu_help" text="查看帮助"/>
@@ -110,6 +112,7 @@
 	<Item id="filemgr_paste" text="粘贴到这里"/>
 	<Item id="filemgr_sendto" text="发送到"/>
 	<Item id="filemgr_unpack" text="解压缩"/>
+	<Item id="filemgr_rename" text="重命名"/>
 	<Item id="file_operate_failed" text="文件操作失败："/>
 	<Item id="fail_to_open_archive" text="无法作为压缩包打开："/>
 	

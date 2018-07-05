@@ -43,6 +43,7 @@
     <Item id="preference_mem_medium" text="Medium Memory(<200MB)"/>
     <Item id="preference_mem_low" text="Low Memory(<100MB)"/>
     <Item id="preference_show_fps" text="Show FPS"/>
+    <Item id="preference_fps_limit" text="FPS Limit"/>
     <Item id="preference_hide_loading_ad" text="Hide Ads while loading"/>
     <Item id="preference_rotate_screen_180" text="Rotate Game Screen"/>
     <Item id="preference_virtual_cursor_scale" text="Virtual Cursor Scale"/>
@@ -69,6 +70,7 @@
     <Item id="menu_global_preference" text="Global Pref."/>
     <Item id="menu_new_local_pref" text="New Individual Pref."/>
     <Item id="menu_local_pref" text="Individual Pref."/>
+    <Item id="menu_new_folder" text="New Folder"/>
     <Item id="menu_about" text="About"/>
     <Item id="menu_exit" text="Exit"/>
     <Item id="menu_help" text="View Help"/>
@@ -110,6 +112,7 @@
 	<Item id="filemgr_paste" text="Paste to here"/>
 	<Item id="filemgr_sendto" text="Send to..."/>
 	<Item id="filemgr_unpack" text="Unpack"/>
+	<Item id="filemgr_rename" text="Rename"/>
 	<Item id="file_operate_failed" text="File operation fail:"/>
 	<Item id="fail_to_open_archive" text="Fail to open archive:"/>
 	
