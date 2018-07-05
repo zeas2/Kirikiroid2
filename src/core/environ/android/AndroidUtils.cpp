@@ -425,7 +425,7 @@ std::vector<std::string> TVPGetDriverPath() {
 namespace kr2android {
 	std::condition_variable MessageBoxCond;
 	std::mutex MessageBoxLock;
-	int MsgBoxRet = 0;
+	int MsgBoxRet = -2;
 	std::string MessageBoxRetText;
 }
 using namespace kr2android;
@@ -452,7 +452,12 @@ int TVPShowSimpleMessageBox(const char *pszText, const char *pszTitle, unsigned 
 		methodInfo.env->DeleteLocalRef(methodInfo.classID);
 
 		std::unique_lock<std::mutex> lk(MessageBoxLock);
-		MessageBoxCond.wait(lk);
+		while (MsgBoxRet == -2) {
+			MessageBoxCond.wait_for(lk, std::chrono::milliseconds(200));
+			if (MsgBoxRet == -2) {
+				TVPForceSwapBuffer(); // update opengl events
+			}
+		}
 		return MsgBoxRet;
 	}
 	return -1;
@@ -485,6 +490,7 @@ int TVPShowSimpleInputBox(ttstr &text, const ttstr &caption, const ttstr &prompt
 			methodInfo.env->DeleteLocalRef(jstrBtn);
 		}
 
+		MsgBoxRet = -2;
 		methodInfo.env->CallStaticVoidMethod(methodInfo.classID, methodInfo.methodID, jstrTitle, jstrPrompt, jstrText, btns);
 
 		methodInfo.env->DeleteLocalRef(jstrTitle);
@@ -494,7 +500,12 @@ int TVPShowSimpleInputBox(ttstr &text, const ttstr &caption, const ttstr &prompt
 		methodInfo.env->DeleteLocalRef(methodInfo.classID);
 
 		std::unique_lock<std::mutex> lk(MessageBoxLock);
-		MessageBoxCond.wait(lk);
+		while (MsgBoxRet == -2) {
+			MessageBoxCond.wait_for(lk, std::chrono::milliseconds(200));
+			if (MsgBoxRet == -2) {
+				TVPForceSwapBuffer(); // update opengl events
+			}
+		}
 		text = MessageBoxRetText;
 		return MsgBoxRet;
 	}
