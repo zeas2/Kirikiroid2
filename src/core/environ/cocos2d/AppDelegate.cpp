@@ -13,9 +13,13 @@
 
 USING_NS_CC;
 
+cocos2d::FileUtils *TVPCreateCustomFileUtils();
+extern "C" void SDL_SetMainReady(void);
+extern std::thread::id TVPMainThreadID;
 static Size designResolutionSize(960, 640);
 bool TVPCheckStartupArg();
 std::string TVPGetCurrentLanguage();
+cocos2d::FileUtils *TVPCreateCustomFileUtils();
 
 void TVPAppDelegate::applicationWillEnterForeground() {
 	::Application->OnActivate();
@@ -28,6 +32,8 @@ void TVPAppDelegate::applicationDidEnterBackground() {
 }
 
 bool TVPAppDelegate::applicationDidFinishLaunching() {
+	SDL_SetMainReady();
+	TVPMainThreadID = std::this_thread::get_id();
 	cocos2d::log("applicationDidFinishLaunching");
 	// initialize director
 	FileUtils::setDelegate(TVPCreateCustomFileUtils());
@@ -42,9 +48,12 @@ bool TVPAppDelegate::applicationDidFinishLaunching() {
 	}
 	// Set the design resolution
 	Size screenSize = glview->getFrameSize();
+	if (screenSize.width < screenSize.height) {
+		std::swap(screenSize.width, screenSize.height);
+	}
 	Size designSize = designResolutionSize;
 	designSize.height = designSize.width * screenSize.height / screenSize.width;
-	glview->setDesignResolutionSize(designSize.width, designSize.height, ResolutionPolicy::SHOW_ALL);
+	glview->setDesignResolutionSize(screenSize.width, screenSize.height, ResolutionPolicy::EXACT_FIT);
 
 	Size frameSize = glview->getFrameSize();
 
@@ -56,14 +65,7 @@ bool TVPAppDelegate::applicationDidFinishLaunching() {
 	// this can make sure that the resource's height could fit for the height of design resolution.
 	searchPath.emplace_back("res");
 
-	std::string skinpath = GlobalConfigManager::GetInstance()->GetValue<std::string>("skin_path", "");
-	if (!skinpath.empty()) {
-		if (!FileUtils::getInstance()->isFileExist(skinpath)) {
-			GlobalConfigManager::GetInstance()->SetValue("skin_path", "");
-		} else {
-			TVPAddAutoSearchArchive(skinpath);
-		}
-	}
+	TVPSkinManager::getInstance()->InitSkin();
 
 	// set searching path
 	FileUtils::getInstance()->setSearchPaths(searchPath);
@@ -72,7 +74,7 @@ bool TVPAppDelegate::applicationDidFinishLaunching() {
 	director->setDisplayStats(false);
 
 	// set FPS. the default value is 1.0/60 if you don't call this
-	director->setAnimationInterval(1.0 / 60);
+	director->setAnimationInterval(1.0f / 60);
 
 	TVPInitUIExtension();
 

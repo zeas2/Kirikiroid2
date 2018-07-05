@@ -1247,8 +1247,10 @@ static tTJSBinaryStream * _TVPCreateStream(const ttstr & _name, tjs_uint32 flags
 	else
 		name = TVPGetPlacedPath(_name); // file must exist
 
-	if(name.IsEmpty())
+	if (name.IsEmpty()) {
+		if (access >= 1) TVPRemoveFromStorageCache(_name);
 		TVPThrowExceptionMessage(TVPCannotOpenStorage, _name);
+	}
 
 	// does name contain > ?
 	const tjs_char * sharp_pos = TJS_strchr(name.c_str(), TVPArchiveDelimiter);

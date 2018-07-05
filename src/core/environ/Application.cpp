@@ -49,6 +49,7 @@ std::thread::id TVPMainThreadID;
 static tTJSCriticalSection _NoMemCallBackCS;
 static void *_reservedMem = malloc(1024 * 1024 * 4); // 4M reserved mem
 static bool _project_startup = false;
+tTJS *TVPAppScriptEngine;
 #define HOOK_MALLOC
 
 static void _do_compact() {
@@ -555,7 +556,6 @@ bool tTVPApplication::StartApplication(ttstr path) {
 	}
 #endif
 	TVPTerminateCode = 0;
-	TVPMainThreadID = std::this_thread::get_id();
 	LocaleConfigManager *mgr = LocaleConfigManager::GetInstance();
 	_retry = mgr->GetText("retry");
 	_cancel = mgr->GetText("cancel");

@@ -15,10 +15,13 @@
 #include "platform/CCDevice.h"
 #include "base/CCScheduler.h"
 #include "utils/TickCount.h"
+#include <condition_variable>
 
 using namespace cocos2d;
 using namespace cocos2d::extension;
 using namespace cocos2d::ui;
+
+extern std::thread::id TVPMainThreadID;
 
 const char * const FileName_Cell = "ui/FileItem.csb";
 static TVPListForm* _listform;
@@ -504,6 +507,13 @@ void TVPBaseFileSelectorForm::onUnpackClicked(cocos2d::Ref *owner)
 	public:
 		bool Init(const std::string &path, const std::string &outpath) {
 			ArcPath = path;
+			ArcUnpacker.SetCallback(
+				std::bind(&UnpackArchive::OnEnded, this),
+				std::bind(&UnpackArchive::OnError, this, std::placeholders::_1, std::placeholders::_2),
+				std::bind(&UnpackArchive::OnProgress, this, std::placeholders::_1, std::placeholders::_2),
+				std::bind(&UnpackArchive::OnNewFile, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
+				std::bind(&UnpackArchive::OnPassword, this)
+			);
 			if (ArcUnpacker.Prepare(path, outpath, &TotalSize) <= 0) {
 				return false;
 			}
@@ -522,13 +532,6 @@ void TVPBaseFileSelectorForm::onUnpackClicked(cocos2d::Ref *owner)
 				ProgressForm->setPercentText2("");
 				ProgressForm->setContent("");
 			}
-			ArcUnpacker.SetCallback(
-				std::bind(&UnpackArchive::OnEnded, this),
-				std::bind(&UnpackArchive::OnError, this, std::placeholders::_1, std::placeholders::_2),
-				std::bind(&UnpackArchive::OnProgress, this, std::placeholders::_1, std::placeholders::_2),
-				std::bind(&UnpackArchive::OnNewFile, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)
-				// std::bind(&UnpackArchive::OnPassword, this)
-				);
 			return true;
 		}
 		virtual ~UnpackArchive() {
@@ -580,7 +583,7 @@ void TVPBaseFileSelectorForm::onUnpackClicked(cocos2d::Ref *owner)
 				ProgressForm->setPercentText2(buf);
 			});
 		}
-		void OnNewFile(int idx, const char * utf8name, tjs_uint64 file_size) {
+		void OnNewFile(int idx, const std::string &utf8name, tjs_uint64 file_size) {
 			if (!ProgressForm) return;
 			tjs_uint32 tick = TVPGetRoughTickCount32();
 			if ((int)(tick - LastUpdate) < UpdateMS && file_size < 1024 * 1024) {
@@ -593,7 +596,7 @@ void TVPBaseFileSelectorForm::onUnpackClicked(cocos2d::Ref *owner)
 				ProgressForm->setContent(filename);
 			});
 		}
-		const char *OnPassword() {
+		bool _onPassword() {
 			LocaleConfigManager *localeMgr = LocaleConfigManager::GetInstance();
 			std::vector<ttstr> btns;
 			btns.emplace_back(localeMgr->GetText("ok"));
@@ -601,11 +604,27 @@ void TVPBaseFileSelectorForm::onUnpackClicked(cocos2d::Ref *owner)
 			ttstr text(ArcPath);
 			if (TVPShowSimpleInputBox(text, localeMgr->GetText("please_input_password"), "", btns) == 0) {
 				PasswordBuffer = text.AsStdString();
-				return PasswordBuffer.c_str();
+				return true;
 			} else {
 				ArcUnpacker.Stop();
-				return "";
+				PasswordBuffer.clear();
+				return false;
 			}
+		}
+		std::string OnPassword() {
+			if (TVPMainThreadID == std::this_thread::get_id()) {
+				_onPassword();
+			} else {
+				std::mutex mtx;
+				std::condition_variable cond;
+				std::unique_lock<std::mutex> lk(mtx);
+				Director::getInstance()->getScheduler()->performFunctionInCocosThread([&]() {
+					_onPassword();
+					cond.notify_all();
+				});
+				cond.wait(lk);
+			}
+			return PasswordBuffer;
 		}
 
 		TVPSimpleProgressForm *ProgressForm = nullptr;
