@@ -14,6 +14,8 @@
 #include "tjsCommHead.h"
 
 #include <math.h>
+#include <cstdlib>
+#include <cmath>
 
 #include "tjsArray.h"
 #include "LayerIntf.h"
@@ -40,6 +42,7 @@
 #include "vkdefine.h"
 #include "RenderManager.h"
 #include <cstdlib>
+#include "FontImpl.h"
 
 extern void TVPSetFontRasterizer( tjs_int index );
 extern tjs_int TVPGetFontRasterizer();
@@ -11306,6 +11309,27 @@ TJS_BEGIN_NATIVE_PROP_DECL(rasterizer)
 	TJS_END_NATIVE_PROP_SETTER
 }
 TJS_END_NATIVE_STATIC_PROP_DECL(rasterizer)
+//----------------------------------------------------------------------
+TJS_BEGIN_NATIVE_PROP_DECL(defaultFaceName)
+{
+	TJS_BEGIN_NATIVE_PROP_GETTER
+	{
+		*result = TVPGetDefaultFontName();
+		// *result = ttstr(TVPFontSystem->GetDefaultFontName());
+		return TJS_S_OK;
+	}
+	TJS_END_NATIVE_PROP_GETTER
+
+	TJS_BEGIN_NATIVE_PROP_SETTER
+	{
+		ttstr name( *param );
+		// don't override, specified by preference
+		// TVPFontSystem->SetDefaultFontName( name.c_str() );
+		return TJS_S_OK;
+	}
+	TJS_END_NATIVE_PROP_SETTER
+}
+TJS_END_NATIVE_STATIC_PROP_DECL(defaultFaceName)
 //----------------------------------------------------------------------
 
 	TJS_END_NATIVE_MEMBERS

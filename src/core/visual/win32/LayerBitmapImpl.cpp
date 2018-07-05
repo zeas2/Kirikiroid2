@@ -561,7 +561,9 @@ void tTVPNativeBaseBitmap::SetHeight(tjs_uint h)
 //---------------------------------------------------------------------------
 void tTVPNativeBaseBitmap::SetSize(tjs_uint w, tjs_uint h, bool keepimage)
 {
-	if(Bitmap->GetWidth() != w || Bitmap->GetHeight() != h)
+	if (w == 0) w = 1;
+	if (h == 0) h = 1;
+	if (Bitmap->GetWidth() != w || Bitmap->GetHeight() != h)
 	{
 		// create a new bitmap and copy existing bitmap
 		iTVPTexture2D *newbitmap;

@@ -1,6 +1,25 @@
 extern void TVPInitTextureFormatList();
 extern bool TVPIsSupportTextureFormat(GLenum fmt);
 
+static bool PreferenceGetValueBool(const std::string &name, bool defval) {
+	return GetConfigManager()->GetValue<bool>(name, defval);
+}
+static void PreferenceSetValueBool(const std::string &name, bool v) {
+	GetConfigManager()->SetValueInt(name, v);
+}
+static std::string PreferenceGetValueString(const std::string &name, const std::string& defval) {
+	return GetConfigManager()->GetValue<std::string>(name, defval);
+}
+static void PreferenceSetValueString(const std::string &name, const std::string& v) {
+	GetConfigManager()->SetValue(name, v);
+}
+static float PreferenceGetValueFloat(const std::string &name, float defval) {
+	return GetConfigManager()->GetValue<float>(name, defval);
+}
+static void PreferenceSetValueFloat(const std::string &name, float v) {
+	GetConfigManager()->SetValueFloat(name, v);
+}
+
 namespace {
 static tPreferenceScreen RootPreference;
 static tPreferenceScreen OpenglOptPreference, SoftRendererOptPreference;
@@ -199,12 +218,48 @@ public:
 	}
 };
 
+class tTVPPreferenceInfoResetDefaultSkin : public iTVPPreferenceInfo {
+public:
+	tTVPPreferenceInfoResetDefaultSkin(const std::string &cap) : iTVPPreferenceInfo(cap, "") {}
+	virtual iPreferenceItem *createItem(int idx) override {
+		LocaleConfigManager *locmgr = LocaleConfigManager::GetInstance();
+		tPreferenceItemConstant* ret = CreatePreferenceItem<tPreferenceItemConstant>(idx, PrefListSize, locmgr->GetText(Caption));
+		ret->setTouchEnabled(true);
+		ret->addClickEventListener([](Ref*) {
+			LocaleConfigManager *locmgr = LocaleConfigManager::GetInstance();
+			if (TVPShowSimpleMessageBoxYesNo(locmgr->GetText("preference_ensure_reset_skin"), locmgr->GetText("notice")) == 0) {
+				PreferenceSetValueString("skin_path", "");
+			}
+		});
+		return ret;
+	}
+};
+
+class tTVPPreferenceInfoKeyMap : public iTVPPreferenceInfo {
+public:
+	tTVPPreferenceInfoKeyMap(const std::string &cap) : iTVPPreferenceInfo(cap, "") {}
+	virtual iPreferenceItem *createItem(int idx) override {
+		LocaleConfigManager *locmgr = LocaleConfigManager::GetInstance();
+		iPreferenceItem *ret = CreatePreferenceItem<tPreferenceItemSubDir>(idx, PrefListSize, locmgr->GetText(Caption));
+		ret->addClickEventListener([this](Ref*) {
+			TVPMainScene::GetInstance()->pushUIForm(KeyMapPreferenceForm::create(GetConfigManager()));
+		});
+		return ret;
+	}
+};
+
 static void initAllConfig() {
 	if (!RootPreference.Preferences.empty()) return;
 	RootPreference.Title = "preference_title";
 	RootPreference.Preferences = {
 		new tTVPPreferenceInfoCheckBox("preference_output_log", "outputlog", true),
 		new tTVPPreferenceInfoCheckBox("preference_show_fps", "showfps", false),
+		new tTVPPreferenceInfoSelectList("preference_fps_limit", "fps_limit", "60",{
+			{ "60", "60" },
+			{ "45", "45" },
+			{ "30", "30" },
+			{ "15", "15" }
+		}),
 		new tTVPPreferenceInfoSelectList("preference_select_renderer", "renderer", "software", {
 			{ "preference_opengl", "opengl" },
 			{ "preference_software", "software" }
@@ -225,12 +280,15 @@ static void initAllConfig() {
 			new tTVPPreferenceInfoCheckBox("preference_keep_screen_alive", "keep_screen_alive", true),
 			new tTVPPreferenceInfoSliderIcon("preference_virtual_cursor_scale", "vcursor_scale", 0.5f),
 			new tTVPPreferenceInfoSliderText("preference_menu_handler_opacity", "menu_handler_opa", 0.15f),
+			new tTVPPreferenceInfoKeyMap("preference_keymap"),
 #ifdef GLOBAL_PREFERENCE
 			new tTVPPreferenceInfoCheckBox("preference_remember_last_path", "remember_last_path", true),
 #if CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID
 			new tTVPPreferenceInfoCheckBox("preference_hide_android_sys_btn", "hide_android_sys_btn", false),
 			new tTVPPreferenceInfoFetchSDCardPermission("preference_android_fetch_sdcard_permission"),
 #endif
+			new tTVPPreferenceInfoResetDefaultSkin("preference_reset_def_skin"),
+
 #endif
 #if 0
 			new tTVPPreferenceInfo(tTVPPreferenceInfo::eTypeSubPref, "preference_custom_option"),

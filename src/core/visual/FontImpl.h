@@ -5,6 +5,7 @@
 
 void TVPInitFontNames();
 int TVPEnumFontsProc(const ttstr &FontPath);
+const ttstr &TVPGetDefaultFontName();
 tTJSBinaryStream* TVPCreateFontStream(const ttstr &fontname);
 struct TVPFontNamePathInfo {
     ttstr Path;

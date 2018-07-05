@@ -157,6 +157,14 @@ public:
 	{
 		// register some native-supported formats
 		Handlers.push_back(tTVPGraphicHandlerType(
+			TJS_W(".pvr"), TVPLoadGraphicRouter, TVPLoadHeaderRouter, nullptr, nullptr, NULL));
+		Handlers.push_back(tTVPGraphicHandlerType(
+			TJS_W(".jxr"), TVPLoadGraphicRouter, TVPLoadHeaderRouter, TVPSaveAsJXR, TVPAcceptSaveAsJXR, NULL));
+		Handlers.push_back(tTVPGraphicHandlerType(
+			TJS_W(".bpg"), TVPLoadGraphicRouter, TVPLoadHeaderRouter, nullptr, nullptr, NULL));
+		Handlers.push_back(tTVPGraphicHandlerType(
+			TJS_W(".webp"), TVPLoadGraphicRouter, TVPLoadHeaderRouter, nullptr, nullptr, NULL));
+		Handlers.push_back(tTVPGraphicHandlerType(
 			TJS_W(".bmp"), TVPLoadGraphicRouter, TVPLoadHeaderRouter, TVPSaveAsBMP, TVPAcceptSaveAsBMP, NULL));
 		Handlers.push_back(tTVPGraphicHandlerType(
 			TJS_W(".dib"), TVPLoadGraphicRouter, TVPLoadHeaderRouter, TVPSaveAsBMP, TVPAcceptSaveAsBMP, NULL));
@@ -174,14 +182,6 @@ public:
 			TJS_W(".tlg5"), TVPLoadGraphicRouter, TVPLoadHeaderRouter, TVPSaveAsTLG, TVPAcceptSaveAsTLG, NULL));
 		Handlers.push_back(tTVPGraphicHandlerType(
 			TJS_W(".tlg6"), TVPLoadGraphicRouter, TVPLoadHeaderRouter, TVPSaveAsTLG, TVPAcceptSaveAsTLG, NULL));
-		Handlers.push_back(tTVPGraphicHandlerType(
-			TJS_W(".jxr"), TVPLoadGraphicRouter, TVPLoadHeaderRouter, TVPSaveAsJXR, TVPAcceptSaveAsJXR, NULL));
-		Handlers.push_back(tTVPGraphicHandlerType(
-			TJS_W(".bpg"), TVPLoadGraphicRouter, TVPLoadHeaderRouter, nullptr, nullptr, NULL));
-		Handlers.push_back(tTVPGraphicHandlerType(
-			TJS_W(".webp"), TVPLoadGraphicRouter, TVPLoadHeaderRouter, nullptr, nullptr, NULL));
-		Handlers.push_back(tTVPGraphicHandlerType(
-			TJS_W(".pvr"), TVPLoadGraphicRouter, TVPLoadHeaderRouter, nullptr, nullptr, NULL));
 		ReCreateHash();
 		Avail = true;
 	}
@@ -783,11 +783,13 @@ static void TVPWriteLE32(tTJSBinaryStream * stream, tjs_uint32 number)
 	stream->WriteBuffer(data, 4);
 }
 //---------------------------------------------------------------------------
-void TVPSaveAsBMP( void* formatdata, tTJSBinaryStream* dst, const iTVPBaseBitmap* bmp, const ttstr & mode, iTJSDispatch2* meta )
+void TVPSaveTextureAsBMP(tTJSBinaryStream* dst, iTVPTexture2D* bmp, const ttstr & mode, iTJSDispatch2* meta)
 {
 	tjs_int pixelbytes;
 
-	if(mode == TJS_W("bmp32") || mode == TJS_W("bmp"))
+	if (bmp->GetFormat() == TVPTextureFormat::Gray)
+		pixelbytes = 1;
+	else if(mode == TJS_W("bmp32") || mode == TJS_W("bmp"))
 		pixelbytes = 4;
 	else if(mode == TJS_W("bmp24"))
 		pixelbytes = 3;
@@ -850,45 +852,60 @@ void TVPSaveAsBMP( void* formatdata, tTJSBinaryStream* dst, const iTVPBaseBitmap
 		{
 			tjs_uint8 palette[1024];
 			tjs_uint8 * p = palette;
-			for(tjs_int i = 0; i < 256; i++)
-			{
-				p[0] = TVP252DitherPalette[0][i];
-				p[1] = TVP252DitherPalette[1][i];
-				p[2] = TVP252DitherPalette[2][i];
-				p[3] = 0;
-				p += 4;
+			if (bmp->GetFormat() == TVPTextureFormat::Gray) {
+				for (tjs_int i = 0; i < 256; i++)
+				{
+					p[0] = i;
+					p[1] = i;
+					p[2] = i;
+					p[3] = 0;
+					p += 4;
+				}
+			} else {
+				for (tjs_int i = 0; i < 256; i++)
+				{
+					p[0] = TVP252DitherPalette[0][i];
+					p[1] = TVP252DitherPalette[1][i];
+					p[2] = TVP252DitherPalette[2][i];
+					p[3] = 0;
+					p += 4;
+				}
 			}
 			stream->WriteBuffer(palette, 1024);
 		}
 
 		// write bitmap body
-		for(tjs_int y = bmp->GetHeight() - 1; y >= 0; y --)
-		{
-			if(!buf) buf = new tjs_uint8[bmppitch];
-			if(pixelbytes == 4)
+		if (bmp->GetFormat() == TVPTextureFormat::Gray) {
+			for (tjs_int y = bmp->GetHeight() - 1; y >= 0; y--)
 			{
-				TVPReverseRGB((tjs_uint32 *)buf, (const tjs_uint32 *)bmp->GetScanLine(y), bmp->GetWidth());
+				if (!buf) buf = new tjs_uint8[bmppitch];
+				memcpy(buf, bmp->GetScanLineForRead(y), bmp->GetWidth());
+				stream->WriteBuffer(buf, bmppitch);
 			}
-			else if(pixelbytes == 1)
+		} else {
+			for (tjs_int y = bmp->GetHeight() - 1; y >= 0; y--)
 			{
-				TVPDither32BitTo8Bit(buf, (const tjs_uint32*)bmp->GetScanLine(y),
-					bmp->GetWidth(), 0, y);  
-			}
-			else
-			{
-				const tjs_uint8 *src = (const tjs_uint8 *)bmp->GetScanLine(y);
-				tjs_uint8 *dest = buf;
-				tjs_int w = bmp->GetWidth();
-				for(tjs_int x = 0; x < w; x++)
-				{
-					dest[0] = src[2];
-					dest[1] = src[1];
-					dest[2] = src[0];
-					dest += 3;
-					src += 4;
+				if (!buf) buf = new tjs_uint8[bmppitch];
+				if (pixelbytes == 4) {
+					TVPReverseRGB((tjs_uint32 *)buf, (const tjs_uint32 *)bmp->GetScanLineForRead(y), bmp->GetWidth());
+				} else if (pixelbytes == 1) {
+					TVPDither32BitTo8Bit(buf, (const tjs_uint32*)bmp->GetScanLineForRead(y),
+						bmp->GetWidth(), 0, y);
+				} else {
+					const tjs_uint8 *src = (const tjs_uint8 *)bmp->GetScanLineForRead(y);
+					tjs_uint8 *dest = buf;
+					tjs_int w = bmp->GetWidth();
+					for (tjs_int x = 0; x < w; x++)
+					{
+						dest[0] = src[2];
+						dest[1] = src[1];
+						dest[2] = src[0];
+						dest += 3;
+						src += 4;
+					}
 				}
+				stream->WriteBuffer(buf, bmppitch);
 			}
-			stream->WriteBuffer(buf, bmppitch);
 		}
 	}
 	catch(...)
@@ -897,6 +914,18 @@ void TVPSaveAsBMP( void* formatdata, tTJSBinaryStream* dst, const iTVPBaseBitmap
 		throw;
 	}
 	if(buf) delete [] buf;
+}
+
+void TVPSaveTextureAsBMP(const ttstr &path, iTVPTexture2D* tex, const ttstr &mode, iTJSDispatch2* meta)
+{
+	tTJSBinaryStream *dst = TVPCreateStream(path, TJS_BS_WRITE);
+	TVPSaveTextureAsBMP(dst, tex, mode, meta);
+	delete dst;
+}
+
+void TVPSaveAsBMP(void* formatdata, tTJSBinaryStream* dst, const iTVPBaseBitmap* bmp, const ttstr & mode, iTJSDispatch2* meta)
+{
+	TVPSaveTextureAsBMP(dst, bmp->GetTexture(), mode, meta);
 }
 //---------------------------------------------------------------------------
 
@@ -2132,11 +2161,11 @@ private:
                 continue;
             }
 
-            unsigned int totalSize = 0;
+            tjs_uint totalSize = 0;
             for(auto it = CurrentTask->items.begin(); it != CurrentTask->items.end(); ++it) {
                 if(ReqInterrupt) break;
                 totalSize += loadOneGraph(*it);
-                if(totalSize >= CurrentTask->limit) break;
+                if(totalSize >= (tjs_uint)CurrentTask->limit) break;
             }
             delete CurrentTask;
         }

@@ -66,7 +66,7 @@ protected:
 	virtual void bindBodyController(const NodeMap &allNodes) override;
 	virtual void bindHeaderController(const NodeMap &allNodes) override;
 
-	const tPreferenceScreen *Config;
+	const tPreferenceScreen *Config = nullptr;
 	cocos2d::ui::ListView *PrefList;
 	cocos2d::ui::Button *_title;
 };
@@ -120,18 +120,22 @@ protected:
 	cocos2d::Node *highlight;
 };
 
-class tPreferenceItemSubDir : public iPreferenceItem {
-public:
-	tPreferenceItemSubDir();
-
+class tPreferenceItemWithHighlight : public iPreferenceItem {
 protected:
 	virtual void initController(const NodeMap &allNodes) override;
-	virtual const char* getUIFileName() const override;
 
 	virtual void onPressStateChangedToNormal() override;
 	virtual void onPressStateChangedToPressed() override;
 
-	cocos2d::Node *highlight;
+	cocos2d::Node *highlight = nullptr;
+};
+
+class tPreferenceItemSubDir : public tPreferenceItemWithHighlight {
+public:
+	tPreferenceItemSubDir();
+
+protected:
+	virtual const char* getUIFileName() const override;
 };
 
 class tPreferenceItemConstant : public tPreferenceItemSubDir {
@@ -264,4 +268,33 @@ protected:
 
 	cocos2d::ui::Text *_text;
 	std::function<std::string(float)> _strScaleConv;
+};
+
+class tPreferenceItemDeletable : public iPreferenceItem {
+	virtual void initController(const NodeMap &allNodes) override;
+	virtual const char* getUIFileName() const override;
+	void onTouchEvent(cocos2d::Ref*, cocos2d::ui::Widget::TouchEventType);
+	void walkTouchEvent(cocos2d::ui::Widget* node);
+
+	cocos2d::ui::Widget *_deleteIcon;
+	cocos2d::ui::ScrollView *_scrollview;
+
+public:
+	std::function<void(tPreferenceItemDeletable*)> _onDelete;
+};
+
+class tPreferenceItemKeyMap : public tPreferenceItemDeletable {
+public:
+	std::pair<int, int> _keypair;
+
+	void initData(int k, int v, int idx, const cocos2d::Size &size);
+};
+
+class KeyMapPreferenceForm : public TVPPreferenceForm {
+	iSysConfigManager* _mgr;
+	KeyMapPreferenceForm(iSysConfigManager* mgr);
+	void initData();
+
+public:
+	static KeyMapPreferenceForm* create(iSysConfigManager* mgr);
 };

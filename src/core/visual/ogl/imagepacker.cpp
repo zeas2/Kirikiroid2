@@ -1,6 +1,7 @@
 #include "imagepacker.h"
 #include <vector>
 #include <algorithm>
+#include <memory.h>
 
 using namespace std;
 

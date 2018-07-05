@@ -106,10 +106,10 @@ tTJSCriticalSection tTVPBitmapBitsAlloc::AllocCS;
 
 void tTVPBitmapBitsAlloc::InitializeAllocator() {
 	if( Allocator == NULL ) {
-		tTJSVariant val;
-		if(TVPGetCommandLine(TJS_W("-bitmapallocator"), &val)) {
-			ttstr str(val);
 #if 0
+		tTJSVariant val;
+		if (TVPGetCommandLine(TJS_W("-bitmapallocator"), &val)) {
+			ttstr str(val);
 			if(str == TJS_W("globalalloc"))
 				Allocator = new GlobalAllocAllocator();
 			else if(str == TJS_W("separateheap"))
@@ -117,13 +117,11 @@ void tTVPBitmapBitsAlloc::InitializeAllocator() {
 			else    // malloc
 #endif
 				Allocator = new BasicAllocator();
-		} else {
 #if 0
+		} else {
 			Allocator = new GlobalAllocAllocator();
-#else
-			Allocator = new BasicAllocator();
-#endif
 		}
+#endif
 	}
 }
 void tTVPBitmapBitsAlloc::FreeAllocator() {

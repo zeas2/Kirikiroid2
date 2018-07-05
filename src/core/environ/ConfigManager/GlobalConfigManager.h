@@ -2,11 +2,13 @@
 #include <unordered_map>
 #include <string>
 #include <vector>
+#include <map>
 
 class iSysConfigManager {
 protected:
 	std::unordered_map<std::string, std::string> AllConfig;
 	std::vector<std::pair<std::string, std::string> > CustomArguments;
+	std::map<int, int> KeyMap;
 
 	bool ConfigUpdated;
 
@@ -30,6 +32,9 @@ public:
 		ConfigUpdated = true;
 		return CustomArguments;
 	}
+
+	const std::map<int, int>& GetKeyMap() { return KeyMap; }
+	void SetKeyMap(int k, int v/* 0 means remove */);
 
 	const std::vector<std::pair<std::string, std::string> > &GetCustomArguments() const { return CustomArguments; }
 

@@ -20,6 +20,7 @@
 #include "StorageImpl.h"
 #include "TipsHelpForm.h"
 #include "XP3RepackForm.h"
+#include "cocos2d/CustomFileUtils.h"
 
 using namespace cocos2d;
 using namespace cocos2d::ui;
@@ -200,6 +201,26 @@ void TVPMainFileSelectorForm::onCellClicked(int idx) {
 		SimpleMediaFilePlayer *player = SimpleMediaFilePlayer::create();
 		TVPMainScene::GetInstance()->addChild(player, 10);// pushUIForm(player);
 		player->PlayFile(info.FullPath.c_str());
+	} else if (archiveType && FileUtils::getInstance()->getFileExtension(info.NameForCompare) == ".skin") {
+		// maybe skin
+		if (TVPSkinManager::Check(info.FullPath)) {
+			std::vector<ttstr> btns;
+			btns.emplace_back("Direct Use");
+			btns.emplace_back("Install");
+			btns.emplace_back("Cancel");
+			switch (TVPShowSimpleMessageBox("Install or direct use it ? (restart needed)", "Skin found", btns)) {
+			case 0: // direct use
+				TVPSkinManager::Use(info.FullPath);
+				TVPShowSimpleMessageBox("Active after restart.", "Skin");
+				break;
+			case 1: // install
+				TVPSkinManager::InstallAndUse(info.FullPath);
+				TVPShowSimpleMessageBox("Active after restart.", "Skin");
+				break;
+			default:
+				break;
+			}
+		}
 	}
 }
 
@@ -371,13 +392,15 @@ void TVPMainFileSelectorForm::showMenu(Ref*) {
 				case 1:
 					TVPOpenPatchLibUrl();
 					break;
-				case 2: {
-							std::string text = TVPGetOpenGLInfo();
-							const char *pOK = LocaleConfigManager::GetInstance()->GetText("ok").c_str();
-							TVPShowSimpleMessageBox(text.c_str(),
-								LocaleConfigManager::GetInstance()->GetText("device_info").c_str(),
-								1, &pOK);
-				} break;
+				case 2:
+					cocos2d::Director::getInstance()->getScheduler()->performFunctionInCocosThread([]{
+						std::string text = TVPGetOpenGLInfo();
+						const char *pOK = LocaleConfigManager::GetInstance()->GetText("ok").c_str();
+						TVPShowSimpleMessageBox(text.c_str(),
+							LocaleConfigManager::GetInstance()->GetText("device_info").c_str(),
+							1, &pOK);
+					});
+					break;
 				}
 			});
 			reader.findWidget("btnExit")->addClickEventListener([](Ref*) {

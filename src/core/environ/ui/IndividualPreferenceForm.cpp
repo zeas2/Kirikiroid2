@@ -15,23 +15,8 @@ const char * const FileName_NaviBar = "ui/NaviBar.csb";
 const char * const FileName_Body = "ui/ListView.csb";
 #define TVPGlobalPreferenceForm IndividualPreferenceForm
 
-static bool PreferenceGetValueBool(const std::string &name, bool defval) {
-	return IndividualConfigManager::GetInstance()->GetValue<bool>(name, defval);
-}
-static void PreferenceSetValueBool(const std::string &name, bool v) {
-	IndividualConfigManager::GetInstance()->SetValueInt(name, v);
-}
-static std::string PreferenceGetValueString(const std::string &name, const std::string& defval) {
-	return IndividualConfigManager::GetInstance()->GetValue<std::string>(name, defval);
-}
-static void PreferenceSetValueString(const std::string &name, const std::string& v) {
-	IndividualConfigManager::GetInstance()->SetValue(name, v);
-}
-static float PreferenceGetValueFloat(const std::string &name, float defval) {
-	return IndividualConfigManager::GetInstance()->GetValue<float>(name, defval);
-}
-static void PreferenceSetValueFloat(const std::string &name, float v) {
-	IndividualConfigManager::GetInstance()->SetValueFloat(name, v);
+static iSysConfigManager* GetConfigManager() {
+	return IndividualConfigManager::GetInstance();
 }
 #include "PreferenceConfig.h"
 

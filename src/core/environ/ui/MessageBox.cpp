@@ -48,7 +48,7 @@ void TVPMessageBoxForm::init(const std::string &caption, const std::string &text
 		}
 	}
 	_btnModel->retain();
-	_btnModel->removeFromParent();
+	_btnModel->removeFromParentAndCleanup(false);
 
 	std::vector<Widget *> btns;
 

@@ -66,6 +66,14 @@ void iSysConfigManager::Initialize() {
 					CustomArguments.emplace_back(key, val);
 				}
 			}
+			for (tinyxml2::XMLElement *item = rootElement->FirstChildElement("KeyMap"); item; item = item->NextSiblingElement("KeyMap")) {
+				int key, val;
+				if (tinyxml2::XML_SUCCESS == item->QueryIntAttribute("key", &key) &&
+					tinyxml2::XML_SUCCESS == item->QueryIntAttribute("value", &val) &&
+					key && val) {
+					KeyMap.emplace(key, val);
+				}
+			}
 		}
 	}
 	if (fp) fclose(fp);
@@ -90,7 +98,14 @@ void iSysConfigManager::SaveToFile() {
 		item->SetAttribute("value", it->second.c_str());
 		rootElement->LinkEndChild(item);
 	}
-
+	for (auto &it : KeyMap) {
+		if (it.first && it.second) {
+			tinyxml2::XMLElement *item = doc.NewElement("KeyMap");
+			item->SetAttribute("key", it.first);
+			item->SetAttribute("value", it.second);
+			rootElement->LinkEndChild(item);
+		}
+	}
 	doc.LinkEndChild(rootElement);
 	XMLMemPrinter stream;
 	doc.Print(&stream);
@@ -160,6 +175,15 @@ void iSysConfigManager::SetValueFloat(const std::string &name, float val) {
 void iSysConfigManager::SetValue(const std::string &name, const std::string & val) {
 	AllConfig[name] = val;
 	ConfigUpdated = true;
+}
+
+void iSysConfigManager::SetKeyMap(int k/* 0 means remove */, int v)
+{
+	if (v == 0) {
+		KeyMap.erase(k);
+	} else {
+		KeyMap[k] = v;
+	}
 }
 
 std::vector<std::string> iSysConfigManager::GetCustomArgumentsForPush() {

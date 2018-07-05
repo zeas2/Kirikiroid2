@@ -146,17 +146,17 @@ void TVPXP3Repacker::OnProgress(uint64_t total_size, uint64_t arc_size, uint64_t
 
 	LastUpdate = tick;
 	Director::getInstance()->getScheduler()->performFunctionInCocosThread([this, total_size, arc_size] {
-		ProgressForm->setPercentOnly((float)total_size / TotalSize);
-		ProgressForm->setPercentOnly2((float)arc_size / CurrentArcSize);
+		ProgressForm->setPercentOnly2((float)total_size / TotalSize);
+		ProgressForm->setPercentOnly((float)arc_size / CurrentArcSize);
 		char buf[64];
 		int sizeMB = static_cast<int>(total_size / (1024 * 1024)),
 			totalMB = static_cast<int>(TotalSize / (1024 * 1024));
 		sprintf(buf, "%d / %dMB", sizeMB, totalMB);
-		ProgressForm->setPercentText(buf);
+		ProgressForm->setPercentText2(buf);
 		sizeMB = static_cast<int>(arc_size / (1024 * 1024));
 		totalMB = static_cast<int>(CurrentArcSize / (1024 * 1024));
 		sprintf(buf, "%d / %dMB", sizeMB, totalMB);
-		ProgressForm->setPercentText2(buf);
+		ProgressForm->setPercentText(buf);
 	});
 }
 
@@ -338,7 +338,7 @@ void TVPProcessXP3Repack(const std::string &dir)
 		delete st;
 	});
 	if (filelist.empty()) {
-		TVPShowSimpleMessageBox(locmgr->GetText("archive_repack_no_xp3").c_str(), "XP3Repack");
+		TVPShowSimpleMessageBox(locmgr->GetText("archive_repack_no_xp3").c_str(), "XP3Repack", 0, nullptr);
 	} else {
 		TVPXP3RepackFileListForm::show(filelist, dir);
 	}

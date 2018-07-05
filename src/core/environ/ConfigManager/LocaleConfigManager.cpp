@@ -72,6 +72,7 @@ bool LocaleConfigManager::initText(cocos2d::ui::Text *ctrl, const std::string &t
 
 	std::string txt = GetText(tid);
 	if (txt.empty()) {
+		ctrl->setString(tid);
 		ctrl->setColor(cocos2d::Color3B::RED);
 		return false;
 	}
@@ -85,6 +86,7 @@ bool LocaleConfigManager::initText(cocos2d::ui::Button *ctrl, const std::string 
 
 	std::string txt = GetText(tid);
 	if (txt.empty()) {
+		ctrl->setTitleText(tid);
 		ctrl->setTitleColor(cocos2d::Color3B::RED);
 		return false;
 	}

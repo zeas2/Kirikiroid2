@@ -144,21 +144,20 @@ const char* tPreferenceItemSubDir::getUIFileName() const  {
 	return "ui/comctrl/SubDirItem.csb";
 }
 
-void tPreferenceItemSubDir::initController(const NodeMap &allNodes) {
+void tPreferenceItemWithHighlight::initController(const NodeMap &allNodes) {
 	setTouchEnabled(true);
 	highlight = allNodes.findController("highlight");
 }
 
-void tPreferenceItemSubDir::onPressStateChangedToNormal() {
+void tPreferenceItemWithHighlight::onPressStateChangedToNormal() {
 	if (highlight) highlight->setVisible(false);
 }
 
-void tPreferenceItemSubDir::onPressStateChangedToPressed() {
+void tPreferenceItemWithHighlight::onPressStateChangedToPressed() {
 	if (highlight) highlight->setVisible(true);
 }
 
 tPreferenceItemSubDir::tPreferenceItemSubDir()
-	: highlight(nullptr)
 {
 
 }
@@ -183,7 +182,10 @@ void tPreferenceItemSelectList::showForm(cocos2d::Ref*) {
 	TVPSelectListForm *form = TVPSelectListForm::create(lst, highlightTid, [this](int idx){
 		const std::pair<std::string, std::string>& item = CurInfo->getListInfo()[idx];
 		highlightTid = item.first;
-		LocaleConfigManager::GetInstance()->initText(selected, highlightTid);
+		if (highlightTid.empty())
+			selected->setString(item.second);
+		else
+			LocaleConfigManager::GetInstance()->initText(selected, highlightTid);
 		_setter(item.second);
 	});
 	TVPMainScene::GetInstance()->pushUIForm(form, TVPMainScene::eEnterFromBottom);
@@ -438,3 +440,107 @@ void tPreferenceItemFileSelect::updateHightlight()
 {
 	if (selected) selected->setString(_getter());
 }
+
+KeyMapPreferenceForm::KeyMapPreferenceForm(iSysConfigManager* mgr)
+	: _mgr(mgr)
+{
+
+}
+
+void KeyMapPreferenceForm::initData()
+{
+	LocaleConfigManager *locmgr = LocaleConfigManager::GetInstance();
+	PrefList->removeAllItems();
+	locmgr->initText(_title, "preference_keymap_title");
+
+	Size size = PrefList->getContentSize();
+#if 0
+	tPreferenceItemConstant* celladd = CreatePreferenceItem<tPreferenceItemConstant>(0, size, locmgr->GetText("preference_keymap_add"));
+	celladd->setTouchEnabled(true);
+	celladd->addClickEventListener([this](Ref*) {
+		TVPKeyPairSelectForm *form = TVPKeyPairSelectForm::create([this](int k) {
+			TVPKeyPairSelectForm *form = TVPKeyPairSelectForm::create([this, k](int v) {
+				_mgr->SetKeyMap(k, v);
+				initData();
+			});
+			TVPMainScene::GetInstance()->pushUIForm(form, TVPMainScene::eEnterFromBottom);
+		});
+		TVPMainScene::GetInstance()->pushUIForm(form, TVPMainScene::eEnterFromBottom);
+	});
+	PrefList->pushBackCustomItem(celladd);
+
+	const auto& keymap = _mgr->GetKeyMap();
+	int counter = 0;
+	for (const std::pair<int, int>& it : keymap) {
+		if (it.first && it.second) {
+			tPreferenceItemKeyMap *cell = new tPreferenceItemKeyMap;
+			cell->initData(it.first, it.second, ++counter, size);
+			cell->_onDelete = [this](tPreferenceItemDeletable* cell) {
+				auto &keypair = static_cast<tPreferenceItemKeyMap*>(cell)->_keypair;
+				_mgr->SetKeyMap(keypair.first, 0);
+			};
+			PrefList->pushBackCustomItem(cell);
+		}
+	}
+#endif
+	Widget *nullcell = new Widget();
+	nullcell->setContentSize(Size(PrefList->getContentSize().width, 200));
+	PrefList->pushBackCustomItem(nullcell);
+}
+
+KeyMapPreferenceForm* KeyMapPreferenceForm::create(iSysConfigManager* mgr)
+{
+	KeyMapPreferenceForm *ret = new KeyMapPreferenceForm(mgr);
+	ret->autorelease();
+	ret->initFromFile("ui/NaviBar.csb", "ui/ListView.csb", nullptr);
+	ret->initData();
+	return ret;
+}
+
+void tPreferenceItemDeletable::initController(const NodeMap &allNodes)
+{
+	_deleteIcon = allNodes.findWidget("delete");
+	_scrollview = allNodes.findController<cocos2d::ui::ScrollView>("scrollview");
+	_scrollview->setScrollBarEnabled(false);
+	Size viewSize = _scrollview->getContentSize();
+	float iconWidth = _deleteIcon->getContentSize().width;
+	viewSize.width += iconWidth;
+	_scrollview->setInnerContainerSize(viewSize);
+	walkTouchEvent(_scrollview);
+	_deleteIcon->addTouchEventListener(nullptr);
+	_deleteIcon->addClickEventListener([this](Ref*) {
+		if (_onDelete) _onDelete(this);
+	});
+}
+
+const char* tPreferenceItemDeletable::getUIFileName() const
+{
+	return "ui/comctrl/DeletableItem.csb";
+}
+
+void tPreferenceItemDeletable::onTouchEvent(cocos2d::Ref* p, cocos2d::ui::Widget::TouchEventType ev)
+{
+
+}
+
+void tPreferenceItemDeletable::walkTouchEvent(Widget* node)
+{
+	node->addTouchEventListener(std::bind(&tPreferenceItemDeletable::onTouchEvent,
+		this, std::placeholders::_1, std::placeholders::_2));
+	auto &vecChildren = node->getChildren();
+	for (Node *child : vecChildren) {
+		Widget *widget = dynamic_cast<Widget*>(child);
+		if (widget) {
+			walkTouchEvent(widget);
+		}
+	}
+}
+
+void tPreferenceItemKeyMap::initData(int k, int v, int idx, const cocos2d::Size &size)
+{
+	_keypair.first = k; _keypair.second = v;
+	char buf[32];
+	sprintf(buf, "%d <=> %d", k, v);
+	initFromInfo(idx, size, buf);
+}
+

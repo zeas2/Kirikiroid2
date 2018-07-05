@@ -226,6 +226,8 @@ extern bool TVPAcceptSaveAsJXR(void* formatdata, const ttstr & type, iTJSDispatc
 extern bool TVPAcceptSaveAsTLG(void* formatdata, const ttstr & type, iTJSDispatch2** dic );
 //---------------------------------------------------------------------------
 
+void TVPSaveTextureAsBMP(tTJSBinaryStream* dst, class iTVPTexture2D* bmp, const ttstr & mode = TJS_W(""), iTJSDispatch2* meta = nullptr);
+void TVPSaveTextureAsBMP(const ttstr &path, class iTVPTexture2D* tex, const ttstr &mode = TJS_W(""), iTJSDispatch2* meta = nullptr);
 
 //---------------------------------------------------------------------------
 // JPEG loading handler

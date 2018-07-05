@@ -12,7 +12,7 @@ public:
 	static TVPSelectListForm *create(const std::vector<std::string> &info,
 		const std::string &highlight_tid, const std::function<void(int)> &funcok);
 
-private:
+protected:
 	virtual void bindBodyController(const NodeMap &allNodes) override;
 	void initWithInfo(const std::vector<std::string> &info, const std::string &highlight_tid);
 
@@ -33,4 +33,22 @@ private:
 	std::function<void(const std::string &, const std::string &)> FuncOK;
 
 	cocos2d::ui::TextField *input1, *input2;
+};
+
+class TVPKeyPairSelectForm : public TVPSelectListForm {
+	typedef TVPSelectListForm inherit;
+
+	cocos2d::EventListenerKeyboard* _keylistener = nullptr;
+	std::vector<std::string> _keyinfo;
+	std::function<void(int)> _funcok;
+
+public:
+	static TVPKeyPairSelectForm *create(const std::function<void(int/*keycode*/)> &funcok);
+
+	virtual ~TVPKeyPairSelectForm();
+
+	void initWithInfo();
+
+	void onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event);
+	void onKeyReleased(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event);
 };

@@ -7,6 +7,7 @@
 #include "platform/CCDevice.h"
 #include "cocos2d/MainScene.h"
 #include "ConfigManager/LocaleConfigManager.h"
+#include "cocos2d/CCKeyCodeConv.h"
 
 using namespace cocos2d;
 using namespace cocos2d::ui;
@@ -120,4 +121,56 @@ void TVPTextPairInputForm::bindBodyController(const NodeMap &allNodes) {
 void TVPTextPairInputForm::initWithInfo(const std::string &text1, const std::string &text2) {
 	input1->setString(text1);
 	input2->setString(text2);
+}
+
+TVPKeyPairSelectForm * TVPKeyPairSelectForm::create(const std::function<void(int)> &funcok)
+{
+	TVPKeyPairSelectForm *ret = new TVPKeyPairSelectForm;
+	ret->autorelease();
+	ret->_funcok = funcok;
+	ret->initFromFile(FileName_Body);
+	ret->initWithInfo();
+	return ret;
+}
+
+TVPKeyPairSelectForm::~TVPKeyPairSelectForm()
+{
+	if (_keylistener) {
+		_eventDispatcher->removeEventListener(_keylistener);
+	}
+}
+
+void TVPKeyPairSelectForm::initWithInfo()
+{
+	FuncOK = [this](int idx) {
+		auto &namemap = TVPGetVKCodeNameMap();
+		auto it = namemap.find(_keyinfo[idx]);
+		if (it == namemap.end()) {
+			return;
+		}
+		_funcok(it->second);
+	};
+	auto &namemap = TVPGetVKCodeNameMap();
+	_keyinfo.clear();
+	_keyinfo.reserve(namemap.size());
+	for (const auto &it : namemap) {
+		_keyinfo.emplace_back(it.first);
+	}
+	inherit::initWithInfo(_keyinfo, "0");
+	_keylistener = EventListenerKeyboard::create();
+	_keylistener->onKeyPressed = CC_CALLBACK_2(TVPKeyPairSelectForm::onKeyPressed, this);
+	_keylistener->onKeyReleased = CC_CALLBACK_2(TVPKeyPairSelectForm::onKeyReleased, this);
+	_eventDispatcher->addEventListenerWithFixedPriority(_keylistener, 1);
+}
+
+void TVPKeyPairSelectForm::onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event)
+{
+}
+
+void TVPKeyPairSelectForm::onKeyReleased(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event)
+{
+	unsigned int code = TVPConvertKeyCodeToVKCode(keyCode);
+	if (!code || code >= 0x200) return;
+
+	_funcok(code);
 }

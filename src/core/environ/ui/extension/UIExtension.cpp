@@ -3,6 +3,7 @@
 #include "ui/UIWidget.h"
 #include "cocostudio/ActionTimeline/CSLoader.h"
 #include "cocostudio/WidgetReader/NodeReader/NodeReader.h"
+#include "base/CCEventDispatcher.h"
 
 USING_NS_CC;
 using namespace cocos2d::ui;
