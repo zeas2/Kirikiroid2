@@ -329,6 +329,7 @@ tjs_uint tTVPSoundBuffer::GetLatencySamples()
 tjs_uint tTVPSoundBuffer::GetCurrentPlaySamples()
 {
 	int32_t samples = TVPAudioRenderer->GetUnprocessedSamples();
+	if (samples > _sendedSamples) return 0;
 	return _sendedSamples - samples; // -GetLatencySamples();
 }
 
