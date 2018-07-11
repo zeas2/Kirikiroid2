@@ -722,7 +722,7 @@ const char * tTVPUnpackArchiveImplLibArchive::_onPassphraseCallback(struct archi
 	static std::string psw = ((tTVPUnpackArchiveImplLibArchive*)clientdata)->onPassphraseCallback();
 	return psw.c_str();
 }
-#if 1
+
 #include "unrar/raros.hpp"
 #include "unrar/dll.hpp"
 class tTVPUnpackArchiveImplUnRAR : public iTVPUnpackArchiveImpl {
@@ -858,7 +858,7 @@ public:
 		_callbacks->FuncOnEnded();
 	}
 };
-#endif
+
 int tTVPUnpackArchive::Prepare(const std::string &path, const std::string &_outpath, tjs_uint64 *totalSize) {
 	FILE *FpIn = fopen(path.c_str(), "rb");
 	if (!FpIn) return -1;

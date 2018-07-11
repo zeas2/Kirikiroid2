@@ -1930,7 +1930,11 @@ void TVPMainScene::onKeyPressed(EventKeyboard::KeyCode keyCode, Event* event) {
 			std::vector<ttstr> btns({ "OK", "Cancel" });
 			ttstr text; tTJSVariant result;
 			if (TVPShowSimpleInputBox(text, "console command", "", btns) == 0) {
-				TVPExecuteExpression(text, &result);
+				try {
+					TVPExecuteExpression(text, &result);
+				} catch (...) {
+					;
+				}
 			}
 			result = text;
 		}

@@ -27,7 +27,7 @@
 #include "pvrtc.h"
 #include "pvr.h"
 
-//#define TEST_SHADER_ENABLED
+// #define TEST_SHADER_ENABLED
 #ifndef GL_ETC1_RGB8_OES
 #define GL_ETC1_RGB8_OES    0x8D64
 #endif
@@ -3173,13 +3173,13 @@ public:
 		TEST_SHADER_BLTO(PsColorDodge5Blend);
 
 		CompileAndRegRegularBlendMethod("PsColorBurnBlend", opacityPrefix,
-			"    s.rgb += 0.001;\n"
-			"    s.rgb = 1.0 - min(1.0 - d.rgb, s.rgb) / s.rgb;\n"
+			"    vec3 t = 1.0 - d.rgb;\n"
+			"    s.rgb = step(t + 0.001, s.rgb) * (1.0 - t / s.rgb);\n"
+			"    s.rgb = clamp(s.rgb, 0.0, 1.0);\n"
 			"    d.rgb = mix(d.rgb, s.rgb, s.a * opacity);\n"
 			"    gl_FragColor = d;\n"
 			"}");
-		//TEST_SHADER_BLTO(PsColorBurnBlend);
-		//pass
+		TEST_SHADER_BLTO(PsColorBurnBlend);
 
 		CompileAndRegRegularBlendMethod("PsLightenBlend", opacityPrefix,
 			"    d.rgb = mix(d.rgb, max(s.rgb, d.rgb), s.a * opacity);\n"

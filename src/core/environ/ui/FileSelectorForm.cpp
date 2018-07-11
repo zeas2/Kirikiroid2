@@ -731,7 +731,8 @@ void TVPBaseFileSelectorForm::updateFileMenu()
 	}
 	if (_selectedFileIndex.size() == 1) {
 		if (_fileOperateCell_view) _fileOperateMenulist->pushBackCustomItem(_fileOperateCell_view.get());
-		_fileOperateMenulist->pushBackCustomItem(_fileOperateCell_unpack.get());
+		FileInfo &info = CurrentDirList[*_selectedFileIndex.begin()];
+		if (!info.IsDir) _fileOperateMenulist->pushBackCustomItem(_fileOperateCell_unpack.get());
 		_fileOperateMenulist->pushBackCustomItem(_fileOperateCell_rename.get());
 #if CC_PLATFORM_IOS == CC_TARGET_PLATFORM // TODO implement other platform
 		_fileOperateMenulist->pushBackCustomItem(_fileOperateCell_sendto.get());

@@ -285,7 +285,7 @@ static void initAllConfig() {
 			new tTVPPreferenceInfoCheckBox("preference_remember_last_path", "remember_last_path", true),
 #if CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID
 			new tTVPPreferenceInfoCheckBox("preference_hide_android_sys_btn", "hide_android_sys_btn", false),
-			new tTVPPreferenceInfoFetchSDCardPermission("preference_android_fetch_sdcard_permission"),
+			// new tTVPPreferenceInfoFetchSDCardPermission("preference_android_fetch_sdcard_permission"),
 #endif
 			new tTVPPreferenceInfoResetDefaultSkin("preference_reset_def_skin"),
 

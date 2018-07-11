@@ -18,7 +18,6 @@ extern "C" void SDL_SetMainReady(void);
 extern std::thread::id TVPMainThreadID;
 static Size designResolutionSize(960, 640);
 bool TVPCheckStartupArg();
-std::string TVPGetCurrentLanguage();
 cocos2d::FileUtils *TVPCreateCustomFileUtils();
 
 void TVPAppDelegate::applicationWillEnterForeground() {
@@ -53,7 +52,7 @@ bool TVPAppDelegate::applicationDidFinishLaunching() {
 	}
 	Size designSize = designResolutionSize;
 	designSize.height = designSize.width * screenSize.height / screenSize.width;
-	glview->setDesignResolutionSize(screenSize.width, screenSize.height, ResolutionPolicy::EXACT_FIT);
+	glview->setDesignResolutionSize(designSize.width, designSize.height, ResolutionPolicy::SHOW_ALL);
 
 	Size frameSize = glview->getFrameSize();
 
@@ -91,42 +90,7 @@ bool TVPAppDelegate::applicationDidFinishLaunching() {
 	scene->scheduleOnce([](float dt){
 		TVPMainScene::GetInstance()->unschedule("launch");
 		TVPGlobalPreferenceForm::Initialize();
-		if (!TVPCheckStartupArg())
-		{
-// 			std::string lastpath;
-// 			if (GlobalConfigManager::GetInstance()->GetValueBool("remember_last_path", true)) {
-// 				std::string lastpathfile = TVPGetInternalPreferencePath() + "lastpath.txt";
-// 				lastpath = FileUtils::getInstance()->getStringFromFile(lastpathfile);
-// 				if (!lastpath.empty() && TVPCheckExistentLocalFile(lastpath.c_str())) {
-// 					LocaleConfigManager *localeMgr = LocaleConfigManager::GetInstance();
-// #if 1
-// 					if (TVPShowSimpleMessageBoxYesNo(lastpath.c_str(), localeMgr->GetText("use_last_path")) == 0) {
-// 						if (TVPMainScene::GetInstance()->startupFrom(lastpath))
-// 							return;
-// 					} else {
-// 						remove(lastpathfile.c_str());
-// // 						FILE* fp = fopen(lastpathfile.c_str(), "wt");
-// // 						if (fp) { // clear last path file
-// // 							fclose(fp);
-// // 						}
-// 					}
-// #else
-// 					TVPMessageBoxForm::showYesNo(localeMgr->GetText("use_last_path"), lastpath,
-// 						[lastpath, lastpathfile](int n) {
-// 						if (n == 0) {
-// 							if (TVPMainScene::GetInstance()->startupFrom(lastpath));
-// 						} else {
-// 							TVPMainScene::GetInstance()->pushUIForm(TVPMainFileSelectorForm::create(lastpath));
-// 							FILE* fp = fopen(lastpathfile.c_str(), "wt");
-// 							if (fp) { // clear last path file
-// 								fclose(fp);
-// 							}
-// 						}
-// 					});
-// 					return;
-// #endif
-// 				}
-// 			}
+		if (!TVPCheckStartupArg()) {
 			TVPMainScene::GetInstance()->pushUIForm(TVPMainFileSelectorForm::create());
 		}
 	}, 0, "launch");

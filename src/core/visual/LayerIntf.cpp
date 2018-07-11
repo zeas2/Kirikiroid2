@@ -6013,15 +6013,17 @@ void tTJSNI_BaseLayer::Draw_GPU(tTVPDrawable *target, int x, int y, const tTVPRe
 			} else {
 				useTemp = true;
 				UpdateBitmapForChild = tTVPTempBitmapHolder::GetTemp(
-					rect.get_width(),
-					rect.get_height());
+					Rect.get_width(),
+					Rect.get_height());
 			}
+			tTVPRect rectForChild(0, 0, Rect.get_width(), Rect.get_height());
+
 			// copy self image to UpdateBitmapForChild
 			if (MainImage != NULL) {
 // 				if (UpdateExcludeRect.top <= rect.top && UpdateExcludeRect.bottom >= rect.bottom &&
 // 					rect.left >= UpdateExcludeRect.left && rect.right <= UpdateExcludeRect.right) {
 // 				} else
-					CopySelfForRect(UpdateBitmapForChild, 0, 0, rect); // transfer self image
+					CopySelfForRect(UpdateBitmapForChild, 0, 0, rectForChild); // transfer self image
 			}
 
 			TVP_LAYER_FOR_EACH_CHILD_BEGIN(child)
@@ -6032,7 +6034,7 @@ void tTJSNI_BaseLayer::Draw_GPU(tTVPDrawable *target, int x, int y, const tTVPRe
 				if (!child->Visible) continue;
 
 				// intersection check
-				if (!TVPIntersectRect(&UpdateRectForChild, rect, child->Rect))
+				if (!TVPIntersectRect(&UpdateRectForChild, rectForChild, child->Rect))
 					continue;
 
 				// setup UpdateOfsX/Y UpdateRectForChildOfsX/Y
@@ -6045,7 +6047,7 @@ void tTJSNI_BaseLayer::Draw_GPU(tTVPDrawable *target, int x, int y, const tTVPRe
 				child->Draw_GPU((tTVPDrawable*)this, UpdateRectForChild.left, UpdateRectForChild.top, UpdateRectForChild);
 			}
 			TVP_LAYER_FOR_EACH_CHILD_END
-			rect.set_offsets(0, 0);
+			// rect.set_offsets(0, 0);
 			target->DrawCompleted(rctar, UpdateBitmapForChild, rect, DisplayType, Opacity);
 			if (useTemp) tTVPTempBitmapHolder::FreeTemp();
 		}

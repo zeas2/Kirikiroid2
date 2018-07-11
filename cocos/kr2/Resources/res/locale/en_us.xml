@@ -61,7 +61,7 @@
     <Item id="ensure_to_override_file" text="Please ensure to override:"/>
     <Item id="readonly_storage" text="Read-only external storage detected"/>
     <Item id="cannot_create_preference" text="Can not create individual preference file."/>
-    <Item id="use_internal_path" text="Please copy your game folder into package path to avoid this warning or you may lost your savedata:&#10;%1&#10;&#10;Continue anyway?"/>
+    <Item id="use_internal_path" text="Cannot access write permission for external storage, please copy/move data into the package paths listed below then try again:"/>
     <Item id="continue_run" text="Continue"/>
     <Item id="get_sdcard_permission" text="Fetch Permission(May Slow)"/>
     <Item id="crash_report" text="Crash Report"/>

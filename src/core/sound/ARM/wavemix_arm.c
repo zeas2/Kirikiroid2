@@ -2,7 +2,9 @@
 #include "cpu_types.h"
 #include <assert.h>
 #include "Protect.h"
+#include "tjsTypes.h"
 
+extern tjs_uint32 TVPCPUFeatures;
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -36,13 +38,14 @@ static void VolumeMix_NEON_S16_CH2(void *dst, const void *src, int len, int16_t 
 		int16x4_t dest_sample = vld1_s16(dst16);
 		int16x4_t src_sign = vreinterpret_s16_u16(vtst_s16(src_sample, sign_mask));
 		int16x4_t dst_sign = vreinterpret_s16_u16(vtst_s16(dest_sample, sign_mask));
+		int16x4_t src_sign_n = vmvn_s16(src_sign);
 		src_sample = vshrn_n_s32(vmull_s16(src_sample, volume), 14);
 		int16x4_t error = vshrn_n_s32(vmull_s16(src_sample, dest_sample), 15);
-		int16x4_t same_sign = veor_s16(src_sign, dst_sign); // -1 = same sign
+		int16x4_t same_sign = veor_s16(src_sign_n, dst_sign); // -1 = same sign
 		error = vand_s16(error, same_sign);
 		int16x4_t errneg = vneg_s16(error);
 		errneg = vand_s16(errneg, src_sign);
-		error = vand_s16(error, vmvn_s16(src_sign));
+		error = vand_s16(error, src_sign_n);
 		int16x4_t result = vadd_s16(src_sample, dest_sample);
 		result = vadd_s16(result, error);
 		result = vadd_s16(result, errneg);
@@ -64,7 +67,7 @@ static void VolumeMix_NEON_F32_CH2(void *dst, const void *src, int len, int16_t 
 	float* pEndDst = dst32 + len;
 	// Pre Frag
 	{
-		int PreFragLen = ((float*)((((intptr_t)dst32) + 15)&~15) - dst32) / 8;
+		int PreFragLen = ((float*)((((int)dst32) + 15)&~15) - dst32) / 8;
 		if (PreFragLen > len) PreFragLen = len / 2;
 		if (PreFragLen) {
 			_VolumeMix_CPP_S16_CH2(dst32, src32, PreFragLen, vol);
@@ -73,7 +76,7 @@ static void VolumeMix_NEON_F32_CH2(void *dst, const void *src, int len, int16_t 
 		}
 	}
 
-	float* pVecEndDst = (float*)(((intptr_t)pEndDst)&addr_mask) - 15;
+	float* pVecEndDst = (float*)(((int)pEndDst)&addr_mask) - 15;
 	float32x4_t volume = vcvtq_f32_s32(vmovl_s16(vld1_s16(vol)));
 	int32x4_t sign_mask = vdupq_n_s32((int32_t)0x80000000);
 
@@ -97,7 +100,6 @@ static void VolumeMix_NEON_F32_CH2(void *dst, const void *src, int len, int16_t 
 
 void TVPWaveMixer_ASM_Init(FAudioMix **func16, FAudioMix **func32)
 {
-	return; // currently not used
 	if ((TVPCPUFeatures & TVP_CPU_FAMILY_MASK) == TVP_CPU_FAMILY_ARM && (TVPCPUFeatures & TVP_CPU_HAS_NEON)) {
 		_VolumeMix_CPP_S16_CH2 = func16[1];
 		_VolumeMix_CPP_F32_CH2 = func32[1];

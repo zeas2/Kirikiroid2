@@ -31,6 +31,7 @@
 #include "EventIntf.h"
 #include "RenderManager.h"
 #include <sys/stat.h>
+#include "deprecated/CCString.h"
 
 USING_NS_CC;
 
@@ -82,6 +83,10 @@ tjs_int TVPGetSelfUsedMemory()
 {
 	_updateMemoryInfo();
 	return _usedMemory;
+}
+
+void TVPForceSwapBuffer() {
+	eglSwapBuffers(eglGetCurrentDisplay(), eglGetCurrentSurface(EGL_DRAW));
 }
 
 std::string TVPGetDeviceID()
@@ -548,7 +553,7 @@ ttstr Android_GetApkStoragePath() {
 	}
 	return strPath;
 }
-
+#if 0
 struct _eventQueueNode {
 	std::function<void()> func;
 	_eventQueueNode *prev;
@@ -580,12 +585,12 @@ void Android_PushEvents(const std::function<void()> &func) {
 	node->prev = nullptr;
 	while (!_lastQueuedEvents.compare_exchange_weak(node->prev, node)) {}
 }
-
+#endif
 void TVPCheckAndSendDumps(const std::string &dumpdir, const std::string &packageName, const std::string &versionStr);
 bool TVPCheckStartupArg() {
 	// check dump
 	TVPCheckAndSendDumps(Android_GetDumpStoragePath(), GetPackageName(), TVPGetPackageVersionString());
-
+#if 0
 	// register event dispatcher
 	cocos2d::Director *director = cocos2d::Director::getInstance();
 	class HackForScheduler : public cocos2d::Scheduler {
@@ -595,8 +600,13 @@ bool TVPCheckStartupArg() {
 		}
 	};
 	static_cast<HackForScheduler*>(director->getScheduler())->regProcessEvents();
-
+#endif
 	return false;
+}
+
+
+void Android_PushEvents(const std::function<void()> &func) {
+	cocos2d::Director::getInstance()->getScheduler()->performFunctionInCocosThread(func);
 }
 
 void TVPControlAdDialog(int adType, int arg1, int arg2) {
@@ -605,10 +615,6 @@ void TVPControlAdDialog(int adType, int arg1, int arg2) {
 		methodInfo.env->CallStaticVoidMethod(methodInfo.classID, methodInfo.methodID, adType, arg1, arg2);
 		methodInfo.env->DeleteLocalRef(methodInfo.classID);
 	}
-}
-
-void TVPForceSwapBuffer() {
-	eglSwapBuffers(eglGetCurrentDisplay(), eglGetCurrentSurface(EGL_DRAW));
 }
 
 static int _GetAndroidSDKVersion() {
@@ -650,12 +656,14 @@ bool TVPCheckStartupPath(const std::string &path) {
 	int pos = path.find_last_of('/');
 	if (pos == path.npos) return false;
 	std::string parent = path.substr(0, pos);
+	std::string testPath = parent + cocos2d::StringUtils::format("/_check_save_%d.tmp", time(nullptr));
 	JniMethodInfo methodInfo;
 	bool success = false;
-	if (JniHelper::getStaticMethodInfo(methodInfo, "org/tvp/kirikiri2/KR2Activity", "isWritableNormalOrSaf", "(Ljava/lang/String;)Z")) {
-		jstring jstrPath = methodInfo.env->NewStringUTF(parent.c_str());
+	if (JniHelper::getStaticMethodInfo(methodInfo, "org/tvp/kirikiri2/KR2Activity", "isWritableNormal", "(Ljava/lang/String;)Z")) {
+		jstring jstrPath = methodInfo.env->NewStringUTF(testPath.c_str());
 		success = methodInfo.env->CallStaticBooleanMethod(methodInfo.classID, methodInfo.methodID, jstrPath);
 		methodInfo.env->DeleteLocalRef(jstrPath);
+#if 0
 		if (success) {
 			parent += "/savedata";
 			if (!TVPCheckExistentLocalFolder(parent)) {
@@ -665,20 +673,32 @@ bool TVPCheckStartupPath(const std::string &path) {
 			success = methodInfo.env->CallStaticBooleanMethod(methodInfo.classID, methodInfo.methodID, jstrPath);
 			methodInfo.env->DeleteLocalRef(jstrPath);
 		}
+#endif
 	}
 
 	if (!success) {
 		std::vector<std::string> paths;
-		paths.emplace_back(GetInternalStoragePath());
+		// paths.emplace_back(GetInternalStoragePath());
 		GetExternalStoragePath(paths);
-		std::string msg = LocaleConfigManager::GetInstance()->GetText("use_internal_path");
-		if (paths.size() > 0) {
+		std::string pathlist;
+		for (const std::string &path : paths) {
+			pathlist += "\n";
+			pathlist += path;
+		}
+		std::string msg = LocaleConfigManager::GetInstance()->GetText("use_internal_path") + pathlist;
+#if 0
+		if (pathlist.size() > 0) {
 			size_t pos = msg.find("%1");
 			if (pos != msg.npos) {
-				msg = msg.replace(msg.begin() + pos, msg.begin() + pos + 2, paths.back());
+				msg = msg.replace(msg.begin() + pos, msg.begin() + pos + 2, pathlist.back());
 			}
 		}
+#endif
 		std::vector<ttstr> btns;
+		btns.emplace_back("OK");
+		TVPShowSimpleMessageBox(msg, LocaleConfigManager::GetInstance()->GetText("readonly_storage"), btns);
+		return false;
+#if 0
 		btns.push_back(LocaleConfigManager::GetInstance()->GetText("continue_run"));
 		bool isLOLLIPOP = IsLollipop();
 		if (isLOLLIPOP)
@@ -691,12 +711,9 @@ bool TVPCheckStartupPath(const std::string &path) {
 		}
 		if (result != 0)
 			return false;
+#endif
 	}
 
-	// check adreno GPU issue
-// 	if (IndividualConfigManager::GetInstance()->GetValue<std::string>("renderer", "software") == "opengl") {
-// 		TVPOnOpenGLRendererSelected(false);
-// 	}
 	return true;
 }
 

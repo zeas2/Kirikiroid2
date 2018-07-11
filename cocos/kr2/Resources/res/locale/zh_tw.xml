@@ -61,9 +61,9 @@
     <Item id="ensure_to_override_file" text="确认要覆盖吗："/>
     <Item id="readonly_storage" text="发现只读的外部存储器"/>
     <Item id="cannot_create_preference" text="无法创建配置"/>
-    <Item id="use_internal_path" text="为避免弹出这个提示以及可能出现的存档丢失，建议移动您的游戏路径到这里：&#10;%1&#10;&#10;仍然使用当前路径运行？"/>
+    <Item id="use_internal_path" text="外部存储目录无法安全写入文件，请移动或复制文件到些下列位置之后再尝试启动："/>
     <Item id="continue_run" text="仍然继续"/>
-    <Item id="get_sdcard_permission" text="获取写入权限（可能很慢）"/>
+    <Item id="get_sdcard_permission" text="获取写入权限"/>
     <Item id="crash_report" text="崩溃报告"/>
     <Item id="crash_report_msg" text="发现崩溃数据，发送数据（%d个文件）到服务器以助我们改进这个应用？"/>
     <Item id="menu_rotate" text="旋转屏幕"/>

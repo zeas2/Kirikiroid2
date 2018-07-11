@@ -61,7 +61,7 @@
     <Item id="ensure_to_override_file" text="上書きしますか："/>
     <Item id="readonly_storage" text="読み取り専用ストレージを検出します"/>
     <Item id="cannot_create_preference" text="個別設定を作成することが出来ません"/>
-    <Item id="use_internal_path" text="この警告を回避するため、内部ストレージにファイルをコピーしてください。続行するとセーブデータが消える可能性があります。：&#10;%1&#10;&#10;このまま続けていますか？"/>
+    <Item id="use_internal_path" text="外部ストレージに書き込むことはできません。ファイルを次のパスに移動またはコピーして、再度実行してみてください："/>
     <Item id="crash_report" text="クラッシュ報告"/>
     <Item id="crash_report_msg" text="このアプリを改善するためにクラッシュデータ（%dファイル）をアップロードしますか？"/>
     <Item id="menu_rotate" text="画面回転"/>

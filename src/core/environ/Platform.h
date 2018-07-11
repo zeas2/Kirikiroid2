@@ -57,3 +57,4 @@ bool TVP_stat(const char *name, tTVP_stat &s);
 void TVP_utime(const char *name, time_t modtime);
 
 void TVPSendToOtherApp(const std::string &filename);
+std::string TVPGetCurrentLanguage();
