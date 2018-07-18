@@ -43,12 +43,15 @@ class FFWaveDecoder : public tTVPWaveDecoder // decoder interface
     int audio_decode_frame();
     void Clear() {
         if (Packet.data)
-            av_free_packet(&Packet);
+			av_packet_unref(&Packet);
         if(frame) av_frame_free(&frame), frame = nullptr;
 		if (FormatCtx) {
+			for (unsigned int i = 0; i < FormatCtx->nb_streams; ++i) {
+				avcodec_close(FormatCtx->streams[i]->codec);
+			}
 			av_free(FormatCtx->pb->buffer);
 			av_free(FormatCtx->pb);
-			avformat_free_context(FormatCtx), FormatCtx = nullptr;
+			avformat_close_input(&FormatCtx), FormatCtx = nullptr;
 		}
         if(InputStream) delete InputStream, InputStream = nullptr;
     }
