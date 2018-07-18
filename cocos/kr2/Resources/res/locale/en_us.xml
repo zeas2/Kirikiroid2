@@ -75,6 +75,7 @@
     <Item id="menu_exit" text="Exit"/>
     <Item id="menu_help" text="View Help"/>
     <Item id="menu_archive_repack" text="Conv/Dec XP3"/>
+    <Item id="menu_web_server" text="Web File Server"/>
     <Item id="about_content" text="Find patch here:&#10https://zeas2.github.io/Kirikiroid2_patch/patch&#10Report bugs here:&#10;https://github.com/zeas2/Kirikiroid2/issues"/>
     <Item id="about_content_i" text=""/>
     <Item id="sure_to_exit" text="Sure to exit?"/>

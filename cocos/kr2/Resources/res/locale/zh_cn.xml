@@ -75,6 +75,7 @@
     <Item id="menu_exit" text="退出"/>
     <Item id="menu_help" text="查看帮助"/>
     <Item id="menu_archive_repack" text="转换/解密XP3封包"/>
+    <Item id="menu_web_server" text="Web文件服务器"/>
     <Item id="about_content" text="可以在github补丁页面寻找补丁：&#10;https://zeas2.github.io/Kirikiroid2_patch/patch&#10;如遇到问题，请反馈到到项目页面：&#10;https://github.com/zeas2/Kirikiroid2/issues&#10;或者到百度贴吧寻找解决方案：&#10;百度Kirikiroid2吧"/>
     <Item id="about_content_i" text=""/>
     <Item id="sure_to_exit" text="确定退出吗？"/>

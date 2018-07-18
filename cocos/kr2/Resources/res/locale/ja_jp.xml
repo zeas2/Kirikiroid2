@@ -72,7 +72,8 @@
     <Item id="menu_about" text="バージョン情報"/>
     <Item id="menu_exit" text="終了"/>
     <Item id="menu_help" text="ヘルプ"/>
-    <Item id="menu_archive_repack" text="Conv/Dec XP3"/>
+    <Item id="menu_archive_repack" text="変換/復号化XP3"/>
+    <Item id="menu_web_server" text="Webサーバー"/>
     <Item id="about_content" text="Find patch here:&#10https://zeas2.github.io/Kirikiroid2_patch/patch&#10Report bugs here:&#10;https://github.com/zeas2/Kirikiroid2/issues"/>
     <Item id="about_content_i" text=""/>
     <Item id="sure_to_exit" text="終了しますか？"/>
