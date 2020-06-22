@@ -60,7 +60,7 @@
     <Item id="reactive" text="再開"/>
     <Item id="ensure_to_override_file" text="上書きするファイル:"/>
     <Item id="readonly_storage" text="読み込み専用の外部ストレージを検出しました"/>
-    <Item id="cannot_create_preference" text="個別設定を作成できません"/>
+    <Item id="cannot_create_preference" text="ローカル設定を作成できません"/>
     <Item id="use_internal_path" text="外部ストレージの書き込み権限にアクセスできません。次のパッケージパスにデータをコピーまたは移動して、再度お試しください:"/>
     <Item id="continue_run" text="続行"/>
     <Item id="get_sdcard_permission" text="権限を取得 (時間がかかる場合があります)"/>
