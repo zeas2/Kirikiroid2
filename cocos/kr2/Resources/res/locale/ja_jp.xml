@@ -51,7 +51,7 @@
     <Item id="preference_reset" text="ﾘｾｯﾄ"/>
     <Item id="preference_hide_android_sys_btn" text="システムバーを非表示"/>
     <Item id="preference_default_font" text="デフォルトフォント (空の場合は組み込み)"/>
-    <Item id="preference_force_def_font" text="デフォルトフォントの使用を強制"/>
+    <Item id="preference_force_def_font" text="デフォルトフォントを強制使用"/>
     <Item id="ok" text="OK"/>
     <Item id="cancel" text="キャンセル"/>
     <Item id="retry" text="再試行"/>
