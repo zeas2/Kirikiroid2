@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Locale lang="en_us">
-    <Item id="preference_title" text="全体設定"/>
-    <Item id="preference_title_individual" text="個別設定"/>
-    <Item id="preference_output_log" text="ログを出力する"/>
-    <Item id="preference_select_renderer" text="画面の描画方法"/>
-    <Item id="preference_opengl" text="OpenGL（実験的）"/>
+    <Item id="preference_title" text="グローバル設定"/>
+    <Item id="preference_title_individual" text="ローカル設定"/>
+    <Item id="preference_output_log" text="ログを出力"/>
+    <Item id="preference_select_renderer" text="レンダリングエンジン"/>
+    <Item id="preference_opengl" text="OpenGL (試験的)"/>
     <Item id="preference_software" text="ソフトウェア"/>
-    <Item id="preference_renderer_opt" text="レンダラ詳細オプション"/>
-    <Item id="preference_soft_renderer_opt" text="ソフトウェアレンダラ"/>
-    <Item id="preference_opengl_renderer_opt" text="OpenGLレンダラ"/>
-    <Item id="preference_multi_draw_thread" text="描画スレッド分割数"/>
+    <Item id="preference_renderer_opt" text="レンダラの詳細設定"/>
+    <Item id="preference_soft_renderer_opt" text="ソフトウェア レンダラの設定"/>
+    <Item id="preference_opengl_renderer_opt" text="OpenGLレンダラの設定"/>
+    <Item id="preference_multi_draw_thread" text="描画スレッド数"/>
     <Item id="preference_draw_thread_auto" text="自動"/>
     <Item id="preference_draw_thread_1" text="1"/>
     <Item id="preference_draw_thread_2" text="2"/>
@@ -19,105 +19,108 @@
     <Item id="preference_draw_thread_6" text="6"/>
     <Item id="preference_draw_thread_7" text="7"/>
     <Item id="preference_draw_thread_8" text="8"/>
-    <Item id="preference_software_compress_tex" text="テクスチャ圧縮"/>
-    <Item id="preference_soft_compress_tex_none" text="オリジナル"/>
-    <Item id="preference_soft_compress_tex_halfline" text="半減"/>
-    <Item id="preference_ogl_compress_tex" text="テクスチャ圧縮"/>
-    <Item id="preference_ogl_compress_tex_none" text="オリジナル"/>
-    <Item id="preference_ogl_compress_tex_half" text="半減"/>
-    <Item id="preference_remember_last_path" text="最後に使用したパスを保存する"/>
-    <Item id="preference_keep_screen_alive" text="画面がスリープに入らないようにする"/>
-    <Item id="preference_custom_option" text="カスタムオプション"/>
-    <Item id="preference_opengl_dup_target" text="ターゲットテクスチャをコピーする"/>
+    <Item id="preference_software_compress_tex" text="テクスチャの圧縮"/>
+    <Item id="preference_soft_compress_tex_none" text="無圧縮"/>
+    <Item id="preference_soft_compress_tex_halfline" text="ハーフライン"/>
+    <Item id="preference_ogl_compress_tex" text="テクスチャの圧縮"/>
+    <Item id="preference_ogl_compress_tex_none" text="無圧縮"/>
+    <Item id="preference_ogl_compress_tex_half" text="クォーターピクセル"/>
+    <Item id="preference_remember_last_path" text="最後に開いたパスを記憶"/>
+    <Item id="preference_keep_screen_alive" text="自動スリープを無効化"/>
+    <Item id="preference_custom_option" text="カスタム設定"/>
+    <Item id="preference_opengl_dup_target" text="レンダ対象のテクスチャをコピー"/>
     <Item id="preference_ogl_accurate_render" text="正確なレンダリング"/>
-    <Item id="preference_ogl_max_texsize" text="最大テクスチャサイズ"/>
+    <Item id="preference_ogl_max_texsize" text="テクスチャの最大サイズ"/>
     <Item id="preference_ogl_texsize_auto" text="自動"/>
     <Item id="preference_ogl_texsize_1024" text="1024"/>
     <Item id="preference_ogl_texsize_2048" text="2048"/>
     <Item id="preference_ogl_texsize_4096" text="4096"/>
     <Item id="preference_ogl_texsize_8192" text="8192"/>
     <Item id="preference_ogl_texsize_16384" text="16384"/>
-    <Item id="preference_mem_limit" text="メモリ使用量を制限（ゲームに応じて）"/>
-    <Item id="preference_mem_unlimited" text="制限なし"/>
-    <Item id="preference_mem_high" text="多く(<300MB)"/>
-    <Item id="preference_mem_medium" text="中(<200MB)"/>
-    <Item id="preference_mem_low" text="少なく(<100MB)"/>
-    <Item id="preference_show_fps" text="FPSを表示する"/>
-    <Item id="preference_fps_limit" text="FPS制限"/>
-    <Item id="preference_hide_loading_ad" text="ロード時に広告を表示しない"/>
-    <Item id="preference_rotate_screen_180" text="画面反転"/>
-    <Item id="preference_virtual_cursor_scale" text="仮想マウスの拡大縮小"/>
-    <Item id="preference_menu_handler_opacity" text="メニューハンドラの不透明度"/>
-    <Item id="preference_reset" text="RESET"/>
-    <Item id="preference_hide_android_sys_btn" text="ナビバーを隠す（再起動必要）"/>
-    <Item id="preference_default_font" text="デフォルトフォント（空白の場合は組み込みのを使用する）"/>
-    <Item id="preference_force_def_font" text="強制的にデフォルトフォントを使用する"/>
+    <Item id="preference_mem_limit" text="メモリ使用量の制限"/>
+    <Item id="preference_mem_unlimited" text="無制限"/>
+    <Item id="preference_mem_high" text="高 (300MB未満)"/>
+    <Item id="preference_mem_medium" text="中 (200MB未満)"/>
+    <Item id="preference_mem_low" text="低 (100MB未満)"/>
+    <Item id="preference_show_fps" text="FPSを表示"/>
+    <Item id="preference_fps_limit" text="FPSの制限"/>
+    <Item id="preference_hide_loading_ad" text="読み込み中の広告を非表示"/>
+    <Item id="preference_rotate_screen_180" text="ゲーム画面を回転"/>
+    <Item id="preference_virtual_cursor_scale" text="仮想カーソルのサイズ"/>
+    <Item id="preference_menu_handler_opacity" text="メニューボタンの不透明度"/>
+    <Item id="preference_reset" text="ﾘｾｯﾄ"/>
+    <Item id="preference_hide_android_sys_btn" text="システムバーを非表示"/>
+    <Item id="preference_default_font" text="デフォルトフォント (空の場合は組み込み)"/>
+    <Item id="preference_force_def_font" text="デフォルトフォントを強制使用"/>
     <Item id="ok" text="OK"/>
     <Item id="cancel" text="キャンセル"/>
     <Item id="retry" text="再試行"/>
-    <Item id="start" text="スタート"/>
-    <Item id="stop" text="Stop"/>
-    <Item id="reactive" text="再認証"/>
-    <Item id="ensure_to_override_file" text="上書きしますか："/>
-    <Item id="readonly_storage" text="読み取り専用ストレージを検出します"/>
-    <Item id="cannot_create_preference" text="個別設定を作成することが出来ません"/>
-    <Item id="use_internal_path" text="外部ストレージに書き込むことはできません。ファイルを次のパスに移動またはコピーして、再度実行してみてください："/>
-    <Item id="crash_report" text="クラッシュ報告"/>
-    <Item id="crash_report_msg" text="このアプリを改善するためにクラッシュデータ（%dファイル）をアップロードしますか？"/>
-    <Item id="menu_rotate" text="画面回転"/>
-    <Item id="menu_global_preference" text="全体設定"/>
-    <Item id="menu_new_local_pref" text="新規設定を作成"/>
-    <Item id="menu_local_pref" text="個別設定"/>
+    <Item id="start" text="開始"/>
+    <Item id="stop" text="中止"/>
+    <Item id="reactive" text="再開"/>
+    <Item id="ensure_to_override_file" text="上書きするファイル:"/>
+    <Item id="readonly_storage" text="読み込み専用の外部ストレージを検出しました"/>
+    <Item id="cannot_create_preference" text="ローカル設定を作成できません"/>
+    <Item id="use_internal_path" text="外部ストレージの書き込み権限にアクセスできません。次のパッケージパスにデータをコピーまたは移動して、再度お試しください:"/>
+    <Item id="continue_run" text="続行"/>
+    <Item id="get_sdcard_permission" text="権限を取得 (時間がかかる場合があります)"/>
+    <Item id="crash_report" text="クラッシュレポート"/>
+    <Item id="crash_report_msg" text="クラッシュが検出されました。このアプリの改善に役立てるため、データ (%d 個のファイル) を送信しますか？"/>
+    <Item id="menu_rotate" text="画面を回転"/>
+    <Item id="menu_global_preference" text="グローバル設定"/>
+    <Item id="menu_new_local_pref" text="ﾛｰｶﾙ設定を作成"/>
+    <Item id="menu_local_pref" text="ローカル設定"/>
     <Item id="menu_new_folder" text="新規フォルダ"/>
-    <Item id="menu_about" text="バージョン情報"/>
+    <Item id="menu_about" text="情報"/>
     <Item id="menu_exit" text="終了"/>
-    <Item id="menu_help" text="ヘルプ"/>
-    <Item id="menu_archive_repack" text="変換/復号化XP3"/>
-    <Item id="menu_web_server" text="Webサーバー"/>
-    <Item id="about_content" text="Find patch here:&#10https://zeas2.github.io/Kirikiroid2_patch/patch&#10Report bugs here:&#10;https://github.com/zeas2/Kirikiroid2/issues"/>
+    <Item id="menu_help" text="ヘルプを見る"/>
+    <Item id="menu_archive_repack" text="XP3変換/復号化"/>
+    <Item id="menu_web_server" text="ﾌｧｲﾙ共有ｻｰﾊﾞ"/>
+    <Item id="about_content" text="パッチ:&#10;https://zeas2.github.io/Kirikiroid2_patch/patch&#10;不具合の報告:&#10;https://github.com/zeas2/Kirikiroid2/issues"/>
     <Item id="about_content_i" text=""/>
-    <Item id="sure_to_exit" text="終了しますか？"/>
+    <Item id="sure_to_exit" text="終了してもよろしいですか？"/>
     <Item id="msgbox_yes" text="はい"/>
     <Item id="msgbox_no" text="いいえ"/>
     <Item id="msgbox_ok" text="OK"/>
-    <Item id="use_last_path" text="前回のパスを開きますか"/>
+    <Item id="msgbox_nerver_notice" text="再度表示しない"/>
+    <Item id="use_last_path" text="最後に開いたパスを使用:"/>
 	
-    <Item id="notice" text="お知らせ"/>
-    <Item id="err_narrow_to_wide" text="ANSI 文字列を UNICODE 文字列に変換できません。&#10;現在のコードページで解釈できない文字が含まれてます。patch.tjsで正しいコードページを指定してください。&#10;正しいデータが指定されているかを確認してください。データが破損している可能性もあります。データが暗号化されている場合はxp3filter.tjsが必要かもしれない。"/>
-	<Item id="err_no_memory" text="メモリが足りません（もしこの問題がよく発生する場合は、オプションの「メモリ使用量を制限」を使用してみる）"/>
+    <Item id="notice" text="通知"/>
+    <Item id="err_narrow_to_wide" text="ANSI文字列をUnicode文字列に変換できません。&#10;データが破損、暗号化されているか、文字エンコードが間違っています。&#10;データが暗号化されている場合は、xp3filter.tjsが必要になる可能性があります。&#10;テキストがShift_JISでエンコードされていない場合は、patch.tjsで正しいエンコードを指定してください。"/>
+	<Item id="err_no_memory" text="メモリ不足&#10;このエラーが頻繁に発生する場合は、メモリ使用量の制限をお試しください。"/>
 	<Item id="err_occured" text="エラーが発生しました"/>
-	<Item id="err_read_error" text="読み込みエラーが発生しました。ファイルが破損している可能性や、デバイスからの読み込みに失敗した可能性があります"/>
-	<Item id="err_not_xp3_archive" text="%1 は正しいXP3アーカイブではありません。ファイルが破損している可能性があります。"/>
-	<Item id="err_cannot_suggest_graph_ext" text="%1 について適切な拡張子を持ったファイルを見つけられませんでした"/>
+	<Item id="err_read_error" text="読み込みエラー"/>
+	<Item id="err_not_xp3_archive" text="%1は有効なXP3アーカイブではありません。データが破損している可能性があります。"/>
+	<Item id="err_cannot_suggest_graph_ext" text="%1は、このグラフィックの拡張子名を特定できません。データが欠落しているか、スクリプトに問題があります。"/>
 	<Item id="delete" text="削除"/>
-	<Item id="file_operate_menu_title" text="ファイル管理"/>
-	<Item id="file_operate_menu_text" text="操作を選択してください"/>
-	<Item id="ensure_to_delete_file" text="削除しますか："/>
-	<Item id="ensure_item_count" text="%d アイテム"/>
-	<Item id="device_info" text="デバイス情報"/>
-	<Item id="supported_opengl_extension" text="OpenGL拡張（利用可能なもの）："/>
-	<Item id="preference_opengl_extension_opt" text="OpenGL拡張"/>
-	<Item id="startup_patch_fail" text="パッチ失敗しました。patch.tjsを更新してください。"/>
-	<Item id="browse_patch_lib" text="パッチ庫"/>
-	<Item id="preference_opengl_extension_desc" text="レンダリング効率を改善するために利用することができるOpenGL拡張のリストです。&#10;いくつかの機能がオンになったら、デバイスに応じて、レンダリングエラーが発生することがあります。"/>
-	<Item id="preference_android_fetch_sdcard_permission" text="外部記憶の書き込みの権限を取得する"/>
+	<Item id="file_operate_menu_title" text="ファイル操作"/>
+	<Item id="file_operate_menu_text" text="操作を選択してください:"/>
+	<Item id="ensure_to_delete_file" text="削除するファイル:"/>
+	<Item id="ensure_item_count" text="%d 項目"/>
+	<Item id="device_info" text="デバイスの情報"/>
+	<Item id="supported_opengl_extension" text="OpenGL拡張機能 (利用可能な機能のみ一覧表示):"/>
+	<Item id="preference_opengl_extension_opt" text="OpenGL拡張機能"/>
+	<Item id="startup_patch_fail" text="パッチに失敗しました。patch.tjsを更新してください。"/>
+	<Item id="browse_patch_lib" text="パッチ ライブラリ"/>
+	<Item id="preference_opengl_extension_desc" text="利用可能なOpenGL拡張機能の一覧です。&#10;いくつかの機能は、一部のデバイス上で誤ったレンダリング結果を引き起こす可能性があります。"/>
+	<Item id="preference_android_fetch_sdcard_permission" text="外部SDカードの書き込み権限を取得"/>
 	
-	<Item id="filemgr_unselect" text="キャンセル"/>
-	<Item id="filemgr_browse" text="ビュー"/>
+	<Item id="filemgr_unselect" text="選択を解除"/>
+	<Item id="filemgr_browse" text="参照"/>
 	<Item id="filemgr_delete" text="削除"/>
 	<Item id="filemgr_copy" text="コピー"/>
-	<Item id="filemgr_cut" text="カット"/>
-	<Item id="filemgr_paste" text="ここに貼り付ける"/>
-	<Item id="filemgr_sendto" text="送信する"/>
-	<Item id="filemgr_unpack" text="解凍する"/>
-	<Item id="filemgr_rename" text="名前を変更する"/>
-	<Item id="file_operate_failed" text="ファイル操作が失敗しました："/>
-	<Item id="fail_to_open_archive" text="アーカイブ操作が失敗しました："/>
+	<Item id="filemgr_cut" text="切り取り"/>
+	<Item id="filemgr_paste" text="ここに貼り付け"/>
+	<Item id="filemgr_sendto" text="送る..."/>
+	<Item id="filemgr_unpack" text="展開"/>
+	<Item id="filemgr_rename" text="名前の変更"/>
+	<Item id="file_operate_failed" text="ファイル操作に失敗しました:"/>
+	<Item id="fail_to_open_archive" text="アーカイブのオープンに失敗しました:"/>
 	
-	<Item id="archive_repack_desc" text="Convert and dec the archive could speed up and reduce heat. Please ensure the free spaec is larger than the maximum archive size, otherwise the operation may fail."/>
-	<Item id="archive_repack_merge_img" text="Merge mask image"/>
-	<Item id="archive_repack_conv_etc2" text="Conv image to ETC2"/>
-	<Item id="archive_repack_proc_title" text="Converting..."/>
-	<Item id="archive_repack_no_xp3filter" text="No xp3filter found in current path. Continue ?"/>
-	<Item id="archive_repack_no_xp3" text="No xp3 archvie found, stop."/>
+	<Item id="archive_repack_desc" text="アーカイブを変換/復号化すると、速度が向上し排熱も抑えられます。空き領域がアーカイブの最大サイズより多いことを確認してください。そうでない場合、操作に失敗する可能性があります。"/>
+	<Item id="archive_repack_merge_img" text="マスク画像をマージ"/>
+	<Item id="archive_repack_conv_etc2" text="画像をETC2に変換"/>
+	<Item id="archive_repack_proc_title" text="変換中..."/>
+	<Item id="archive_repack_no_xp3filter" text="現在のパスにxp3filterが見つかりませんが、続行しますか？"/>
+	<Item id="archive_repack_no_xp3" text="XP3アーカイブが見つからないため、中止します。"/>
 </Locale>
